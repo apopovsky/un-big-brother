@@ -1,0 +1,8 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/src/.vs/UnTaskAlert/v16/Server/sqlite3
+/src/UnTaskAlert/Properties/PublishProfiles/UnTaskAlert - Web Deploy.pubxml
+/src/.vs/UnTaskAlert/v16/.suo
+/src/.vs/UnTaskAlert/config/applicationhost.config
