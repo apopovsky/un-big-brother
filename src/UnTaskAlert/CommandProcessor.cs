@@ -46,6 +46,11 @@ namespace UnTaskAlert
                 startDate = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
                 email = update.Message.Text.Substring(6).Trim();
             }
+            if (update.Message.Text.StartsWith("/day"))
+            {
+                startDate = DateTime.UtcNow.Date;
+                email = update.Message.Text.Substring(4).Trim();
+            }
 
             if (string.IsNullOrWhiteSpace(email))
             {
