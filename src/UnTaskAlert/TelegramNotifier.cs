@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using UnTaskAlert.Common;
@@ -39,10 +40,11 @@ namespace UnTaskAlert
 
         public async Task SendTimeReport(Subscriber subscriber, TimeReport timeReport)
         {
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Your stats since {timeReport.StartDate.Date:yyyy-dd-MM}");
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Estimated Time:{timeReport.TotalEstimated}");
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Completed Time:{timeReport.TotalCompleted}");
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Active Time:{timeReport.TotalActive}");
+            await _bot.SendTextMessageAsync(subscriber.TelegramId,
+                $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
+                $"Estimated Time: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
+                $"Completed Time: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
+                $"Active Time: {timeReport.TotalActive:0.##}");
         }
     }
 }

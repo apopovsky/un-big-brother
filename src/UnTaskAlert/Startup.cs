@@ -18,6 +18,7 @@ namespace UnTaskAlert
                 builder.Services.AddTransient<IMailSender, MailSender>();
                 builder.Services.AddTransient<IBacklogAccessor, BacklogAccessor>();
                 builder.Services.AddTransient<IQueryBuilder, QueryBuilder>();
+                builder.Services.AddTransient<ICommandProcessor, CommandProcessor>();
                 builder.Services.AddOptions<Config>()
                     .Configure<IConfiguration>((settings, configuration) =>
                     {
