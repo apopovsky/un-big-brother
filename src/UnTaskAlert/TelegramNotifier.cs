@@ -39,10 +39,10 @@ namespace UnTaskAlert
 
         public async Task SendTimeReport(Subscriber subscriber, TimeReport timeReport)
         {
-                await _bot.SendTextMessageAsync(subscriber.TelegramId, "Your stats for this month:");
-                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Estimated Time:{timeReport.TotalEstimated}");
-                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Completed Time:{timeReport.TotalCompleted}");
-                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Active Time:{timeReport.TotalActive}");
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Your stats since {timeReport.StartDate.Date:yyyy-dd-MM}");
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Estimated Time:{timeReport.TotalEstimated}");
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Completed Time:{timeReport.TotalCompleted}");
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"Active Time:{timeReport.TotalActive}");
         }
     }
 }

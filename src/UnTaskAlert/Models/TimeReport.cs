@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace UnTaskAlert.Models
 {
@@ -14,6 +15,7 @@ namespace UnTaskAlert.Models
 		public double TotalEstimated { get; set; }
 		public double TotalCompleted { get; set; }
 		public double TotalActive { get; set; }
+        public DateTime StartDate { get; set; }
 
 		public void AddWorkItem(WorkItemTime workItem)
 		{
@@ -26,8 +28,6 @@ namespace UnTaskAlert.Models
 
 		public IEnumerable<WorkItemTime> WorkItemTimes => _workItemTimes;
 	}
-
-
 
 	public class WorkItemTime
 	{

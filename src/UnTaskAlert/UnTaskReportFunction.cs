@@ -22,9 +22,8 @@ namespace UnTaskAlert
 			_config = Arg.NotNull(options.Value, nameof(options));
 		}
 
-		[FunctionName("UnTaskReportFunction")]
-		//public async Task Run([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer)
-		public async Task Run([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req, ILogger log)
+		[FunctionName("MonthlyReport")]
+		public async Task RunMonthly([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req, ILogger log)
 		{
 			log.LogInformation($"Executing monitoring task");
 			log.LogInformation($"Reading subscribers: '{_config.Subscribers}'");
@@ -34,9 +33,12 @@ namespace UnTaskAlert
 			{
 				try
 				{
-					await _service.CreateReport(subscriber,
+                    var startDate = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
+                    await _service.CreateReport(subscriber,
 						_config.AzureDevOpsAddress,
-						_config.AzureDevOpsAccessToken, log);
+						_config.AzureDevOpsAccessToken,
+                        startDate,
+                        log);
 				}
 				catch (Exception e)
 				{
@@ -44,5 +46,36 @@ namespace UnTaskAlert
 				}
 			}
 		}
-	}
+
+        [FunctionName("WeeklyReport")]
+        public async Task RunWeeklyReport([HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = null)] HttpRequest req, ILogger log)
+        {
+            log.LogInformation($"Executing monitoring task");
+            log.LogInformation($"Reading subscribers: '{_config.Subscribers}'");
+
+            var subscribers = JsonConvert.DeserializeObject<Subscribers>(_config.Subscribers);
+            foreach (var subscriber in subscribers.Items)
+            {
+                try
+                {
+                    var startDate = StartOfWeek(DateTime.UtcNow, DayOfWeek.Monday);
+                    await _service.CreateReport(subscriber,
+                        _config.AzureDevOpsAddress,
+                        _config.AzureDevOpsAccessToken,
+                        startDate,
+                        log);
+                }
+                catch (Exception e)
+                {
+                    log.LogError(e.ToString());
+                }
+            }
+        }
+
+        private static DateTime StartOfWeek(DateTime dt, DayOfWeek startOfWeek)
+        {
+            int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
+            return dt.AddDays(-1 * diff).Date;
+        }
+    }
 }

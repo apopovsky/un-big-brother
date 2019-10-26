@@ -19,13 +19,13 @@ namespace UnTaskAlert
 			_backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
 		}
 
-		public async Task CreateReport(Subscriber subscriber, string url, string token, ILogger log)
+		public async Task CreateReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
 		{
 			var orgUrl = new Uri(url);
 			var personalAccessToken = token;
 
-			var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
-			var workItemsIds = await _backlogAccessor.GetWorkItemsForPeriod(connection, subscriber.Email, new DateTime(2019, 10, 1), log);
+            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
+			var workItemsIds = await _backlogAccessor.GetWorkItemsForPeriod(connection, subscriber.Email, startDate, log);
 			var workItems = await _backlogAccessor.GetWorkItemsById(connection, workItemsIds);
 
 			var report = new TimeReport();
@@ -61,12 +61,13 @@ namespace UnTaskAlert
 						Completed = (double)workItem.Fields["Microsoft.VSTS.Scheduling.CompletedWork"]
 					};
 					report.AddWorkItem(item);
+                    report.StartDate = startDate;
 
 					log.LogInformation($"{item.Title} {item.Estimated:F2} {item.Completed:F2} {item.Active:F2}");
 				}
 			}
 
-			log.LogInformation($"Query Result: toalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', ");
+			log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', ");
 
 			await SendReport(subscriber, report, log);
 		}
