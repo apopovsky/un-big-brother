@@ -32,5 +32,10 @@ namespace UnTaskAlert
         {
             // todo
         }
+
+        public async Task SendTimeReport(Subscriber subscriber, TimeReport timeReport)
+        {
+            // todo
+        }
     }
 }

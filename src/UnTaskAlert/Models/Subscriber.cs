@@ -14,5 +14,6 @@ namespace UnTaskAlert.Models
         public TimeSpan StartWorkingHoursUtc { get; set; }
         public TimeSpan EndWorkingHoursUtc { get; set; }
         public string TelegramId { get; set; }
+        public string Email { get; set; }
     }
 }
