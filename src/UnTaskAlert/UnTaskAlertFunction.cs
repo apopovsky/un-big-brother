@@ -20,8 +20,8 @@ namespace UnTaskAlert
             _config = Arg.NotNull(options.Value, nameof(options));
         }
 
-        [FunctionName("UnTaskAlertFunction")]
-        public async Task Run([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, ILogger log)
+        [FunctionName("activeTaskMonitoring")]
+        public async Task Run([TimerTrigger("0 */20 * * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"Executing monitoring task");
             log.LogInformation($"Reading subscribers: '{_config.Subscribers}'");

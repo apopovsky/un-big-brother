@@ -15,6 +15,7 @@ namespace UnTaskAlert.Models
 		public double TotalEstimated { get; set; }
 		public double TotalCompleted { get; set; }
 		public double TotalActive { get; set; }
+        public double Expected { get; set; }
         public DateTime StartDate { get; set; }
 
 		public void AddWorkItem(WorkItemTime workItem)

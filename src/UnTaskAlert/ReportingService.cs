@@ -9,8 +9,10 @@ using UnTaskAlert.Models;
 namespace UnTaskAlert
 {
 	public class ReportingService : IReportingService
-	{
-		private readonly INotifier _notifier;
+    {
+        private static readonly int hoursPerDay = 8;
+
+        private readonly INotifier _notifier;
 		private readonly IBacklogAccessor _backlogAccessor;
 
 		public ReportingService(INotifier notifier, IBacklogAccessor backlogAccessor)
@@ -20,7 +22,7 @@ namespace UnTaskAlert
 		}
 
 		public async Task CreateReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
-		{
+        {
 			var orgUrl = new Uri(url);
 			var personalAccessToken = token;
 
@@ -67,9 +69,11 @@ namespace UnTaskAlert
 				}
 			}
 
-			log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', ");
+            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * hoursPerDay;
 
-			await SendReport(subscriber, report, log);
+            log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
+
+            await SendReport(subscriber, report, log);
 		}
 		
 		private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
@@ -77,5 +81,17 @@ namespace UnTaskAlert
 			log.LogWarning($"Sending info.");
 			await _notifier.SendTimeReport(subscriber, timeReport);
 		}
-	}
+
+        private static double GetBusinessDays(DateTime startDate, DateTime endDate)
+        {
+            double calcBusinessDays =
+                1 + ((endDate - startDate).TotalDays * 5 -
+                     (startDate.DayOfWeek - endDate.DayOfWeek) * 2) / 7;
+
+            if (endDate.DayOfWeek == DayOfWeek.Saturday) calcBusinessDays--;
+            if (startDate.DayOfWeek == DayOfWeek.Sunday) calcBusinessDays--;
+
+            return calcBusinessDays;
+        }
+    }
 }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -41,18 +39,26 @@ namespace UnTaskAlert
                 startDate = StartOfWeek(DateTime.UtcNow, DayOfWeek.Monday);
                 email = update.Message.Text.Substring(5).Trim();
             }
-            if (update.Message.Text.StartsWith("/month"))
+            else if (update.Message.Text.StartsWith("/month"))
             {
                 startDate = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
                 email = update.Message.Text.Substring(6).Trim();
             }
-            if (update.Message.Text.StartsWith("/day"))
+            else if (update.Message.Text.StartsWith("/day"))
             {
                 startDate = DateTime.UtcNow.Date;
                 email = update.Message.Text.Substring(4).Trim();
             }
+            else
+            {
+                var to = new Subscriber
+                {
+                    TelegramId = update.Message.Chat.Id.ToString()
+                };
+                await _notifier.Instruction(to);
+            }
 
-            if (string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains("un.org"))
             {
                 return;
             }
@@ -62,7 +68,9 @@ namespace UnTaskAlert
                 Email = email,
                 TelegramId = update.Message.Chat.Id.ToString()
             };
-
+            
+            await _notifier.Progress(subscriber);
+            
             await _service.CreateReport(subscriber,
                 _config.AzureDevOpsAddress,
                 _config.AzureDevOpsAccessToken,

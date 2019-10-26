@@ -1,7 +1,6 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 [assembly: FunctionsStartup(typeof(UnTaskAlert.MyNamespace.Startup))]
 namespace UnTaskAlert

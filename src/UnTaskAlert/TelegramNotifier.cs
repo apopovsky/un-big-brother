@@ -18,6 +18,17 @@ namespace UnTaskAlert
             _bot = new TelegramBotClient(options.Value.TelegramBotKey);
         }
 
+        public async Task Instruction(Subscriber subscriber)
+        {
+            var text = $"The following commands are available:{Environment.NewLine}" +
+                       $"/day <email>{Environment.NewLine}" +
+                       $"/week <email>{Environment.NewLine}" +
+                       $"/month <email>{Environment.NewLine}" +
+                       $"/help{Environment.NewLine}" +
+                       $"Only @un.org emails are supported";
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
+        }
+
         public async Task NoActiveTasksDuringWorkingHours(Subscriber subscriber)
         {
             await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.");
@@ -42,9 +53,15 @@ namespace UnTaskAlert
         {
             await _bot.SendTextMessageAsync(subscriber.TelegramId,
                 $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
-                $"Estimated Time: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
-                $"Completed Time: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
-                $"Active Time: {timeReport.TotalActive:0.##}");
+                $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
+                $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
+                $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
+                $"Expected Hours: {timeReport.Expected:0.##}");
+        }
+
+        public async Task Progress(Subscriber subscriber)
+        {
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, "Processing your request...");
         }
     }
 }
