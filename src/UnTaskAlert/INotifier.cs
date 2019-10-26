@@ -9,5 +9,6 @@ namespace UnTaskAlert
         Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber);
         Task MoreThanSingleTaskIsActive(Subscriber subscriber);
         Task Ping(Subscriber subscriber);
+        Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);
     }
 }
