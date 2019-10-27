@@ -114,6 +114,7 @@ namespace UnTaskAlert
             var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
             if (subscriber == null)
             {
+                await _notifier.NoEmail(update.Message.Chat.Id.ToString());
                 return;
             }
 

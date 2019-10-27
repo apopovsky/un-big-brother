@@ -15,5 +15,6 @@ namespace UnTaskAlert
         Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo);
         Task IncorrectEmail(string chatId);
         Task EmailUpdated(Subscriber subscriber);
+        Task NoEmail(string chatId);
     }
 }
