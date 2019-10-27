@@ -55,13 +55,23 @@ namespace UnTaskAlert
 						}
 					}
 
-					var item = new WorkItemTime
+                    if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.OriginalEstimate", out var estimated))
+                    {
+                        estimated = 0;
+                    }
+
+                    if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.CompletedWork", out var completed))
+                    {
+                        completed = 0;
+                    }
+
+                    var item = new WorkItemTime
 					{
 						Title = workItem.Fields["System.Title"].ToString(),
 						Active = activeTime.TotalHours,
-						Estimated = (double)workItem.Fields["Microsoft.VSTS.Scheduling.OriginalEstimate"],
-						Completed = (double)workItem.Fields["Microsoft.VSTS.Scheduling.CompletedWork"]
-					};
+						Estimated = estimated,
+						Completed = completed
+                    };
 					report.AddWorkItem(item);
                     report.StartDate = startDate;
 
