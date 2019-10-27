@@ -31,7 +31,12 @@ namespace UnTaskAlert
                 return;
             }
 
-            log.LogInformation($"CommandProcessor.Process(): {update.Message.Text}");
+            if (string.IsNullOrWhiteSpace(update.Message?.Text))
+            {
+                return;
+            }
+
+            log.LogInformation($"Processing the command: {update.Message.Text}");
 
             var startDate = DateTime.UtcNow.Date;
 
