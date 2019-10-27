@@ -7,8 +7,9 @@
     "FromEmailAddress": "",
     "EMailPassword": "",
     "Smtp": "",
-    "AzureDevOpsAddress": "https://dev.azure.com/ucss",
+    "AzureDevOpsAddress": "",
     "AzureDevOpsAccessToken": "",
-    "Subscribers": "{\"Items\":[{\"Name\":\"#NAME\",\"Email\":\"#EMAIL\",\"TelegramId\":\"#TELEGRAM_ID\"}]}"
+    "EmailDomain": "",
+    "CosmosDbConnectionString": ""
   }
 }
