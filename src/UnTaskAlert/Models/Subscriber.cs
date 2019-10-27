@@ -10,5 +10,8 @@ namespace UnTaskAlert.Models
         public string TelegramId { get; set; }
         public string Email { get; set; }
         public int HoursPerDay { get; set; }
+        public int Pin { get; set; }
+        public bool IsVerified { get; set; }
+        public int VerificationAttempts { get; set; }
     }
 }

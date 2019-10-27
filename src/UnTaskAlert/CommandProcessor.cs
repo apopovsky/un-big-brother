@@ -15,13 +15,22 @@ namespace UnTaskAlert
         private readonly INotifier _notifier;
         private readonly Config _config;
         private readonly IDbAccessor _dbAccessor;
+        private readonly IMailSender _mailSender;
 
-        public CommandProcessor(INotifier notifier, IReportingService service, IDbAccessor dbAccessor, IOptions<Config> options)
+        private static readonly Random Random = new Random();
+        private static readonly int MaxVerificationAttempts = 5;
+
+        public CommandProcessor(INotifier notifier,
+            IReportingService service,
+            IDbAccessor dbAccessor,
+            IMailSender mailSender,
+            IOptions<Config> options)
         {
             _notifier = Arg.NotNull(notifier, nameof(notifier));
             _service = Arg.NotNull(service, nameof(service));
             _config = Arg.NotNull(options.Value, nameof(options));
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
+            _mailSender = Arg.NotNull(mailSender, nameof(mailSender));
         }
 
         public async Task Process(Update update, ILogger log)
@@ -42,7 +51,12 @@ namespace UnTaskAlert
 
             // this is a naive and quick implementation
             // proper command parsing is required
-            if (update.Message.Text.StartsWith("/email"))
+            var isNumeric = int.TryParse(update.Message.Text, out int code);
+            if (isNumeric)
+            {
+                await VerifyAccount(update, code);
+            }
+            else if (update.Message.Text.StartsWith("/email"))
             {
                 await SetEmailAddress(update);
             }
@@ -75,6 +89,32 @@ namespace UnTaskAlert
             }
         }
 
+        private async Task VerifyAccount(Update update, int code)
+        {
+            // trying to verify
+            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+            if (subscriber.IsVerified)
+            {
+                // no need to verify anything
+                return;
+            }
+
+            subscriber.VerificationAttempts++;
+
+            if (subscriber.Pin == code && subscriber.VerificationAttempts < MaxVerificationAttempts)
+            {
+                subscriber.IsVerified = true;
+                subscriber.VerificationAttempts = 0;
+                await _notifier.AccountVerified(subscriber);
+            }
+            else
+            {
+                await _notifier.CouldNotVerifyAccount(subscriber);
+            }
+
+            await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+        }
+
         private async Task SetEmailAddress(Update update)
         {
             var email = update.Message.Text.Substring(6).Trim();
@@ -93,10 +133,16 @@ namespace UnTaskAlert
                 TelegramId = update.Message.Chat.Id.ToString(),
                 StartWorkingHoursUtc = existingSubscriber?.StartWorkingHoursUtc ?? default,
                 EndWorkingHoursUtc = existingSubscriber?.EndWorkingHoursUtc ?? default,
-                HoursPerDay = existingSubscriber?.HoursPerDay ?? default
+                HoursPerDay = existingSubscriber?.HoursPerDay ?? ReportingService.HoursPerDay,
+                IsVerified = false,
+                Pin = GetRandomPin(),
+                VerificationAttempts = existingSubscriber?.VerificationAttempts ?? default
             };
             await _dbAccessor.AddOrUpdateSubscriber(subscriber);
 
+            _mailSender.SendMessage("UN Big Brother bot verification code",
+                $"Please send the following PIN to the bot through the chat: {subscriber.Pin}",
+                subscriber.Email);
             await _notifier.EmailUpdated(subscriber);
         }
 
@@ -124,6 +170,12 @@ namespace UnTaskAlert
                 return;
             }
 
+            if (!subscriber.IsVerified)
+            {
+                log.LogInformation($"{subscriber.Email} is not verified. No reports will be sent.");
+                return;
+            }
+
             await _service.CreateWorkHoursReport(subscriber,
                 _config.AzureDevOpsAddress,
                 _config.AzureDevOpsAccessToken,
@@ -135,6 +187,14 @@ namespace UnTaskAlert
         {
             int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
             return dt.AddDays(-1 * diff).Date;
+        }
+
+        public static int GetRandomPin()
+        {
+            lock (Random)
+            {
+                return Random.Next(1000, 9999);
+            }
         }
     }
 }

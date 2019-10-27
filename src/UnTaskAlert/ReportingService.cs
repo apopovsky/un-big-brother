@@ -10,7 +10,7 @@ namespace UnTaskAlert
 {
 	public class ReportingService : IReportingService
     {
-        private static readonly int hoursPerDay = 8;
+        public static readonly int HoursPerDay = 8;
 
         private readonly INotifier _notifier;
 		private readonly IBacklogAccessor _backlogAccessor;
@@ -79,7 +79,7 @@ namespace UnTaskAlert
 				}
 			}
 
-            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? hoursPerDay : subscriber.HoursPerDay);
+            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
 
             log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
 
