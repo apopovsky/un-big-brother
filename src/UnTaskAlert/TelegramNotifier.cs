@@ -90,7 +90,8 @@ namespace UnTaskAlert
 
         public async Task EmailUpdated(Subscriber subscriber)
         {
-            var text = $"Email address is set to {subscriber.Email}{Environment.NewLine}" +
+            var text = $"Email address is set to {subscriber.Email}, but is not yet confirmed.{Environment.NewLine}" +
+                       $"Check you mailbox and verify the pin number by sending it to the bot.{Environment.NewLine}{Environment.NewLine}" +
                        $"Your working hours (UTC) are set to: {subscriber.StartWorkingHoursUtc} - {subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
                        $"Hours per day is {subscriber.HoursPerDay}{Environment.NewLine}" +
                        $"Contact vadim.grayfer@un.org to update your working hours";
@@ -100,6 +101,16 @@ namespace UnTaskAlert
         public async Task NoEmail(string chatId)
         {
             await _bot.SendTextMessageAsync(chatId, "Your email is not set. Use /help command to fix it.");
+        }
+
+        public async Task AccountVerified(Subscriber subscriber)
+        {
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, "Your account is verified. Now you are able to request reports.");
+        }
+
+        public async Task CouldNotVerifyAccount(Subscriber subscriber)
+        {
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, "Your account could not be verified.");
         }
     }
 }
