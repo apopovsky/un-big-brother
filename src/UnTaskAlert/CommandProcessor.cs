@@ -14,12 +14,14 @@ namespace UnTaskAlert
         private readonly IReportingService _service;
         private readonly INotifier _notifier;
         private readonly Config _config;
+        private readonly IDbAccessor _dbAccessor;
 
-        public CommandProcessor(INotifier notifier, IReportingService service, IOptions<Config> options)
+        public CommandProcessor(INotifier notifier, IReportingService service, IDbAccessor dbAccessor, IOptions<Config> options)
         {
             _notifier = Arg.NotNull(notifier, nameof(notifier));
             _service = Arg.NotNull(service, nameof(service));
             _config = Arg.NotNull(options.Value, nameof(options));
+            _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
         }
 
         public async Task Process(Update update, ILogger log)
@@ -29,33 +31,34 @@ namespace UnTaskAlert
                 return;
             }
 
-            DateTime startDate = DateTime.UtcNow.Date;
-            string email = "";
+            log.LogInformation($"CommandProcessor.Process(): {update.Message.Text}");
+
+            var startDate = DateTime.UtcNow.Date;
 
             // this is a naive and quick implementation
             // proper command parsing is required
-            if (update.Message.Text.StartsWith("/week"))
+            if (update.Message.Text.StartsWith("/email"))
+            {
+                await SetEmailAddress(update);
+            }
+            else if (update.Message.Text.StartsWith("/week"))
             {
                 startDate = StartOfWeek(DateTime.UtcNow, DayOfWeek.Monday);
-                email = update.Message.Text.Substring(5).Trim();
-                await CreateWorkHoursReport(update, log, email, startDate);
+                await CreateWorkHoursReport(update, log, startDate);
             }
             else if (update.Message.Text.StartsWith("/month"))
             {
                 startDate = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
-                email = update.Message.Text.Substring(6).Trim();
-                await CreateWorkHoursReport(update, log, email, startDate);
+                await CreateWorkHoursReport(update, log, startDate);
             }
             else if (update.Message.Text.StartsWith("/day"))
             {
                 startDate = DateTime.UtcNow.Date;
-                email = update.Message.Text.Substring(4).Trim();
-                await CreateWorkHoursReport(update, log, email, startDate);
+                await CreateWorkHoursReport(update, log, startDate);
             }
             else if (update.Message.Text.StartsWith("/active"))
             {
-                email = update.Message.Text.Substring(7).Trim();
-                await CreateActiveTasksReport(update, log, email, startDate);
+                await CreateActiveTasksReport(update, log, startDate);
             }
             else
             {
@@ -67,18 +70,38 @@ namespace UnTaskAlert
             }
         }
 
-        private async Task CreateActiveTasksReport(Update update, ILogger log, string email, DateTime startDate)
+        private async Task SetEmailAddress(Update update)
         {
+            var email = update.Message.Text.Substring(6).Trim();
+
             if (string.IsNullOrWhiteSpace(email) || !email.EndsWith(_config.EmailDomain))
+            {
+                await _notifier.IncorrectEmail(update.Message.Chat.Id.ToString());
+
+                return;
+            }
+
+            var existingSubscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+            var subscriber = new Subscriber
+            {
+                Email = email,
+                TelegramId = update.Message.Chat.Id.ToString(),
+                StartWorkingHoursUtc = existingSubscriber?.StartWorkingHoursUtc ?? default,
+                EndWorkingHoursUtc = existingSubscriber?.EndWorkingHoursUtc ?? default
+            };
+            await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+
+            await _notifier.EmailUpdated(subscriber);
+        }
+
+        private async Task CreateActiveTasksReport(Update update, ILogger log, DateTime startDate)
+        {
+            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+            if (subscriber == null)
             {
                 return;
             }
 
-            var subscriber = new Subscriber
-            {
-                Email = email,
-                TelegramId = update.Message.Chat.Id.ToString()
-            };
             await _service.ActiveTasksReport(subscriber,
                 _config.AzureDevOpsAddress,
                 _config.AzureDevOpsAccessToken,
@@ -86,18 +109,14 @@ namespace UnTaskAlert
                 log);
         }
 
-        private async Task CreateWorkHoursReport(Update update, ILogger log, string email, DateTime startDate)
+        private async Task CreateWorkHoursReport(Update update, ILogger log, DateTime startDate)
         {
-            if (string.IsNullOrWhiteSpace(email) || !email.EndsWith(_config.EmailDomain))
+            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+            if (subscriber == null)
             {
                 return;
             }
 
-            var subscriber = new Subscriber
-            {
-                Email = email,
-                TelegramId = update.Message.Chat.Id.ToString()
-            };
             await _service.CreateWorkHoursReport(subscriber,
                 _config.AzureDevOpsAddress,
                 _config.AzureDevOpsAccessToken,

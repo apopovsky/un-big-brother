@@ -13,11 +13,13 @@ namespace UnTaskAlert
     {
         private readonly IMonitoringService _service;
         private readonly Config _config;
+        private readonly IDbAccessor _dbAccessor;
 
-        public UnTaskAlertFunction(IMonitoringService service, IOptions<Config> options)
+        public UnTaskAlertFunction(IMonitoringService service, IOptions<Config> options, IDbAccessor dbAccessor)
         {
             _service = Arg.NotNull(service, nameof(service));
             _config = Arg.NotNull(options.Value, nameof(options));
+            _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
         }
 
         [FunctionName("activeTaskMonitoring")]
@@ -26,8 +28,8 @@ namespace UnTaskAlert
             log.LogInformation($"Executing monitoring task");
             log.LogInformation($"Reading subscribers: '{_config.Subscribers}'");
 
-            var subscribers = JsonConvert.DeserializeObject<Subscribers>(_config.Subscribers);
-            foreach (var subscriber in subscribers.Items)
+            var subscribers = await _dbAccessor.GetSubscribers();
+            foreach (var subscriber in subscribers)
             {
                 try
                 {

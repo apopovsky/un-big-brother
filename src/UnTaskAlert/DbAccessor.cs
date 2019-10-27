@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
@@ -26,23 +27,36 @@ namespace UnTaskAlert
             _config = Arg.NotNull(options.Value, nameof(options));
         }
 
-        public async Task AddSubscriber(Subscriber subscriber)
+        public async Task AddOrUpdateSubscriber(Subscriber subscriber)
         {
             await CreateDb();
-            await _container.CreateItemAsync<Subscriber>(subscriber, new PartitionKey(subscriber.TelegramId));
+            await _container.UpsertItemAsync<Subscriber>(subscriber);
         }
 
         public async Task<Subscriber> GetSubscriberById(string telegramId)
         {
             await CreateDb();
-            var result = await _container.ReadItemAsync<Subscriber>(telegramId, new PartitionKey(telegramId));
+            var result = _container
+                .GetItemLinqQueryable<Subscriber>(allowSynchronousQueryExecution: true)
+                .Where(i => i.TelegramId == telegramId)
+                .ToList();
+
+            return result.SingleOrDefault();
+        }
+
+        public async Task<List<Subscriber>> GetSubscribers()
+        {
+            await CreateDb();
+
+            var result = _container.GetItemLinqQueryable<Subscriber>(allowSynchronousQueryExecution: true)
+                .ToList();
 
             return result;
         }
 
         private async Task CreateDb()
         {
-            _cosmosClient = new CosmosClient(_config.CosmosDbEndpointUri, _config.CosmosDbPrimaryKey);
+            _cosmosClient = new CosmosClient(_config.CosmosDbConnectionString);
             _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseId);
             _container = await _database.CreateContainerIfNotExistsAsync(_containerId, "/TelegramId");
 

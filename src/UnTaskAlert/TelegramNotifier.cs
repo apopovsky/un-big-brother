@@ -21,10 +21,14 @@ namespace UnTaskAlert
         public async Task Instruction(Subscriber subscriber)
         {
             var text = $"The following commands are available:{Environment.NewLine}" +
-                       $"/day <email>{Environment.NewLine}" +
-                       $"/week <email>{Environment.NewLine}" +
-                       $"/month <email>{Environment.NewLine}" +
-                       $"/active <email>{Environment.NewLine}" +
+                       $"The first thing you need to do is to set your email address:" +
+                       $"/email <email>{Environment.NewLine}" +
+                       $"{Environment.NewLine}" +
+                       $"Then the following commands can be used:{Environment.NewLine}" +
+                       $"/day{Environment.NewLine}" +
+                       $"/week{Environment.NewLine}" +
+                       $"/month{Environment.NewLine}" +
+                       $"/active{Environment.NewLine}" +
                        $"/help{Environment.NewLine}" +
                        $"Only @un.org emails are supported";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
@@ -69,6 +73,19 @@ namespace UnTaskAlert
         {
             var text = $"{subscriber.Email} has {activeTaskInfo.ActiveTaskCount} active tasks";
 
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
+        }
+
+        public async Task IncorrectEmail(string chatId)
+        {
+            await _bot.SendTextMessageAsync(chatId, "Incorrect email address");
+        }
+
+        public async Task EmailUpdated(Subscriber subscriber)
+        {
+            var text = $"Email address is set to {subscriber.Email}{Environment.NewLine}" +
+                       $"Your working hours (UTC) are set to: {subscriber.StartWorkingHoursUtc} - {subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
+                       $"Contact vadim.grayfer@un.org to update your working hours";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
     }

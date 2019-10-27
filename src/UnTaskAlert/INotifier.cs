@@ -13,5 +13,7 @@ namespace UnTaskAlert
         Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);
         Task Progress(Subscriber subscriber);
         Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo);
+        Task IncorrectEmail(string chatId);
+        Task EmailUpdated(Subscriber subscriber);
     }
 }

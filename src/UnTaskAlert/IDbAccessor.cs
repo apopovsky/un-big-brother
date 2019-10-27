@@ -8,7 +8,8 @@ namespace UnTaskAlert
 {
     public interface IDbAccessor
     {
-        Task AddSubscriber(Subscriber subscriber);
+        Task AddOrUpdateSubscriber(Subscriber subscriber);
         Task<Subscriber> GetSubscriberById(string telegramId);
+        Task<List<Subscriber>> GetSubscribers();
     }
 }

@@ -24,6 +24,13 @@ namespace UnTaskAlert
             var orgUrl = new Uri(url);
             var personalAccessToken = token;
 
+            if (subscriber.StartWorkingHoursUtc == default || subscriber.EndWorkingHoursUtc == default)
+            {
+                log.LogInformation($"{subscriber.Email} has no working hours set. Active task monitoring is disabled.");
+
+                return;
+            }
+
             var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
             var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
             await CreateAlertIfNeeded(subscriber, activeTaskInfo, log);
