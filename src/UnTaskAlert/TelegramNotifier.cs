@@ -20,8 +20,7 @@ namespace UnTaskAlert
 
         public async Task Instruction(Subscriber subscriber)
         {
-            var text = $"The following commands are available:{Environment.NewLine}" +
-                       $"The first thing you need to do is to set your email address:" +
+            var text = $"The first thing you need to do is to set your email address:{Environment.NewLine}" +
                        $"/email <email>{Environment.NewLine}" +
                        $"{Environment.NewLine}" +
                        $"Then the following commands can be used:{Environment.NewLine}" +
