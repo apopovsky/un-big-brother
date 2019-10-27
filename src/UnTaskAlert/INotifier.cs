@@ -7,7 +7,7 @@ namespace UnTaskAlert
     {
         Task Instruction(Subscriber subscriber);
         Task NoActiveTasksDuringWorkingHours(Subscriber subscriber);
-        Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber);
+        Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTaskInfo activeTaskInfo);
         Task MoreThanSingleTaskIsActive(Subscriber subscriber);
         Task Ping(Subscriber subscriber);
         Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);

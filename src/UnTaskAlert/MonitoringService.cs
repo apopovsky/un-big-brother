@@ -55,7 +55,7 @@ namespace UnTaskAlert
                 if (activeTaskInfo.HasActiveTasks)
                 {
                     log.LogWarning($"There is an active task outside of working hours.");
-                    await _notifier.ActiveTaskOutsideOfWorkingHours(subscriber);
+                    await _notifier.ActiveTaskOutsideOfWorkingHours(subscriber, activeTaskInfo);
                 }
             }
 

@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi;
+using UnTaskAlert.Models;
 
 namespace UnTaskAlert
 {
@@ -33,7 +34,8 @@ namespace UnTaskAlert
                 var result = new ActiveTaskInfo
                 {
                     ActiveTaskCount = queryResult.WorkItems.Count(),
-                    User = name
+                    User = name,
+                    WorkItemsIds = queryResult.WorkItems.Select(i => i.Id).ToList()
                 };
                 log.LogInformation($"Query Result: HasActiveTask is '{result.HasActiveTasks}', ActiveTaskCount is '{result.ActiveTaskCount}'");
 

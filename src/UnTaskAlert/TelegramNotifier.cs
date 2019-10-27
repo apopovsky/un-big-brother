@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
@@ -38,9 +39,11 @@ namespace UnTaskAlert
             await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.");
         }
 
-        public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber)
+        public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTaskInfo activeTaskInfo)
         {
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, "Active task outside of working hours. Doing some overtime, hah?");
+            var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
+                       $"Tasks: {string.Join(", ", activeTaskInfo.WorkItemsIds.Select(i => i.ToString()))}";
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
 
         public async Task MoreThanSingleTaskIsActive(Subscriber subscriber)
@@ -70,7 +73,12 @@ namespace UnTaskAlert
 
         public async Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo)
         {
-            var text = $"{subscriber.Email} has {activeTaskInfo.ActiveTaskCount} active tasks";
+            var text = $"{subscriber.Email} has {activeTaskInfo.ActiveTaskCount} active tasks{Environment.NewLine}";
+            if (activeTaskInfo.ActiveTaskCount != 0)
+            {
+                text +=
+                    $"Tasks: {string.Join(", ", activeTaskInfo.WorkItemsIds.Select(i => i.ToString()))}";
+            }
 
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
