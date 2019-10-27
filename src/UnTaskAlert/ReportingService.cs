@@ -69,7 +69,7 @@ namespace UnTaskAlert
 				}
 			}
 
-            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * hoursPerDay;
+            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? hoursPerDay : subscriber.HoursPerDay);
 
             log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
 

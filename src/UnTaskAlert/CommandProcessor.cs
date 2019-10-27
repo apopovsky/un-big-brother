@@ -87,7 +87,8 @@ namespace UnTaskAlert
                 Email = email,
                 TelegramId = update.Message.Chat.Id.ToString(),
                 StartWorkingHoursUtc = existingSubscriber?.StartWorkingHoursUtc ?? default,
-                EndWorkingHoursUtc = existingSubscriber?.EndWorkingHoursUtc ?? default
+                EndWorkingHoursUtc = existingSubscriber?.EndWorkingHoursUtc ?? default,
+                HoursPerDay = existingSubscriber?.HoursPerDay ?? default
             };
             await _dbAccessor.AddOrUpdateSubscriber(subscriber);
 

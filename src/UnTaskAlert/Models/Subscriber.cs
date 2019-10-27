@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace UnTaskAlert.Models
 {
@@ -10,5 +9,6 @@ namespace UnTaskAlert.Models
         [Newtonsoft.Json.JsonProperty(PropertyName="id")]
         public string TelegramId { get; set; }
         public string Email { get; set; }
+        public int HoursPerDay { get; set; }
     }
 }

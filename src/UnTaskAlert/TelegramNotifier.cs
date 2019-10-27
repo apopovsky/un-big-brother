@@ -84,6 +84,7 @@ namespace UnTaskAlert
         {
             var text = $"Email address is set to {subscriber.Email}{Environment.NewLine}" +
                        $"Your working hours (UTC) are set to: {subscriber.StartWorkingHoursUtc} - {subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
+                       $"Hours per day is {subscriber.HoursPerDay}{Environment.NewLine}" +
                        $"Contact vadim.grayfer@un.org to update your working hours";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
