@@ -9,5 +9,8 @@
         public string AzureDevOpsAddress { get; set; }
         public string AzureDevOpsAccessToken { get; set; }
         public string Subscribers { get; set; }
+        public string CosmosDbEndpointUri { get; set; }
+        public string CosmosDbPrimaryKey { get; set; }
+        public string EmailDomain { get; set; }
     }
 }

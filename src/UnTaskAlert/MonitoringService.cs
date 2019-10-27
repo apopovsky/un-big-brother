@@ -25,7 +25,7 @@ namespace UnTaskAlert
             var personalAccessToken = token;
 
             var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
-            var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Name, log);
+            var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
             await CreateAlertIfNeeded(subscriber, activeTaskInfo, log);
         }
 
@@ -35,16 +35,16 @@ namespace UnTaskAlert
 
             if (now > subscriber.StartWorkingHoursUtc && now < subscriber.EndWorkingHoursUtc && IsWeekDay())
             {
-                log.LogInformation($"It's working hours for {subscriber.Name}");
+                log.LogInformation($"It's working hours for {subscriber.Email}");
                 if (!activeTaskInfo.HasActiveTasks)
                 {
-                    log.LogWarning($"No active tasks during working hours.");
+                    log.LogInformation($"No active tasks during working hours.");
                     await _notifier.NoActiveTasksDuringWorkingHours(subscriber);
                 }
             }
             else
             {
-                log.LogInformation($"It's not working hours for {subscriber.Name}");
+                log.LogInformation($"It's not working hours for {subscriber.Email}");
                 if (activeTaskInfo.HasActiveTasks)
                 {
                     log.LogWarning($"There is an active task outside of working hours.");
@@ -54,7 +54,7 @@ namespace UnTaskAlert
 
             if (activeTaskInfo.ActiveTaskCount > 1)
             {
-                log.LogWarning(
+                log.LogInformation(
                     $"{activeTaskInfo.ActiveTaskCount} active tasks at the same time.");
                 await _notifier.MoreThanSingleTaskIsActive(subscriber);
             }

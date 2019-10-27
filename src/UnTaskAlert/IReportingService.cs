@@ -7,6 +7,7 @@ namespace UnTaskAlert
 {
 	public interface IReportingService
 	{
-		Task CreateReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log);
-	}
+		Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log);
+        Task<ActiveTaskInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log);
+    }
 }

@@ -24,6 +24,7 @@ namespace UnTaskAlert
                        $"/day <email>{Environment.NewLine}" +
                        $"/week <email>{Environment.NewLine}" +
                        $"/month <email>{Environment.NewLine}" +
+                       $"/active <email>{Environment.NewLine}" +
                        $"/help{Environment.NewLine}" +
                        $"Only @un.org emails are supported";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
@@ -62,6 +63,13 @@ namespace UnTaskAlert
         public async Task Progress(Subscriber subscriber)
         {
             await _bot.SendTextMessageAsync(subscriber.TelegramId, "Processing your request...");
+        }
+
+        public async Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo)
+        {
+            var text = $"{subscriber.Email} has {activeTaskInfo.ActiveTaskCount} active tasks";
+
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
     }
 }

@@ -21,7 +21,7 @@ namespace UnTaskAlert
 			_backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
 		}
 
-		public async Task CreateReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+		public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
         {
 			var orgUrl = new Uri(url);
 			var personalAccessToken = token;
@@ -75,8 +75,21 @@ namespace UnTaskAlert
 
             await SendReport(subscriber, report, log);
 		}
-		
-		private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
+
+        public async Task<ActiveTaskInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        {
+            var orgUrl = new Uri(url);
+            var personalAccessToken = token;
+
+            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
+            var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
+
+            await _notifier.ActiveTasks(subscriber, activeTaskInfo);
+
+            return activeTaskInfo;
+        }
+
+        private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
 		{
 			log.LogWarning($"Sending info.");
 			await _notifier.SendTimeReport(subscriber, timeReport);

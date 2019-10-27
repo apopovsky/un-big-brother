@@ -12,12 +12,12 @@ using UnTaskAlert.Common;
 
 namespace UnTaskAlert
 {
-    public class TelegramBotIngress
+    public class TelegramBotFunction
     {
         private readonly Config _config;
         private readonly ICommandProcessor _commandProcessor;
 
-        public TelegramBotIngress(IOptions<Config> options, ICommandProcessor commandProcessor)
+        public TelegramBotFunction(IOptions<Config> options, ICommandProcessor commandProcessor)
         {
             Arg.NotNull(options, nameof(options));
             _config = options.Value;

@@ -21,7 +21,7 @@ namespace UnTaskAlert
         }
 
         [FunctionName("activeTaskMonitoring")]
-        public async Task Run([TimerTrigger("0 */20 * * * *")]TimerInfo myTimer, ILogger log)
+        public async Task Run([TimerTrigger("0 */5 * * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"Executing monitoring task");
             log.LogInformation($"Reading subscribers: '{_config.Subscribers}'");

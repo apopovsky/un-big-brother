@@ -12,5 +12,6 @@ namespace UnTaskAlert
         Task Ping(Subscriber subscriber);
         Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);
         Task Progress(Subscriber subscriber);
+        Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo);
     }
 }

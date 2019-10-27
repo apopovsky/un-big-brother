@@ -38,16 +38,24 @@ namespace UnTaskAlert
             {
                 startDate = StartOfWeek(DateTime.UtcNow, DayOfWeek.Monday);
                 email = update.Message.Text.Substring(5).Trim();
+                await CreateWorkHoursReport(update, log, email, startDate);
             }
             else if (update.Message.Text.StartsWith("/month"))
             {
                 startDate = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
                 email = update.Message.Text.Substring(6).Trim();
+                await CreateWorkHoursReport(update, log, email, startDate);
             }
             else if (update.Message.Text.StartsWith("/day"))
             {
                 startDate = DateTime.UtcNow.Date;
                 email = update.Message.Text.Substring(4).Trim();
+                await CreateWorkHoursReport(update, log, email, startDate);
+            }
+            else if (update.Message.Text.StartsWith("/active"))
+            {
+                email = update.Message.Text.Substring(7).Trim();
+                await CreateActiveTasksReport(update, log, email, startDate);
             }
             else
             {
@@ -57,8 +65,11 @@ namespace UnTaskAlert
                 };
                 await _notifier.Instruction(to);
             }
+        }
 
-            if (string.IsNullOrWhiteSpace(email) || !email.Contains("un.org"))
+        private async Task CreateActiveTasksReport(Update update, ILogger log, string email, DateTime startDate)
+        {
+            if (string.IsNullOrWhiteSpace(email) || !email.EndsWith(_config.EmailDomain))
             {
                 return;
             }
@@ -68,10 +79,26 @@ namespace UnTaskAlert
                 Email = email,
                 TelegramId = update.Message.Chat.Id.ToString()
             };
-            
-            await _notifier.Progress(subscriber);
-            
-            await _service.CreateReport(subscriber,
+            await _service.ActiveTasksReport(subscriber,
+                _config.AzureDevOpsAddress,
+                _config.AzureDevOpsAccessToken,
+                startDate,
+                log);
+        }
+
+        private async Task CreateWorkHoursReport(Update update, ILogger log, string email, DateTime startDate)
+        {
+            if (string.IsNullOrWhiteSpace(email) || !email.EndsWith(_config.EmailDomain))
+            {
+                return;
+            }
+
+            var subscriber = new Subscriber
+            {
+                Email = email,
+                TelegramId = update.Message.Chat.Id.ToString()
+            };
+            await _service.CreateWorkHoursReport(subscriber,
                 _config.AzureDevOpsAddress,
                 _config.AzureDevOpsAccessToken,
                 startDate,
