@@ -87,5 +87,10 @@ namespace UnTaskAlert
                        $"Contact vadim.grayfer@un.org to update your working hours";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
+
+        public async Task NoEmail(string chatId)
+        {
+            await _bot.SendTextMessageAsync(chatId, "Your email is not set. Use /help command to fix it.");
+        }
     }
 }
