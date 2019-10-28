@@ -70,6 +70,11 @@ namespace UnTaskAlert
 
         public async Task<IList<WorkItem>> GetWorkItemsById(VssConnection connection, List<int> workItemsIds)
         {
+            if (!workItemsIds.Any())
+            {
+                return new List<WorkItem>();
+            }
+
 			var client = connection.GetClient<WorkItemTrackingHttpClient>();
             return await client.GetWorkItemsAsync(workItemsIds, expand: WorkItemExpand.Fields);
         }

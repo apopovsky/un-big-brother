@@ -31,8 +31,7 @@ namespace UnTaskAlert
 								    [System.AssignedTo] = '{userName}'
 								    AND [System.WorkItemType] = 'Task'
 								    AND (
-										[Microsoft.VSTS.Common.ActivatedDate] >= '{from:yyyy-MM-dd}' AND
-								        [Microsoft.VSTS.Common.ClosedDate] <= '{dateTo:yyyy-MM-dd} 23:59:59'
+                                        [Microsoft.VSTS.Common.ClosedDate] >= '{from:yyyy-MM-dd}'
 								        OR (
 								            [Microsoft.VSTS.Scheduling.CompletedWork] > 0
 								            AND [System.State] <> 'Closed'

@@ -73,12 +73,12 @@ namespace UnTaskAlert
 						Completed = completed
                     };
 					report.AddWorkItem(item);
-                    report.StartDate = startDate;
 
 					log.LogInformation($"{item.Title} {item.Estimated:F2} {item.Completed:F2} {item.Active:F2}");
 				}
 			}
 
+            report.StartDate = startDate;
             report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
 
             log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");

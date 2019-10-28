@@ -3,9 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Newtonsoft.Json;
 using UnTaskAlert.Common;
-using UnTaskAlert.Models;
 
 namespace UnTaskAlert
 {
