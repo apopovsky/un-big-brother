@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
+using Telegram.Bot.Types.Enums;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
 
@@ -111,6 +112,11 @@ namespace UnTaskAlert
         public async Task CouldNotVerifyAccount(Subscriber subscriber)
         {
             await _bot.SendTextMessageAsync(subscriber.TelegramId, "Your account could not be verified.");
+        }
+
+        public async Task Typing(string chatId)
+        {
+            await _bot.SendChatActionAsync(chatId, ChatAction.Typing);
         }
     }
 }

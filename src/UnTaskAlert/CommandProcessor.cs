@@ -46,6 +46,7 @@ namespace UnTaskAlert
             }
 
             log.LogInformation($"Processing the command: {update.Message.Text}");
+            await _notifier.Typing(update.Message.Chat.Id.ToString());
 
             var startDate = DateTime.UtcNow.Date;
 

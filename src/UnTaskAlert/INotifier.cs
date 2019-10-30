@@ -18,5 +18,6 @@ namespace UnTaskAlert
         Task NoEmail(string chatId);
         Task AccountVerified(Subscriber subscriber);
         Task CouldNotVerifyAccount(Subscriber subscriber);
+        Task Typing(string chatId);
     }
 }
