@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Text;
+using Microsoft.Build.Utilities;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
+using Task = System.Threading.Tasks.Task;
 
 namespace UnTaskAlert
 {
@@ -30,6 +32,7 @@ namespace UnTaskAlert
                        $"/week{Environment.NewLine}" +
                        $"/month{Environment.NewLine}" +
                        $"/active{Environment.NewLine}" +
+                       $"/healthcheck [threshold]{Environment.NewLine}" +
                        $"/help{Environment.NewLine}" +
                        $"Only @un.org emails are supported";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
@@ -67,7 +70,41 @@ namespace UnTaskAlert
                 $"Expected Hours: {timeReport.Expected:0.##}");
         }
 
-        public async Task Progress(Subscriber subscriber)
+        public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold)
+        {
+            const int maxTitleLenght = 50;
+			//Support threshold values from decimal or percentage
+            if (offsetThreshold > 1)
+            {
+                offsetThreshold /= 100;
+            }
+            var builder = new StringBuilder();
+            foreach (var item in timeReport.WorkItemTimes.OrderBy(x => x.Date))
+            {
+                var title = item.Title;
+                if (title.Length > maxTitleLenght) title = title.Substring(0, maxTitleLenght);
+                title = title.PadRight(maxTitleLenght);
+
+                var offset = Math.Abs(item.Active - item.Completed) / item.Active;
+                
+                if (offset > offsetThreshold)
+                {
+                    builder.AppendLine($"{item.Date:dd-MM} {item.Id} - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}");
+                }
+            }
+
+            var detail = builder.ToString();
+
+            await _bot.SendTextMessageAsync(subscriber.TelegramId,
+                $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
+                $"```{detail}```" +
+                $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
+                $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
+                $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
+                $"Expected Hours: {timeReport.Expected:0.##}", ParseMode.Markdown);
+        }
+
+		public async Task Progress(Subscriber subscriber)
         {
             await _bot.SendTextMessageAsync(subscriber.TelegramId, "Processing your request...");
         }

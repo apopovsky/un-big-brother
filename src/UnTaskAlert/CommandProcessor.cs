@@ -11,6 +11,7 @@ namespace UnTaskAlert
 {
     public class CommandProcessor : ICommandProcessor
     {
+        private const string HealthcheckCommand = "/healthcheck";
         private readonly IReportingService _service;
         private readonly INotifier _notifier;
         private readonly Config _config;
@@ -68,7 +69,7 @@ namespace UnTaskAlert
             }
             else if (update.Message.Text.StartsWith("/month"))
             {
-                startDate = new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
+                startDate = StartOfMonth();
                 await CreateWorkHoursReport(update, log, startDate);
             }
             else if (update.Message.Text.StartsWith("/day"))
@@ -79,6 +80,15 @@ namespace UnTaskAlert
             else if (update.Message.Text.StartsWith("/active"))
             {
                 await CreateActiveTasksReport(update, log, startDate);
+            }
+            else if (update.Message.Text.StartsWith(HealthcheckCommand))
+            {
+                double threshold = 0;
+                if (update.Message.Text.Length > HealthcheckCommand.Length)
+                {
+                    double.TryParse(update.Message.Text.Substring(HealthcheckCommand.Length), out threshold);
+                }
+				await CreateHealthCheckReport(update, log, StartOfMonth(), threshold);
             }
             else
             {
@@ -184,10 +194,38 @@ namespace UnTaskAlert
                 log);
         }
 
+        private async Task CreateHealthCheckReport(Update update, ILogger log, DateTime startDate, double threshold)
+		{
+			var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+            if (subscriber == null)
+            {
+                await _notifier.NoEmail(update.Message.Chat.Id.ToString());
+                return;
+            }
+
+            if (!subscriber.IsVerified)
+            {
+                log.LogInformation($"{subscriber.Email} is not verified. No reports will be sent.");
+                return;
+            }
+
+            await _service.CreateHealthCheckReport(subscriber,
+                _config.AzureDevOpsAddress,
+                _config.AzureDevOpsAccessToken,
+                startDate,
+                threshold,
+                log);
+		}
+
         private static DateTime StartOfWeek(DateTime dt, DayOfWeek startOfWeek)
         {
             int diff = (7 + (dt.DayOfWeek - startOfWeek)) % 7;
             return dt.AddDays(-1 * diff).Date;
+        }
+
+        private static DateTime StartOfMonth()
+        {
+            return new DateTime(DateTime.UtcNow.Date.Year, DateTime.UtcNow.Date.Month, 1);
         }
 
         public static int GetRandomPin()

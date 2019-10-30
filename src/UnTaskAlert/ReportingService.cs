@@ -23,10 +23,41 @@ namespace UnTaskAlert
 
 		public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
         {
+			var report = await GetTimeReport(subscriber, url, token, startDate, log);
+
+			log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
+
+            await SendReport(subscriber, report, log);
+		}
+
+		public async Task<ActiveTaskInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        {
+            var orgUrl = new Uri(url);
+            var personalAccessToken = token;
+
+            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
+            var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
+
+            await _notifier.ActiveTasks(subscriber, activeTaskInfo);
+
+            return activeTaskInfo;
+        }
+
+		public async Task CreateHealthCheckReport(Subscriber subscriber, string url, string token, DateTime startDate, double threshold, ILogger log)
+        {
+			var timeReport = await GetTimeReport(subscriber, url, token, startDate, log);
+
+			log.LogInformation($"Query Result: totalActive:'{timeReport.TotalActive}', totalEstimated:'{timeReport.TotalEstimated}', totalCompleted:'{timeReport.TotalCompleted}', expected: '{timeReport.Expected}'");
+			
+			await _notifier.SendDetailedTimeReport(subscriber, timeReport, threshold);
+		}
+
+		private async Task<TimeReport> GetTimeReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+		{
 			var orgUrl = new Uri(url);
 			var personalAccessToken = token;
 
-            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
+			var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
 			var workItemsIds = await _backlogAccessor.GetWorkItemsForPeriod(connection, subscriber.Email, startDate, log);
 			var workItems = await _backlogAccessor.GetWorkItemsById(connection, workItemsIds);
 
@@ -43,63 +74,54 @@ namespace UnTaskAlert
 						if (itemUpdate.Fields == null || !itemUpdate.Fields.ContainsKey("System.State")) continue;
 						if (itemUpdate.Fields["System.State"].NewValue.ToString() == "Active")
 						{
-							activeStart = (DateTime)itemUpdate.Fields["System.ChangedDate"].NewValue;
+							activeStart = (DateTime) itemUpdate.Fields["System.ChangedDate"].NewValue;
 						}
 
 						if (activeStart.HasValue && itemUpdate.Fields["System.State"].NewValue.ToString() != "Active")
 						{
-							var activeEnd = (DateTime)itemUpdate.Fields["System.ChangedDate"].NewValue;
+							var activeEnd = (DateTime) itemUpdate.Fields["System.ChangedDate"].NewValue;
 							var span = activeEnd - activeStart;
 							activeTime = activeTime.Add(span.GetValueOrDefault());
 							activeStart = null;
 						}
 					}
 
-                    if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.OriginalEstimate", out var estimated))
-                    {
-                        estimated = 0;
-                    }
-
-                    if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.CompletedWork", out var completed))
-                    {
-                        completed = 0;
-                    }
-
-                    var item = new WorkItemTime
+					if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.OriginalEstimate", out var estimated))
 					{
+						estimated = 0;
+					}
+
+					if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.CompletedWork", out var completed))
+					{
+						completed = 0;
+					}
+
+					var workItemDate = workItem.Fields.Keys.Contains("Microsoft.VSTS.Common.ClosedDate")
+						? (DateTime) workItem.Fields["Microsoft.VSTS.Common.ClosedDate"]
+						: (DateTime) workItem.Fields["System.ChangedDate"];
+
+
+					var item = new WorkItemTime
+					{
+						Id = workItem.Id.GetValueOrDefault(),
+						Date = workItemDate,
 						Title = workItem.Fields["System.Title"].ToString(),
 						Active = activeTime.TotalHours,
 						Estimated = estimated,
 						Completed = completed
-                    };
+					};
 					report.AddWorkItem(item);
 
 					log.LogInformation($"{item.Title} {item.Estimated:F2} {item.Completed:F2} {item.Active:F2}");
 				}
 			}
 
-            report.StartDate = startDate;
-            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
-
-            log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
-
-            await SendReport(subscriber, report, log);
+			report.StartDate = startDate;
+			report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
+			return report;
 		}
 
-        public async Task<ActiveTaskInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
-        {
-            var orgUrl = new Uri(url);
-            var personalAccessToken = token;
-
-            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
-            var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
-
-            await _notifier.ActiveTasks(subscriber, activeTaskInfo);
-
-            return activeTaskInfo;
-        }
-
-        private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
+		private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
 		{
 			log.LogWarning($"Sending info.");
 			await _notifier.SendTimeReport(subscriber, timeReport);

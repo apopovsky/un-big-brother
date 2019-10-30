@@ -32,9 +32,11 @@ namespace UnTaskAlert.Models
 
 	public class WorkItemTime
 	{
+		public int Id { get; set; }
 		public string Title { get; set; }
 		public double Estimated { get; set; }
 		public double Completed { get; set; }
 		public double Active { get; set; }
+		public DateTime Date { get; set; }
 	}
 }
