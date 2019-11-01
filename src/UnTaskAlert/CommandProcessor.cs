@@ -62,6 +62,10 @@ namespace UnTaskAlert
             {
                 await SetEmailAddress(update);
             }
+            else if (update.Message.Text.StartsWith("/standup"))
+            {
+                await CreateStandUpReport(update, log);
+            }
             else if (update.Message.Text.StartsWith("/week"))
             {
                 startDate = StartOfWeek(DateTime.UtcNow, DayOfWeek.Monday);
@@ -98,6 +102,27 @@ namespace UnTaskAlert
                 };
                 await _notifier.Instruction(to);
             }
+        }
+
+        private async Task CreateStandUpReport(Update update, ILogger log)
+        {
+            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+            if (subscriber == null)
+            {
+                await _notifier.NoEmail(update.Message.Chat.Id.ToString());
+                return;
+            }
+
+            if (!subscriber.IsVerified)
+            {
+                log.LogInformation($"{subscriber.Email} is not verified. No reports will be sent.");
+                return;
+            }
+
+            await _service.CreateStandupReport(subscriber,
+                _config.AzureDevOpsAddress,
+                _config.AzureDevOpsAccessToken,
+                log);
         }
 
         private async Task VerifyAccount(Update update, int code)

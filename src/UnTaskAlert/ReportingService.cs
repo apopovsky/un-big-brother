@@ -52,7 +52,14 @@ namespace UnTaskAlert
 			await _notifier.SendDetailedTimeReport(subscriber, timeReport, threshold);
 		}
 
-		private async Task<TimeReport> GetTimeReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        public async Task CreateStandupReport(Subscriber subscriber, string url, string token, ILogger log)
+        {
+            var startDate = PreviousWorkDay(DateTime.Today);
+            var timeReport = await GetTimeReport(subscriber, url, token, startDate, log);
+            await _notifier.SendDetailedTimeReport(subscriber, timeReport, 0);
+        }
+
+        private async Task<TimeReport> GetTimeReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
 		{
 			var orgUrl = new Uri(url);
 			var personalAccessToken = token;
@@ -123,9 +130,26 @@ namespace UnTaskAlert
 
 		private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
 		{
-			log.LogWarning($"Sending info.");
+			log.LogInformation($"Sending info.");
 			await _notifier.SendTimeReport(subscriber, timeReport);
 		}
+
+        public DateTime PreviousWorkDay(DateTime date)
+        {
+            do
+            {
+                date = date.AddDays(-1);
+            }
+            while (IsWeekend(date));
+
+            return date;
+        }
+
+        private bool IsWeekend(DateTime date)
+        {
+            return date.DayOfWeek == DayOfWeek.Saturday ||
+                   date.DayOfWeek == DayOfWeek.Sunday;
+        }
 
         private static double GetBusinessDays(DateTime startDate, DateTime endDate)
         {

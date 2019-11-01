@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
-using Microsoft.Build.Utilities;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -28,6 +27,7 @@ namespace UnTaskAlert
         {
             var text = $"The first thing you need to do is to set your email address:{Environment.NewLine}" +
                        $"/email <email>{Environment.NewLine}" +
+                       "Only @un.org emails are supported" +
                        $"{Environment.NewLine}" +
                        $"Then the following commands can be used:{Environment.NewLine}" +
                        $"/day{Environment.NewLine}" +
@@ -35,9 +35,9 @@ namespace UnTaskAlert
                        $"/month{Environment.NewLine}" +
                        $"/active{Environment.NewLine}" +
                        $"/healthcheck [threshold]{Environment.NewLine}" +
-                       $"/help{Environment.NewLine}" +
-                       $"Only @un.org emails are supported";
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
+                       $"/standup{Environment.NewLine}" +
+                       $"/help";
+                       await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
 
         public async Task NoActiveTasksDuringWorkingHours(Subscriber subscriber)
@@ -76,7 +76,6 @@ namespace UnTaskAlert
         {
             await _bot.SendTextMessageAsync(subscriber.TelegramId,
                 $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}");
-
 
             const int maxTitleLength = 50;
 			//Support threshold values from decimal or percentage
