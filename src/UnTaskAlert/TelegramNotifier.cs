@@ -15,6 +15,8 @@ namespace UnTaskAlert
     {
         private readonly TelegramBotClient _bot;
 
+        private static readonly int maxMessageLength = 4096;
+
         public TelegramNotifier(IOptions<Config> options)
         {
             Arg.NotNull(options, nameof(options));
@@ -72,7 +74,11 @@ namespace UnTaskAlert
 
         public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold)
         {
-            const int maxTitleLenght = 50;
+            await _bot.SendTextMessageAsync(subscriber.TelegramId,
+                $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}");
+
+
+            const int maxTitleLength = 50;
 			//Support threshold values from decimal or percentage
             if (offsetThreshold > 1)
             {
@@ -82,22 +88,32 @@ namespace UnTaskAlert
             foreach (var item in timeReport.WorkItemTimes.OrderBy(x => x.Date))
             {
                 var title = item.Title;
-                if (title.Length > maxTitleLenght) title = title.Substring(0, maxTitleLenght);
-                title = title.PadRight(maxTitleLenght);
+                if (title.Length > maxTitleLength) title = title.Substring(0, maxTitleLength);
+                title = title.PadRight(maxTitleLength);
 
                 var offset = Math.Abs(item.Active - item.Completed) / item.Active;
                 
                 if (offset > offsetThreshold)
                 {
-                    builder.AppendLine($"{item.Date:dd-MM} {item.Id} - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}");
+                    var message =
+                        $"{item.Date:dd-MM} {item.Id} - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}";
+
+                    if (builder.Length + message.Length >= maxMessageLength)
+                    {
+                        await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}");
+                        builder = new StringBuilder();
+                    }
+
+                    builder.AppendLine($"{message}");
                 }
             }
 
-            var detail = builder.ToString();
+            if (builder.Length > 0)
+            {
+                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}");
+            }
 
             await _bot.SendTextMessageAsync(subscriber.TelegramId,
-                $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
-                $"```{detail}```" +
                 $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
                 $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
                 $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
@@ -130,7 +146,7 @@ namespace UnTaskAlert
         {
             var text = $"Email address is set to {subscriber.Email}, but is not yet confirmed.{Environment.NewLine}" +
                        $"Check you mailbox and verify the pin number by sending it to the bot.{Environment.NewLine}{Environment.NewLine}" +
-                       $"Your working hours (UTC) are set to: {subscriber.StartWorkingHoursUtc} - {subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
+                       $"Your working hours (UTC) are set to: {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
                        $"Hours per day is {subscriber.HoursPerDay}{Environment.NewLine}" +
                        $"Contact admin to update your working hours";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
