@@ -5,7 +5,7 @@ namespace UnTaskAlert.Models
 {
 	public class TimeReport
 	{
-		private IList<WorkItemTime> _workItemTimes;
+		private readonly IList<WorkItemTime> _workItemTimes;
 
 		public TimeReport()
 		{
