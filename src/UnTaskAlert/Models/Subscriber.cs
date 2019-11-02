@@ -13,5 +13,8 @@ namespace UnTaskAlert.Models
         public int Pin { get; set; }
         public bool IsVerified { get; set; }
         public int VerificationAttempts { get; set; }
+        public DateTime LastNoActiveTasksAlert { get; set; }
+        public DateTime LastActiveTaskOutsideOfWorkingHoursAlert { get; set; }
+        public DateTime LastMoreThanSingleTaskIsActiveAlert { get; set; }
     }
 }
