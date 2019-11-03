@@ -25,19 +25,18 @@ namespace UnTaskAlert
 
         public async Task Instruction(Subscriber subscriber)
         {
-            var text = $"The first thing you need to do is to set your email address:{Environment.NewLine}" +
-                       $"/email <email>{Environment.NewLine}" +
-                       "Only @un.org emails are supported" +
-                       $"{Environment.NewLine}" +
-                       $"Then the following commands can be used:{Environment.NewLine}" +
-                       $"/day{Environment.NewLine}" +
-                       $"/week{Environment.NewLine}" +
-                       $"/month{Environment.NewLine}" +
-                       $"/active{Environment.NewLine}" +
-                       $"/healthcheck [threshold]{Environment.NewLine}" +
-                       $"/standup{Environment.NewLine}" +
-                       $"/help";
-                       await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
+            var text = $"I'm here to help you track your working time. " +
+                       $"The following commands are available:{Environment.NewLine}" +
+                       $"/email - set email address {Environment.NewLine}" +
+                       $"/day - stats for today{Environment.NewLine}" +
+                       $"/week - stats for the week{Environment.NewLine}" +
+                       $"/month - stats for the month{Environment.NewLine}" +
+                       $"/active - show active tasks{Environment.NewLine}" +
+                       $"/healthcheck [threshold] - detailed report with a list of tasks where the difference between active and complete is bigger than a given threshold{Environment.NewLine}" +
+                       $"/standup - tasks of the previous work day{Environment.NewLine}" +
+                       "/help";
+
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
 
         public async Task NoActiveTasksDuringWorkingHours(Subscriber subscriber)
@@ -143,11 +142,8 @@ namespace UnTaskAlert
 
         public async Task EmailUpdated(Subscriber subscriber)
         {
-            var text = $"Email address is set to {subscriber.Email}, but is not yet confirmed.{Environment.NewLine}" +
-                       $"Check you mailbox and verify the pin number by sending it to the bot.{Environment.NewLine}{Environment.NewLine}" +
-                       $"Your working hours (UTC) are set to: {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
-                       $"Hours per day is {subscriber.HoursPerDay}{Environment.NewLine}" +
-                       $"Contact admin to update your working hours";
+            var text = $"Email address is set to {subscriber.Email}, but is not yet verified.{Environment.NewLine}" +
+                       "Please check you mailbox and send PIN to this chat.";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
 
@@ -169,6 +165,11 @@ namespace UnTaskAlert
         public async Task Typing(string chatId)
         {
             await _bot.SendChatActionAsync(chatId, ChatAction.Typing);
+        }
+
+        public async Task RequestEmail(string chatId)
+        {
+            await _bot.SendTextMessageAsync(chatId, "I'm here to help you track your time. First, let me know your email address.");
         }
     }
 }

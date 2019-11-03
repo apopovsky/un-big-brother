@@ -27,7 +27,7 @@ namespace UnTaskAlert
             ILogger log)
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-            log.LogInformation($"Incoming request: {requestBody}");
+            log.LogInformation($"Incoming request:{Environment.NewLine}{requestBody}");
 
             try
             {
