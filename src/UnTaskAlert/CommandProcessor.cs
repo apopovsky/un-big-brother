@@ -67,25 +67,25 @@ namespace UnTaskAlert
             if (subscriber.ExpectedAction == ExpectedActionType.ExpectedEmail)
             {
                 await Task.Delay(PauseBeforeAnswer);
-                await SetEmailFlow(log, input, subscriber);
+                await SetEmailFlow(log, subscriber, input);
                 return;
             }
 
             if (!subscriber.IsVerified && subscriber.ExpectedAction == ExpectedActionType.ExpectedPin)
             {
-                await NotVerifiedUserFlow(log, input, subscriber);
+                await NotVerifiedUserFlow(log, subscriber, input);
                 return;
             }
 
             if (subscriber.ExpectedAction == ExpectedActionType.VerifiedSubscriberCommand)
             {
-                await VerifiedUserFlow(update, log, input, subscriber);
+                await VerifiedUserFlow(log, subscriber, update, input);
             }
 
             log.LogWarning($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}', expected action '{subscriber.ExpectedAction}'");
         }
 
-        private async Task SetEmailFlow(ILogger log, string input, Subscriber subscriber)
+        private async Task SetEmailFlow(ILogger log, Subscriber subscriber, string input)
         {
             log.LogInformation($"SetEmailFlow() is executed for chatId '{subscriber.TelegramId}', input '{input}'");
 
@@ -130,7 +130,7 @@ namespace UnTaskAlert
             await _notifier.RequestEmail(chatId);
         }
 
-        private async Task NotVerifiedUserFlow(ILogger log, string input, Subscriber subscriber)
+        private async Task NotVerifiedUserFlow(ILogger log, Subscriber subscriber, string input)
         {
             log.LogInformation($"NotVerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}'");
 
@@ -141,13 +141,19 @@ namespace UnTaskAlert
                 return;
             }
 
-            await Parser.ParseArguments<Email>(input.Split(" "))
+            await Parser.ParseArguments<Email, Info>(input.Split(" "))
                 .MapResult(
-                    async opts => await ResetEmail(log, subscriber),
-                    async errs => await _notifier.Instruction(subscriber));
+                    async (Email opts) => await ResetEmail(log, subscriber),
+                    async (Info opts) => await Info(log, subscriber),
+                    async errs => await _notifier.CouldNotVerifyAccount(subscriber));
         }
 
-        private async Task VerifiedUserFlow(Update update, ILogger log, string input, Subscriber subscriber)
+        private Task Info(ILogger log, Subscriber subscriber)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async Task VerifiedUserFlow(ILogger log, Subscriber subscriber, Update update, string input)
         {
             log.LogInformation($"VerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}', input: '{input}'");
 
@@ -183,6 +189,7 @@ namespace UnTaskAlert
         {
             log.LogInformation($"Resetting email for subscriber '{subscriber.TelegramId}'");
 
+            // we are not updating Attempts for security reasons
             subscriber.Email = string.Empty;
             subscriber.ExpectedAction = ExpectedActionType.ExpectedEmail;
             subscriber.IsVerified = false;

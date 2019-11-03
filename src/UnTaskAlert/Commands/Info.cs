@@ -2,8 +2,8 @@
 
 namespace UnTaskAlert.Commands
 {
-    [Verb("/email", HelpText = "")]
-    public class Email
+    [Verb("/info", HelpText = "")]
+    public class Info
     {
     }
 }

@@ -24,7 +24,6 @@ namespace UnTaskAlert
         public async Task Run([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, ILogger log)
         {
             log.LogInformation($"Executing monitoring task");
-            log.LogInformation($"Reading subscribers: '{_config.Subscribers}'");
 
             var subscribers = await _dbAccessor.GetSubscribers();
             foreach (var subscriber in subscribers)
