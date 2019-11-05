@@ -45,7 +45,7 @@ namespace UnTaskAlert
 
             if (now > subscriber.StartWorkingHoursUtc && now < subscriber.EndWorkingHoursUtc
                 && IsWeekDay()
-                && DateTime.UtcNow - subscriber.LastNoActiveTasksAlert <= PauseBetweenAlerts)
+                && DateTime.UtcNow - subscriber.LastNoActiveTasksAlert >= PauseBetweenAlerts)
             {
                 log.LogInformation($"It's working hours for {subscriber.Email}");
                 if (!activeTaskInfo.HasActiveTasks)
@@ -59,7 +59,7 @@ namespace UnTaskAlert
             {
                 log.LogInformation($"It's not working hours for {subscriber.Email}");
                 if (activeTaskInfo.HasActiveTasks
-                    && DateTime.UtcNow - subscriber.LastActiveTaskOutsideOfWorkingHoursAlert <= PauseBetweenAlerts)
+                    && DateTime.UtcNow - subscriber.LastActiveTaskOutsideOfWorkingHoursAlert >= PauseBetweenAlerts)
                 {
                     log.LogWarning($"There is an active task outside of working hours.");
                     subscriber.LastActiveTaskOutsideOfWorkingHoursAlert = DateTime.UtcNow;
@@ -68,7 +68,7 @@ namespace UnTaskAlert
             }
 
             if (activeTaskInfo.ActiveTaskCount > 1
-                && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert <= PauseBetweenAlerts)
+                && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert >= PauseBetweenAlerts)
             {
                 log.LogInformation(
                     $"{activeTaskInfo.ActiveTaskCount} active tasks at the same time.");
