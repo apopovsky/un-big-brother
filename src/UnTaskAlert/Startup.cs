@@ -19,6 +19,8 @@ namespace UnTaskAlert
                 builder.Services.AddTransient<IQueryBuilder, QueryBuilder>();
                 builder.Services.AddTransient<ICommandProcessor, CommandProcessor>();
                 builder.Services.AddTransient<IDbAccessor, DbAccessor>();
+                builder.Services.AddTransient<ITelegramBotProvider, TelegramBotProvider>();
+                builder.Services.AddTransient<IPinGenerator, PinGenerator>();
                 builder.Services.AddOptions<Config>()
                     .Configure<IConfiguration>((settings, configuration) =>
                     {

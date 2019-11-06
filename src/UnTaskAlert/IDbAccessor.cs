@@ -9,5 +9,6 @@ namespace UnTaskAlert
         Task AddOrUpdateSubscriber(Subscriber subscriber);
         Task<Subscriber> GetSubscriberById(string telegramId);
         Task<List<Subscriber>> GetSubscribers();
+        Task DeleteIfExists(Subscriber subscriber);
     }
 }

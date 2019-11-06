@@ -19,8 +19,8 @@ namespace UnTaskAlert
         private readonly Config _config;
         private readonly IDbAccessor _dbAccessor;
         private readonly IMailSender _mailSender;
+        private readonly IPinGenerator _pinGenerator;
 
-        private static readonly Random Random = new Random();
         private static readonly int MaxVerificationAttempts = 5;
         private static readonly Parser Parser = Parser.Default;
         private static readonly int PauseBeforeAnswer = 1000;
@@ -29,6 +29,7 @@ namespace UnTaskAlert
             IReportingService service,
             IDbAccessor dbAccessor,
             IMailSender mailSender,
+            IPinGenerator pinGenerator,
             IOptions<Config> options)
         {
             _notifier = Arg.NotNull(notifier, nameof(notifier));
@@ -36,6 +37,7 @@ namespace UnTaskAlert
             _config = Arg.NotNull(options.Value, nameof(options));
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
             _mailSender = Arg.NotNull(mailSender, nameof(mailSender));
+            _pinGenerator = Arg.NotNull(pinGenerator, nameof(pinGenerator));
         }
         
         public async Task Process(Update update, ILogger log)
@@ -67,25 +69,25 @@ namespace UnTaskAlert
             if (subscriber.ExpectedAction == ExpectedActionType.ExpectedEmail)
             {
                 await Task.Delay(PauseBeforeAnswer);
-                await SetEmailFlow(log, input, subscriber);
+                await SetEmailFlow(log, subscriber, input);
                 return;
             }
 
             if (!subscriber.IsVerified && subscriber.ExpectedAction == ExpectedActionType.ExpectedPin)
             {
-                await NotVerifiedUserFlow(log, input, subscriber);
+                await NotVerifiedUserFlow(log, subscriber, input);
                 return;
             }
 
             if (subscriber.ExpectedAction == ExpectedActionType.VerifiedSubscriberCommand)
             {
-                await VerifiedUserFlow(update, log, input, subscriber);
+                await VerifiedUserFlow(log, subscriber, update, input);
             }
 
             log.LogWarning($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}', expected action '{subscriber.ExpectedAction}'");
         }
 
-        private async Task SetEmailFlow(ILogger log, string input, Subscriber subscriber)
+        private async Task SetEmailFlow(ILogger log, Subscriber subscriber, string input)
         {
             log.LogInformation($"SetEmailFlow() is executed for chatId '{subscriber.TelegramId}', input '{input}'");
 
@@ -98,7 +100,7 @@ namespace UnTaskAlert
 
             subscriber.Email = input;
             subscriber.IsVerified = false;
-            subscriber.Pin = GetRandomPin();
+            subscriber.Pin = _pinGenerator.GetRandomPin();
             subscriber.ExpectedAction = ExpectedActionType.ExpectedPin;
             await _dbAccessor.AddOrUpdateSubscriber(subscriber);
 
@@ -121,7 +123,7 @@ namespace UnTaskAlert
                 EndWorkingHoursUtc =  default,
                 HoursPerDay =  ReportingService.HoursPerDay,
                 IsVerified = false,
-                Pin = GetRandomPin(),
+                Pin = _pinGenerator.GetRandomPin(),
                 VerificationAttempts = default,
                 ExpectedAction = ExpectedActionType.ExpectedEmail
             };
@@ -130,7 +132,7 @@ namespace UnTaskAlert
             await _notifier.RequestEmail(chatId);
         }
 
-        private async Task NotVerifiedUserFlow(ILogger log, string input, Subscriber subscriber)
+        private async Task NotVerifiedUserFlow(ILogger log, Subscriber subscriber, string input)
         {
             log.LogInformation($"NotVerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}'");
 
@@ -141,24 +143,38 @@ namespace UnTaskAlert
                 return;
             }
 
-            await Parser.ParseArguments<Email>(input.Split(" "))
+            await Parser.ParseArguments<Email, Info, Delete>(input.Split(" "))
                 .MapResult(
-                    async opts => await ResetEmail(log, subscriber),
-                    async errs => await _notifier.Instruction(subscriber));
+                    async (Email opts) => await ResetEmail(log, subscriber),
+                    async (Info opts) => await Info(log, subscriber),
+                    async (Delete opts) => await Delete(log, subscriber),
+                    async errs => await _notifier.CouldNotVerifyAccount(subscriber));
         }
 
-        private async Task VerifiedUserFlow(Update update, ILogger log, string input, Subscriber subscriber)
+        private Task Info(ILogger log, Subscriber subscriber)
+        {
+            throw new NotImplementedException();
+        }
+
+        private async Task Delete(ILogger log, Subscriber subscriber)
+        {
+            log.LogInformation($"Deleting subscriber '{subscriber.TelegramId}'");
+            await _dbAccessor.DeleteIfExists(subscriber);
+        }
+
+        private async Task VerifiedUserFlow(ILogger log, Subscriber subscriber, Update update, string input)
         {
             log.LogInformation($"VerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}', input: '{input}'");
 
-            await Parser.ParseArguments<Day, Week, Month, Standup, Email, Active, Healthcheck>(input.Split(" "))
+            await Parser.ParseArguments<Day, Week, Month, Standup, Email, Active, Healthcheck, Delete>(input.Split(" "))
                 .MapResult(
                     async (Day opts) => await CreateWorkHoursReport(log, subscriber, DateTime.Today),
-                    async (Week opts) => await CreateWorkHoursReport(log, subscriber, StartOfWeek()),
-                    async (Month opts) => await CreateWorkHoursReport(log, subscriber, StartOfMonth()),
+                    async (Week opts) => await CreateWorkHoursReport(log, subscriber, DateUtils.StartOfWeek()),
+                    async (Month opts) => await CreateWorkHoursReport(log, subscriber, DateUtils.StartOfMonth()),
                     async (Standup opts) => await CreateStandUpReport(log, subscriber),
                     async (Email opts) => await ResetEmail(log, subscriber),
                     async (Active opts) => await CreateActiveTasksReport(log, subscriber, DateTime.Today),
+                    async (Delete opts) => await Delete(log, subscriber),
                     async (Healthcheck opts) =>
                     {
                         double threshold = 0;
@@ -167,8 +183,9 @@ namespace UnTaskAlert
                             double.TryParse(update.Message.Text.Substring(HealthcheckCommand.Length), out threshold);
                         }
 
-                        await CreateHealthCheckReport(log, subscriber, StartOfMonth(), threshold);
+                        await CreateHealthCheckReport(log, subscriber, DateUtils.StartOfMonth(), threshold);
                     },
+                    async (Delete opts) => throw new NotImplementedException(),
                     async errs =>
                     {
                         var to = new Subscriber
@@ -183,6 +200,7 @@ namespace UnTaskAlert
         {
             log.LogInformation($"Resetting email for subscriber '{subscriber.TelegramId}'");
 
+            // we are not updating Attempts for security reasons
             subscriber.Email = string.Empty;
             subscriber.ExpectedAction = ExpectedActionType.ExpectedEmail;
             subscriber.IsVerified = false;
@@ -251,26 +269,5 @@ namespace UnTaskAlert
                 threshold,
                 log);
 		}
-
-        private static DateTime StartOfWeek()
-        {
-            var dt = DateTime.Today;
-            int diff = (7 + (dt.DayOfWeek - DayOfWeek.Monday)) % 7;
-
-            return dt.AddDays(-1 * diff).Date;
-        }
-
-        private static DateTime StartOfMonth()
-        {
-            return new DateTime(DateTime.Today.Date.Year, DateTime.UtcNow.Date.Month, 1);
-        }
-
-        public static int GetRandomPin()
-        {
-            lock (Random)
-            {
-                return Random.Next(1000, 9999);
-            }
-        }
     }
 }

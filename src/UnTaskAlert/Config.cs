@@ -8,7 +8,6 @@
         public string Smtp { get; set; }
         public string AzureDevOpsAddress { get; set; }
         public string AzureDevOpsAccessToken { get; set; }
-        public string Subscribers { get; set; }
         public string CosmosDbConnectionString { get; set; }
         public string EmailDomain { get; set; }
     }
