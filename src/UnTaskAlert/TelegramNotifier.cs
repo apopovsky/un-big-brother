@@ -10,17 +10,30 @@ using Task = System.Threading.Tasks.Task;
 
 namespace UnTaskAlert
 {
+    public interface ITelegramBotProvider
+    {
+        ITelegramBotClient Create(string key);
+    }
+
+    public class TelegramBotProvider : ITelegramBotProvider
+    {
+        public ITelegramBotClient Create(string key)
+        {
+            return new TelegramBotClient(key);
+        }
+    }
+
     public class TelegramNotifier : INotifier
     {
-        private readonly TelegramBotClient _bot;
+        private readonly ITelegramBotClient _bot;
 
         private static readonly int maxMessageLength = 4096;
 
-        public TelegramNotifier(IOptions<Config> options)
+        public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider)
         {
             Arg.NotNull(options, nameof(options));
 
-            _bot = new TelegramBotClient(options.Value.TelegramBotKey);
+            _bot = botProvider.Create(options.Value.TelegramBotKey);
         }
 
         public async Task Instruction(Subscriber subscriber)
@@ -169,7 +182,10 @@ namespace UnTaskAlert
 
         public async Task RequestEmail(string chatId)
         {
-            await _bot.SendTextMessageAsync(chatId, "I'm here to help you track your time. First, let me know your email address.");
+            await _bot.SendTextMessageAsync(chatId, RequestEmailMessage);
         }
+
+        public static string RequestEmailMessage =
+            "I'm here to help you track your time. First, let me know your email address.";
     }
 }

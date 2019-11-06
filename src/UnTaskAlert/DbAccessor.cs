@@ -52,12 +52,26 @@ namespace UnTaskAlert
             return result;
         }
 
+        public async Task DeleteIfExists(Subscriber subscriber)
+        {
+            await CreateDb();
+
+        }
+
         private async Task CreateDb()
         {
+            // todo: move to ctor? any other place?
+
+            if (_container != null && _database != null)
+            {
+                return;
+            }
+
             _cosmosClient = new CosmosClient(_config.CosmosDbConnectionString);
+            //_database = _cosmosClient.GetDatabase(_databaseId);
+            //_container = _cosmosClient.GetContainer(_databaseId, _containerId);
             _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseId);
             _container = await _database.CreateContainerIfNotExistsAsync(_containerId, "/TelegramId");
-
         }
     }
 }

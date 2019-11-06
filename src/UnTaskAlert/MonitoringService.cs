@@ -25,7 +25,6 @@ namespace UnTaskAlert
         public async Task PerformMonitoring(Subscriber subscriber, string url, string token, ILogger log)
         {
             var orgUrl = new Uri(url);
-            var personalAccessToken = token;
 
             if (subscriber.StartWorkingHoursUtc == default || subscriber.EndWorkingHoursUtc == default)
             {
@@ -34,7 +33,7 @@ namespace UnTaskAlert
                 return;
             }
 
-            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
+            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
             var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
             await CreateAlertIfNeeded(subscriber, activeTaskInfo, log);
         }
@@ -44,22 +43,24 @@ namespace UnTaskAlert
             var now = DateTime.UtcNow.TimeOfDay;
 
             if (now > subscriber.StartWorkingHoursUtc && now < subscriber.EndWorkingHoursUtc
-                && IsWeekDay()
-                && DateTime.UtcNow - subscriber.LastNoActiveTasksAlert <= PauseBetweenAlerts)
+                && IsWeekDay())
             {
                 log.LogInformation($"It's working hours for {subscriber.Email}");
                 if (!activeTaskInfo.HasActiveTasks)
                 {
                     log.LogInformation($"No active tasks during working hours.");
-                    subscriber.LastNoActiveTasksAlert = DateTime.UtcNow;
-                    await _notifier.NoActiveTasksDuringWorkingHours(subscriber);
+                    if (DateTime.UtcNow - subscriber.LastNoActiveTasksAlert >= PauseBetweenAlerts)
+                    {
+                        subscriber.LastNoActiveTasksAlert = DateTime.UtcNow;
+                        await _notifier.NoActiveTasksDuringWorkingHours(subscriber);
+                    }
                 }
             }
             else
             {
                 log.LogInformation($"It's not working hours for {subscriber.Email}");
                 if (activeTaskInfo.HasActiveTasks
-                    && DateTime.UtcNow - subscriber.LastActiveTaskOutsideOfWorkingHoursAlert <= PauseBetweenAlerts)
+                    && DateTime.UtcNow - subscriber.LastActiveTaskOutsideOfWorkingHoursAlert >= PauseBetweenAlerts)
                 {
                     log.LogWarning($"There is an active task outside of working hours.");
                     subscriber.LastActiveTaskOutsideOfWorkingHoursAlert = DateTime.UtcNow;
@@ -68,7 +69,7 @@ namespace UnTaskAlert
             }
 
             if (activeTaskInfo.ActiveTaskCount > 1
-                && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert <= PauseBetweenAlerts)
+                && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert >= PauseBetweenAlerts)
             {
                 log.LogInformation(
                     $"{activeTaskInfo.ActiveTaskCount} active tasks at the same time.");
