@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
@@ -56,6 +57,7 @@ namespace UnTaskAlert
         {
             await CreateDb();
 
+            throw new NotImplementedException();
         }
 
         private async Task CreateDb()

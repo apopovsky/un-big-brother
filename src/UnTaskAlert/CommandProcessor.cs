@@ -151,22 +151,11 @@ namespace UnTaskAlert
                     async errs => await _notifier.CouldNotVerifyAccount(subscriber));
         }
 
-        private Task Info(ILogger log, Subscriber subscriber)
-        {
-            throw new NotImplementedException();
-        }
-
-        private async Task Delete(ILogger log, Subscriber subscriber)
-        {
-            log.LogInformation($"Deleting subscriber '{subscriber.TelegramId}'");
-            await _dbAccessor.DeleteIfExists(subscriber);
-        }
-
         private async Task VerifiedUserFlow(ILogger log, Subscriber subscriber, Update update, string input)
         {
             log.LogInformation($"VerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}', input: '{input}'");
 
-            await Parser.ParseArguments<Day, Week, Month, Standup, Email, Active, Healthcheck, Delete>(input.Split(" "))
+            await Parser.ParseArguments<Day, Week, Month, Standup, Email, Active, Info, Healthcheck, Delete>(input.Split(" "))
                 .MapResult(
                     async (Day opts) => await CreateWorkHoursReport(log, subscriber, DateTime.Today),
                     async (Week opts) => await CreateWorkHoursReport(log, subscriber, DateUtils.StartOfWeek()),
@@ -175,6 +164,7 @@ namespace UnTaskAlert
                     async (Email opts) => await ResetEmail(log, subscriber),
                     async (Active opts) => await CreateActiveTasksReport(log, subscriber, DateTime.Today),
                     async (Delete opts) => await Delete(log, subscriber),
+                    async (Info opts) => await Info(log, subscriber),
                     async (Healthcheck opts) =>
                     {
                         double threshold = 0;
@@ -185,7 +175,7 @@ namespace UnTaskAlert
 
                         await CreateHealthCheckReport(log, subscriber, DateUtils.StartOfMonth(), threshold);
                     },
-                    async (Delete opts) => throw new NotImplementedException(),
+                    async (Delete opts) => await Delete(log, subscriber),
                     async errs =>
                     {
                         var to = new Subscriber
@@ -194,6 +184,18 @@ namespace UnTaskAlert
                         };
                         await _notifier.Instruction(to);
                     });
+        }
+
+        private async Task Info(ILogger log, Subscriber subscriber)
+        {
+            log.LogInformation($"Information for subscriber '{subscriber.TelegramId}'");
+            await _notifier.AccountInfo(subscriber);
+        }
+
+        private async Task Delete(ILogger log, Subscriber subscriber)
+        {
+            log.LogInformation($"Deleting subscriber '{subscriber.TelegramId}'");
+            await _dbAccessor.DeleteIfExists(subscriber);
         }
 
         private async Task ResetEmail(ILogger log, Subscriber subscriber)

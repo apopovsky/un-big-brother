@@ -44,6 +44,8 @@ namespace UnTaskAlert
         {
             var text = $"I'm here to help you track your working time. " +
                        $"The following commands are available:{Environment.NewLine}" +
+                       $"/info - show account settings {Environment.NewLine}" +
+                       $"/delete - delete account {Environment.NewLine}" +
                        $"/email - set email address {Environment.NewLine}" +
                        $"/day - stats for today{Environment.NewLine}" +
                        $"/week - stats for the week{Environment.NewLine}" +
@@ -189,6 +191,19 @@ namespace UnTaskAlert
         public async Task RequestEmail(string chatId)
         {
             await _bot.SendTextMessageAsync(chatId, RequestEmailMessage);
+        }
+
+        public async Task AccountInfo(Subscriber subscriber)
+        {
+            var text = $"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
+                       $"Email: {subscriber.Email}{Environment.NewLine}" +
+                       $"Working hours (UTC): {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
+                       $"Is account verified: {subscriber.IsVerified}" +
+                       $"Hours per day: {subscriber.HoursPerDay}{Environment.NewLine}" +
+                       $"LastNoActiveTasksAlert: {subscriber.LastNoActiveTasksAlert}{Environment.NewLine}" +
+                       $"LastMoreThanSingleTaskIsActiveAlert: {subscriber.LastMoreThanSingleTaskIsActiveAlert}{Environment.NewLine}" +
+                       $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}";
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
 
         public static string RequestEmailMessage =
