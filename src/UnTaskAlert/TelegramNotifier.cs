@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using Flurl;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
@@ -32,7 +33,7 @@ namespace UnTaskAlert
         public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider)
         {
             Arg.NotNull(options, nameof(options));
-
+            _devOpsAddress = options.Value.AzureDevOpsAddress;
             _bot = botProvider.Create(options.Value.TelegramBotKey);
         }
 
@@ -59,9 +60,11 @@ namespace UnTaskAlert
 
         public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTaskInfo activeTaskInfo)
         {
+            var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
             var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
-                       $"Tasks: {string.Join(", ", activeTaskInfo.WorkItemsIds.Select(i => i.ToString()))}";
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
+                       $"Tasks: {activeTaskInfo.WorkItemsIds.Select(id => $"<a href=\"{baseUrl.AppendPathSegment(id)}\">{id}</a>{Environment.NewLine}")}";
+            
+			await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
         }
 
         public async Task MoreThanSingleTaskIsActive(Subscriber subscriber)
@@ -187,5 +190,7 @@ namespace UnTaskAlert
 
         public static string RequestEmailMessage =
             "I'm here to help you track your time. First, let me know your email address.";
+
+        private string _devOpsAddress;
     }
 }
