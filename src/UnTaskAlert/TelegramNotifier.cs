@@ -198,7 +198,7 @@ namespace UnTaskAlert
             var text = $"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
                        $"Email: {subscriber.Email}{Environment.NewLine}" +
                        $"Working hours (UTC): {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
-                       $"Is account verified: {subscriber.IsVerified}" +
+                       $"Is account verified: {subscriber.IsVerified}{Environment.NewLine}" +
                        $"Hours per day: {subscriber.HoursPerDay}{Environment.NewLine}" +
                        $"LastNoActiveTasksAlert: {subscriber.LastNoActiveTasksAlert}{Environment.NewLine}" +
                        $"LastMoreThanSingleTaskIsActiveAlert: {subscriber.LastMoreThanSingleTaskIsActiveAlert}{Environment.NewLine}" +
@@ -207,8 +207,8 @@ namespace UnTaskAlert
         }
 
         public static string RequestEmailMessage =
-            "I'm here to help you track your time. First, let me know your email address.";
+            "I'm here to help you track your time. First, let me know your work email address.";
 
-        private string _devOpsAddress;
+        private readonly string _devOpsAddress;
     }
 }

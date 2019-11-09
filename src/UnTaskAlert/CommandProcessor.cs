@@ -163,7 +163,6 @@ namespace UnTaskAlert
                     async (Standup opts) => await CreateStandUpReport(log, subscriber),
                     async (Email opts) => await ResetEmail(log, subscriber),
                     async (Active opts) => await CreateActiveTasksReport(log, subscriber, DateTime.Today),
-                    async (Delete opts) => await Delete(log, subscriber),
                     async (Info opts) => await Info(log, subscriber),
                     async (Healthcheck opts) =>
                     {
