@@ -103,6 +103,8 @@ namespace UnTaskAlert
             {
                 offsetThreshold /= 100;
             }
+
+            var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
             var builder = new StringBuilder();
             foreach (var item in timeReport.WorkItemTimes.OrderBy(x => x.Date))
             {
@@ -115,11 +117,11 @@ namespace UnTaskAlert
                 if (offset > offsetThreshold)
                 {
                     var message =
-                        $"{item.Date:dd-MM} {item.Id} - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}";
+                        $"{item.Date:dd-MM} <a href=\"{baseUrl.AppendPathSegment(item.Id)}\">{item.Id}</a> - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}";
 
                     if (builder.Length + message.Length >= maxMessageLength)
                     {
-                        await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}");
+                        await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", ParseMode.Html);
                         builder = new StringBuilder();
                     }
 
@@ -129,7 +131,7 @@ namespace UnTaskAlert
 
             if (builder.Length > 0)
             {
-                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}");
+                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", ParseMode.Html);
             }
 
             await _bot.SendTextMessageAsync(subscriber.TelegramId,
