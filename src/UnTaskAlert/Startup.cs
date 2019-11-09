@@ -1,6 +1,9 @@
 ﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Telegram.Bot;
 
 [assembly: FunctionsStartup(typeof(UnTaskAlert.MyNamespace.Startup))]
 namespace UnTaskAlert
@@ -26,7 +29,9 @@ namespace UnTaskAlert
                     {
                         configuration.Bind(settings);
                     });
+                builder.Services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(provider.GetService<IOptions<Config>>().Value.TelegramBotKey));
+                builder.Services.AddSingleton<ITelegramBotListener, TelegramBotListener>();
             }
         }
-    }
+	}
 }

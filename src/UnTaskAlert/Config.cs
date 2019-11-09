@@ -10,5 +10,6 @@
         public string AzureDevOpsAccessToken { get; set; }
         public string CosmosDbConnectionString { get; set; }
         public string EmailDomain { get; set; }
+        public bool DebugLocal { get; set; }
     }
 }

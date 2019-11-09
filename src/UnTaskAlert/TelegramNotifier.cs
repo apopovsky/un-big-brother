@@ -13,15 +13,17 @@ namespace UnTaskAlert
 {
     public interface ITelegramBotProvider
     {
-        ITelegramBotClient Create(string key);
+        ITelegramBotClient Client { get; }
     }
 
     public class TelegramBotProvider : ITelegramBotProvider
     {
-        public ITelegramBotClient Create(string key)
+        public TelegramBotProvider(ITelegramBotClient client)
         {
-            return new TelegramBotClient(key);
+            this.Client = client;
         }
+
+        public ITelegramBotClient Client { get; }
     }
 
     public class TelegramNotifier : INotifier
@@ -33,6 +35,7 @@ namespace UnTaskAlert
         public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider)
         {
             Arg.NotNull(options, nameof(options));
+
             _devOpsAddress = options.Value.AzureDevOpsAddress;
             _bot = botProvider.Create(options.Value.TelegramBotKey);
         }
