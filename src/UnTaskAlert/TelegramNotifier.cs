@@ -37,7 +37,7 @@ namespace UnTaskAlert
             Arg.NotNull(options, nameof(options));
 
             _devOpsAddress = options.Value.AzureDevOpsAddress;
-            _bot = botProvider.Create(options.Value.TelegramBotKey);
+            _bot = botProvider.Client;
         }
 
         public async Task Instruction(Subscriber subscriber)
