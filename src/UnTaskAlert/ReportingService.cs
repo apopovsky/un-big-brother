@@ -124,6 +124,7 @@ namespace UnTaskAlert
 			}
 
 			report.StartDate = startDate;
+			report.EndDate = DateTime.UtcNow.Date;
 			report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
 			return report;
 		}

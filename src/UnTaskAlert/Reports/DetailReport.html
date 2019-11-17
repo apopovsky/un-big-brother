@@ -1,0 +1,133 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <title>UN Working hours report</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-numeral-filter/dist/vue-numeral-filter.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vue-moment@4.0.0/dist/vue-moment.js"></script>
+  <style type="text/css">
+    .number {
+      text-align: center;
+    }
+
+    .number-container {
+      text-align: right;
+      width: 30%;
+      display: block;
+    }
+
+    table tfoot td {
+      text-align: right;
+      font-weight: bold;
+    }
+	
+    table tr.subtotal td {
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <h2>Report for {{report.ReportDate}}</h2>
+  <div style="margin: 0 30px">
+    <label class="checkbox-inline">
+      Daily totals
+      <!--{{JSON.stringify(totals)}}-->
+      <input type="checkbox" v-model="showSubTotals" />
+    </label>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-striped table-sm">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Id</th>
+          <th>Title</th>
+          <th>Estimated</th>
+          <th>Active</th>
+          <th>Complete</th>
+          <th>Offset</th>
+        </tr>
+      </thead>
+      <tbody>
+        <template v-for="total in totals">
+          <template v-for="item in total.WorkItemTimes">
+            <tr>
+              <td>{{item.Date | moment("YYYY-MM-DD ddd")}}</td>
+              <td>{{item.Id}}</td>
+              <td>{{item.Title}}</td>
+              <td class="number"><span class="number-container">{{item.Estimated  | numeral('0.00')}}</span></td>
+              <td class="number"><span class="number-container">{{item.Active  | numeral('0.00')}}</span></td>
+              <td class="number"><span class="number-container">{{item.Completed  | numeral('0.00')}}</span></td>
+              <td class="number"><span class="number-container">{{item.Offset  | numeral('0.00%')}}</span></td>
+            </tr>
+          </template>
+          <tr class="subtotal" v-if="showSubTotals">
+            <td>
+              {{total.Date | moment("YYYY-MM-DD ddd")}}
+            </td>
+            <td></td>
+            <td></td>
+            <td class="number"><span class="number-container">{{total.Estimated  | numeral('0.00')}}</span></td>
+            <td class="number"><span class="number-container">{{total.Active  | numeral('0.00')}}</span></td>
+            <td class="number"><span class="number-container">{{total.Completed  | numeral('0.00')}}</span></td>
+            <td class="number"><span class="number-container">{{total.Offset  | numeral('0.00%')}}</span></td>
+          </tr>
+        </template>
+      </tbody>
+      <tfoot>
+        <tr>
+          <td colspan="3">Total</td>
+          <td class="number"><span class="number-container">{{report.TotalEstimated  | numeral('0.00')}}</span></td>
+          <td class="number"><span class="number-container">{{report.TotalActive  | numeral('0.00')}}</span></td>
+          <td class="number"><span class="number-container">{{report.TotalCompleted  | numeral('0.00')}}</span></td>
+          <td class="number"><span class="number-container">{{report.TotalOffset  | numeral('0.00%')}}</span></td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+<script type="text/javascript">
+  Vue.use(vueMoment);
+
+  var app = new Vue({
+    el: '#app',
+    data: {
+      showSubTotals: false,
+      report: '@@DATA@@'
+    },
+    computed: {
+      totals: function () {
+        var groupDays = this.showSubTotals;
+        return this.report.WorkItemTimes.reduce(function (prev, current) {
+            let key = "";
+            if (groupDays) {
+              key = moment(current.Date).format("YYYY-MM-DD ddd");
+            }
+            if (!prev[key]) {
+              prev[key] = { ...current, count: 1 };
+              prev[key].WorkItemTimes = [];
+            } else {
+              prev[key].count++;
+              prev[key].Estimated += current.Estimated;
+              prev[key].Completed += current.Completed;
+              prev[key].Active += current.Active;
+            }
+            prev[key].Offset = (prev[key].Active - prev[key].Completed) / prev[key].Active;
+            prev[key].WorkItemTimes.push(current);
+            return prev;
+          },
+          {});
+      }
+    }
+  });
+</script>
+</body>
+</html>

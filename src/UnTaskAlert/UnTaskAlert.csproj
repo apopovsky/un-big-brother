@@ -4,6 +4,9 @@
     <AzureFunctionsVersion>v2</AzureFunctionsVersion>
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Reports\DetailReport.html" />
+  </ItemGroup>
+  <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.6.0" />
     <PackageReference Include="Flurl.Http" Version="2.4.2" />
     <PackageReference Include="Microsoft.Azure.Cosmos" Version="3.3.3" />
@@ -16,6 +19,9 @@
     <PackageReference Include="Microsoft.VisualStudio.Services.InteractiveClient" Version="16.153.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Telegram.Bot" Version="15.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Reports\DetailReport.html" />
   </ItemGroup>
   <ItemGroup>
     <None Update="host.json">

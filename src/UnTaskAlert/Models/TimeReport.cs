@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace UnTaskAlert.Models
 {
@@ -16,9 +17,27 @@ namespace UnTaskAlert.Models
 		public double TotalCompleted { get; set; }
 		public double TotalActive { get; set; }
         public double Expected { get; set; }
-        public DateTime StartDate { get; set; }
+        public double TotalOffset => Math.Abs((TotalCompleted - TotalActive) / TotalActive);
 
-		public void AddWorkItem(WorkItemTime workItem)
+        public DateTime StartDate { get; set; }
+        public DateTime EndDate { get; set; }
+        public string ReportDate => StartDate.ToString("MMMM yyyy");
+
+        public IList<WorkItemTime> DailyStats
+        {
+	        get
+	        {
+		        return _workItemTimes.GroupBy(x => x.Date.Date).Select(x => new WorkItemTime
+		        {
+					Date = x.Key,
+					Active = x.Sum(i=>i.Active),
+					Estimated = x.Sum(i=>i.Estimated),
+					Completed = x.Sum(i=>i.Completed),
+		        }).ToList();
+	        }
+        }
+
+        public void AddWorkItem(WorkItemTime workItem)
 		{
 			TotalActive += workItem.Active;
 			TotalEstimated += workItem.Estimated;
@@ -38,5 +57,6 @@ namespace UnTaskAlert.Models
 		public double Completed { get; set; }
 		public double Active { get; set; }
 		public DateTime Date { get; set; }
+		public double Offset => Math.Abs((Active - Completed) / Active);
 	}
 }

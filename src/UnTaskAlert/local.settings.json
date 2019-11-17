@@ -6,10 +6,13 @@
     "TelegramBotKey": "",
     "FromEmailAddress": "",
     "EMailPassword": "",
-    "Smtp": "",
+    "SmtpAddress": "",
+    "SmtpPort": "587",
+    "SmtpSSL": "true",
     "AzureDevOpsAddress": "",
     "AzureDevOpsAccessToken": "",
     "EmailDomain": "",
-    "CosmosDbConnectionString": ""
+    "CosmosDbConnectionString": "",
+    "DebugLocal": false
   }
 }
