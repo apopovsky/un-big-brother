@@ -18,6 +18,7 @@ using UnTaskAlert.Common;
 
 namespace UnTaskAlert.Tests
 {
+    //[TestFixture]
     public class TelegramBotFunctionTests
     {
         
@@ -37,7 +38,7 @@ namespace UnTaskAlert.Tests
 
         // 2. new user sets email
         // 3. new user confirms email
-        [Test]
+        //[Test]
         public void NewUser_RegistersAndVerifies()
         {
             // todo: clean db from this user
@@ -81,7 +82,7 @@ namespace UnTaskAlert.Tests
             //await _target.Run(request, _logger);
         }
 
-        [Test]
+        //[Test]
         public void NewUserEntersWrongPinAndIsBlocked()
         {
             var chatId = "667";
@@ -111,7 +112,7 @@ namespace UnTaskAlert.Tests
             //.DeleteAccount();
         }
 
-        [Test]
+        //[Test]
         public void NewUserCanVerifyAccountOnLastAttempt()
         {
             var chatId = "668";
@@ -139,7 +140,7 @@ namespace UnTaskAlert.Tests
         // 3. new user resets email
         // 4. new user confirms email
         // 5. new user requests reports
-        [Test]
+        //[Test]
         public Task NewUser1()
         {
             throw new NotImplementedException();
@@ -148,7 +149,7 @@ namespace UnTaskAlert.Tests
         // 1. new user sends message
         // 2. new user sets email
         // 3. cannot verify email and is blocked
-        [Test]
+        //[Test]
         public Task NewUser2()
         {
             throw new NotImplementedException();
@@ -156,7 +157,7 @@ namespace UnTaskAlert.Tests
 
         // 1. new user sends message
         // 2. new user incorrect email
-        [Test]
+        //[Test]
         public Task NewUser3()
         {
             throw new NotImplementedException();
