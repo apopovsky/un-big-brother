@@ -45,10 +45,10 @@
             <th>Date</th>
             <th>Id</th>
             <th>Title</th>
-            <th>Estimated</th>
             <th>Active</th>
-            <th>Complete</th>
+            <th>Completed</th>
             <th>Offset</th>
+            <th>Estimated</th>
           </tr>
         </thead>
         <tbody>
@@ -59,16 +59,16 @@
             <td>@row.Id</td>
             <td class="title text-truncate">@row.Title</td>
             <td class="number">
-              <span class="number-container text-nowrap">@row.Estimated</span>
+              <span class="number-container text-nowrap">@row.Active</span>
             </td>
             <td class="number">
               <span class="number-container text-nowrap">@row.Completed</span>
             </td>
             <td class="number">
-              <span class="number-container text-nowrap">@row.Active</span>
+              <span class="number-container text-nowrap">@row.Offset</span>
             </td>
             <td class="number">
-              <span class="number-container text-nowrap">@row.Offset</span>
+              <span class="number-container text-nowrap">@row.Estimated</span>
             </td>
           </tr>
           }
@@ -77,16 +77,16 @@
           <tr>
             <td colspan="3">Total</td>
             <td class="number">
-              <span class="number-container text-nowrap">@Model.TotalEstimated</span>
+              <span class="number-container text-nowrap">@Model.TotalActive</span>
             </td>
             <td class="number">
               <span class="number-container text-nowrap">@Model.TotalCompleted</span>
             </td>
             <td class="number">
-              <span class="number-container text-nowrap">@Model.TotalActive</span>
+              <span class="number-container text-nowrap">@Model.TotalOffset</span>
             </td>
             <td class="number">
-              <span class="number-container text-nowrap">@Model.TotalOffset</span>
+              <span class="number-container text-nowrap">@Model.TotalEstimated</span>
             </td>
           </tr>
         </tfoot>
