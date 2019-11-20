@@ -21,7 +21,7 @@ namespace UnTaskAlert
         private readonly IMailSender _mailSender;
         private readonly IPinGenerator _pinGenerator;
 
-        private static readonly int MaxVerificationAttempts = 5;
+        private static readonly int MaxVerificationAttempts = 3;
         private static readonly Parser Parser = Parser.Default;
         private static readonly int PauseBeforeAnswer = 1000;
 
@@ -59,16 +59,34 @@ namespace UnTaskAlert
             await _notifier.Typing(update.Message.Chat.Id.ToString());
 
             var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+
             if (subscriber == null)
             {
-                await Task.Delay(PauseBeforeAnswer);
+                log.LogInformation($"Process: Subscriber is 'null'");
+            }
+            else
+            {
+                log.LogInformation($"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
+                                   $"VerificationAttempts: {subscriber.VerificationAttempts}{Environment.NewLine}" +
+                                   $"PIN: {subscriber.Pin}{Environment.NewLine}" +
+                                   $"ExpectedAction: {subscriber.ExpectedAction}{Environment.NewLine}" +
+                                   $"Email: {subscriber.Email}{Environment.NewLine}" +
+                                   $"Working hours (UTC): {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
+                                   $"Is account verified: {subscriber.IsVerified}{Environment.NewLine}" +
+                                   $"Hours per day: {subscriber.HoursPerDay}{Environment.NewLine}" +
+                                   $"LastNoActiveTasksAlert: {subscriber.LastNoActiveTasksAlert}{Environment.NewLine}" +
+                                   $"LastMoreThanSingleTaskIsActiveAlert: {subscriber.LastMoreThanSingleTaskIsActiveAlert}{Environment.NewLine}" +
+                                   $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}");
+            }
+            
+            if (subscriber == null)
+            {
                 await NewUserFlow(log, chatId);
                 return;
             }
 
             if (subscriber.ExpectedAction == ExpectedActionType.ExpectedEmail)
             {
-                await Task.Delay(PauseBeforeAnswer);
                 await SetEmailFlow(log, subscriber, input);
                 return;
             }
@@ -84,12 +102,13 @@ namespace UnTaskAlert
                 await VerifiedUserFlow(log, subscriber, update, input);
             }
 
-            log.LogWarning($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}', expected action '{subscriber.ExpectedAction}'");
+            throw new InvalidOperationException($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}', expected action '{subscriber.ExpectedAction}'");
         }
 
         private async Task SetEmailFlow(ILogger log, Subscriber subscriber, string input)
         {
             log.LogInformation($"SetEmailFlow() is executed for chatId '{subscriber.TelegramId}', input '{input}'");
+            await Task.Delay(PauseBeforeAnswer);
 
             if (string.IsNullOrWhiteSpace(input) || !input.EndsWith(_config.EmailDomain))
             {
@@ -114,6 +133,7 @@ namespace UnTaskAlert
         private async Task NewUserFlow(ILogger log, string chatId)
         {
             log.LogInformation($"NewUserFlow() is executed for chatId '{chatId}'");
+            await Task.Delay(PauseBeforeAnswer);
 
             var subscriber = new Subscriber
             {
@@ -135,6 +155,7 @@ namespace UnTaskAlert
         private async Task NotVerifiedUserFlow(ILogger log, Subscriber subscriber, string input)
         {
             log.LogInformation($"NotVerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}'");
+            await Task.Delay(PauseBeforeAnswer);
 
             var isNumeric = int.TryParse(input, out int code);
             if (isNumeric && subscriber.ExpectedAction == ExpectedActionType.ExpectedPin)
@@ -228,7 +249,7 @@ namespace UnTaskAlert
 
             subscriber.VerificationAttempts++;
 
-            if (subscriber.Pin == code && subscriber.VerificationAttempts < MaxVerificationAttempts)
+            if (subscriber.Pin == code && subscriber.VerificationAttempts <= MaxVerificationAttempts)
             {
                 subscriber.IsVerified = true;
                 subscriber.VerificationAttempts = 0;
@@ -262,13 +283,13 @@ namespace UnTaskAlert
         }
 
         private async Task CreateHealthCheckReport(ILogger log, Subscriber subscriber, DateTime startDate, double threshold)
-		{
+        {
             await _service.CreateHealthCheckReport(subscriber,
                 _config.AzureDevOpsAddress,
                 _config.AzureDevOpsAccessToken,
                 startDate,
                 threshold,
                 log);
-		}
+        }
     }
 }

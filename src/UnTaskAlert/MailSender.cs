@@ -26,12 +26,26 @@ namespace UnTaskAlert
             }
         }
 
-        private static MailMessage CreateMessage(string subject, string body, MailAddress fromAddress, MailAddress toAddress)
+        public void SendHtmlMessage(string subject, string body, string to)
+        {
+            var fromAddress = new MailAddress(_config.FromEmailAddress);
+            var toAddress = new MailAddress(to);
+
+            using (SmtpClient smtp = CreateSmtpClient(fromAddress))
+            using (var message = CreateMessage(subject, body, fromAddress, toAddress, isHtml: true))
+            {
+                smtp.Send(message);
+            }
+        }
+
+        private static MailMessage CreateMessage(string subject, string body, 
+            MailAddress fromAddress, MailAddress toAddress, bool isHtml = false)
         {
             return new MailMessage(fromAddress, toAddress)
             {
                 Subject = subject,
-                Body = body
+                Body = body,
+                IsBodyHtml = isHtml
             };
         }
 
