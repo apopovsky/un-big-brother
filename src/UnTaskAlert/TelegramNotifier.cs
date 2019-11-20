@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Flurl;
 using Microsoft.Extensions.Options;
-using Microsoft.VisualStudio.Services.Common.Internal;
-using Newtonsoft.Json;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InputFiles;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
-using JsonSerializerSettings = Newtonsoft.Json.JsonSerializerSettings;
-using NullValueHandling = Newtonsoft.Json.NullValueHandling;
+using UnTaskAlert.Reports;
 using Task = System.Threading.Tasks.Task;
 
 namespace UnTaskAlert
@@ -92,22 +88,13 @@ namespace UnTaskAlert
 
         public async Task SendTimeReport(Subscriber subscriber, TimeReport timeReport)
         {
-			var reportData = JsonConvert.SerializeObject(timeReport, Formatting.Indented);
-            var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "UnTaskAlert.Reports.DetailReport.html";
+            var content = new StpdReportGenerator(_devOpsAddress).GenerateReport(timeReport);
+            byte[] byteArray = Encoding.UTF8.GetBytes(content);
+            MemoryStream contentStream = new MemoryStream(byteArray);
+			var file = new InputOnlineFile(contentStream) { FileName = "report.html" };
 
-            using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-            using (StreamReader reader = new StreamReader(stream))
-            {
-                string content = reader.ReadToEnd();
-                content=content.Replace("'@@DATA@@'", reportData);
-				byte[] byteArray = Encoding.UTF8.GetBytes(content);
-                MemoryStream contentStream = new MemoryStream(byteArray);
-
-                var file = new InputOnlineFile(contentStream) {FileName = "report.html"};
-                await _bot.SendDocumentAsync(subscriber.TelegramId, file, caption: "Your report.");
-            }
-
+            await _bot.SendDocumentAsync(subscriber.TelegramId, file, caption: "Your report.");
+            
 			await _bot.SendTextMessageAsync(subscriber.TelegramId,
                 $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
                 $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
