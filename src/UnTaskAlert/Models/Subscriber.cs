@@ -1,4 +1,5 @@
 ﻿using System;
+using UnTaskAlert.Commands.Workflow;
 
 namespace UnTaskAlert.Models
 {
@@ -25,5 +26,7 @@ namespace UnTaskAlert.Models
         public DateTime LastActiveTaskOutsideOfWorkingHoursAlert { get; set; }
         public DateTime LastMoreThanSingleTaskIsActiveAlert { get; set; }
         public ExpectedActionType ExpectedAction { get; set; }
+        public CommandWorkflow ActiveWorkflow { get; set; }
+        public DateTime? SnoozeAlertsUntil { get; set; }
     }
 }

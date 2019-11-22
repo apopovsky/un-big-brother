@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using UnTaskAlert.Commands;
+using UnTaskAlert.Commands.Workflow;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
 
@@ -85,6 +86,17 @@ namespace UnTaskAlert
                 return;
             }
 
+            if (subscriber.ActiveWorkflow != null && !subscriber.ActiveWorkflow.IsExpired)
+            {
+                var result = await subscriber.ActiveWorkflow.Step(input, subscriber, _dbAccessor, _notifier, log, update.Message.Chat.Id);
+                if (result == WorkflowResult.Finished)
+                {
+                    subscriber.ActiveWorkflow = null;
+                }
+                await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+				return;
+			}
+
             if (subscriber.ExpectedAction == ExpectedActionType.ExpectedEmail)
             {
                 await SetEmailFlow(log, subscriber, input);
@@ -100,6 +112,7 @@ namespace UnTaskAlert
             if (subscriber.ExpectedAction == ExpectedActionType.VerifiedSubscriberCommand)
             {
                 await VerifiedUserFlow(log, subscriber, update, input);
+                return;
             }
 
             throw new InvalidOperationException($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}', expected action '{subscriber.ExpectedAction}'");
@@ -176,6 +189,15 @@ namespace UnTaskAlert
         {
             log.LogInformation($"VerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}', input: '{input}'");
 
+            var commandWorkflow = ProcessInput(input, new SnoozeAlertWorkflow(), new SetSettingsWorkflow());
+            if (commandWorkflow != null)
+            {
+                var result = await commandWorkflow.Step(input, subscriber, _dbAccessor, _notifier, log, update.Message.Chat.Id);
+                subscriber.ActiveWorkflow = result == WorkflowResult.Finished ? null : commandWorkflow;
+				await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+				return;
+            }
+
             await Parser.ParseArguments<Day, Week, Month, Standup, Email, Active, Info, Healthcheck, Delete>(input.Split(" "))
                 .MapResult(
                     async (Day opts) => await CreateWorkHoursReport(log, subscriber, DateTime.Today),
@@ -204,6 +226,19 @@ namespace UnTaskAlert
                         };
                         await _notifier.Instruction(to);
                     });
+        }
+
+        public CommandWorkflow ProcessInput(string input, params CommandWorkflow[] workflows)
+        {
+            foreach (var commandWorkflow in workflows)
+            {
+                if (commandWorkflow.Accepts(input))
+                {
+                    return commandWorkflow;
+                }
+            }
+
+            return null;
         }
 
         private async Task Info(ILogger log, Subscriber subscriber)

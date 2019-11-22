@@ -21,6 +21,7 @@ namespace UnTaskAlert
         Task CouldNotVerifyAccount(Subscriber subscriber);
         Task Typing(string chatId);
         Task RequestEmail(string chatId);
+        Task Respond(long chatId, string message);
         Task AccountInfo(Subscriber subscriber);
     }
 }

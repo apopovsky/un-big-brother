@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
 
@@ -69,7 +70,15 @@ namespace UnTaskAlert
                 return;
             }
 
-            _cosmosClient = new CosmosClient(_config.CosmosDbConnectionString);
+            var cosmosClientOptions = new CosmosClientOptions
+            {
+                Serializer = new CosmosJsonNetSerializer(new JsonSerializerSettings
+                {
+                    TypeNameHandling = TypeNameHandling.Auto
+                })
+            };
+
+            _cosmosClient = new CosmosClient(_config.CosmosDbConnectionString, cosmosClientOptions);
             //_database = _cosmosClient.GetDatabase(_databaseId);
             //_container = _cosmosClient.GetContainer(_databaseId, _containerId);
             _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseId);

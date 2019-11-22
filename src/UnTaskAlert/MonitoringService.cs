@@ -40,8 +40,13 @@ namespace UnTaskAlert
 
         private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTaskInfo activeTaskInfo, ILogger log)
         {
-            var now = DateTime.UtcNow.TimeOfDay;
+            if (subscriber.SnoozeAlertsUntil.GetValueOrDefault(DateTime.MaxValue) < DateTime.UtcNow)
+            {
+                log.LogInformation($"Alert checks snoozed for subscriber {subscriber.Email} til {subscriber.SnoozeAlertsUntil:G}");
+                return;
+            }
 
+			var now = DateTime.UtcNow.TimeOfDay;
             if (now > subscriber.StartWorkingHoursUtc && now < subscriber.EndWorkingHoursUtc
                 && IsWeekDay())
             {

@@ -213,6 +213,11 @@ namespace UnTaskAlert
             await _bot.SendTextMessageAsync(chatId, RequestEmailMessage);
         }
 
+        public async Task Respond(long chatId, string message)
+        {
+            await _bot.SendTextMessageAsync(chatId, message);
+        }
+
         public async Task AccountInfo(Subscriber subscriber)
         {
             var text = $"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
