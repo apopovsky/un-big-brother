@@ -17,6 +17,8 @@ namespace UnTaskAlert.Commands.Workflow
 
         private bool _isInitialized;
 
+        private static readonly int PauseBeforeAnswer = 1000;
+
         protected IServiceProvider ServiceProvider { get; set; }
         protected ILogger Logger { get; set; }
         protected INotifier Notifier { get; set; }
@@ -24,6 +26,8 @@ namespace UnTaskAlert.Commands.Workflow
         protected IReportingService ReportingService { get; set; }
         protected Config Config { get; set; }
 
+        [JsonIgnore]
+        public virtual bool IsVerificationRequired { get; set; } = true;
         [JsonIgnore]
         public bool IsExpired => DateTime.UtcNow > Expiration;
         public DateTime Expiration { get; set; }
@@ -48,6 +52,19 @@ namespace UnTaskAlert.Commands.Workflow
             if (!_isInitialized)
             {
                 throw new InvalidOperationException("Workflow is not initialized. Call 'Inject' first.");
+            }
+
+            if (IsVerificationRequired && !subscriber.IsVerified)
+            {
+                Logger.LogInformation($"Command '{input} is available only for verified users'");
+                await Notifier.Respond(chatId, "Verification is required");
+                return WorkflowResult.Finished;
+            }
+
+            if (!IsVerificationRequired && !subscriber.IsVerified)
+            {
+                // making a pause for security reasons
+                await Task.Delay(PauseBeforeAnswer);
             }
 
             if (input.Equals("/cancel", StringComparison.OrdinalIgnoreCase))

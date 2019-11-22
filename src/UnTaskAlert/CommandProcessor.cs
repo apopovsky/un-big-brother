@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 using CommandLine;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
@@ -15,7 +14,6 @@ namespace UnTaskAlert
 {
     public class CommandProcessor : ICommandProcessor
     {
-        private const string HealthcheckCommand = "/healthcheck";
         private readonly IReportingService _service;
         private readonly INotifier _notifier;
         private readonly Config _config;
@@ -181,10 +179,9 @@ namespace UnTaskAlert
                 return;
             }
 
-            await Parser.ParseArguments<Email, Info, Delete>(input.Split(" "))
+            await Parser.ParseArguments<Email, Delete>(input.Split(" "))
                 .MapResult(
                     async (Email opts) => await ResetEmail(log, subscriber),
-                    async (Info opts) => await Info(log, subscriber),
                     async (Delete opts) => await Delete(log, subscriber),
                     async errs => await _notifier.CouldNotVerifyAccount(subscriber));
         }
@@ -193,8 +190,22 @@ namespace UnTaskAlert
         {
             log.LogInformation($"VerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}', input: '{input}'");
 
-            var commandWorkflow = ProcessInput(log, input,
-                new SnoozeAlertWorkflow(), new SetSettingsWorkflow(), new ActiveWorkflow(), new StandupWorkflow());
+            // todo: it would be good to use DI to create these instances
+            var workflows = new CommandWorkflow[]
+            {
+                new SnoozeAlertWorkflow(),
+                new SetSettingsWorkflow(),
+                new ActiveWorkflow(),
+                new StandupWorkflow(),
+                new DayWorkflow(),
+                new WeekWorkflow(),
+                new MonthWorkflow(),
+                new YearWorkflow(),
+                new HealthcheckWorkflow(),
+                new InfoWorkflow(), 
+            };
+            var commandWorkflow = ProcessInput(log, input, workflows);
+
             if (commandWorkflow != null)
             {
                 var result = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id);
@@ -203,23 +214,9 @@ namespace UnTaskAlert
                 return;
             }
 
-            await Parser.ParseArguments<Day, Week, Month, Email, Info, Healthcheck, Delete>(input.Split(" "))
+            await Parser.ParseArguments<Email, Delete>(input.Split(" "))
                 .MapResult(
-                    async (Day opts) => await CreateWorkHoursReport(log, subscriber, DateTime.Today),
-                    async (Week opts) => await CreateWorkHoursReport(log, subscriber, DateUtils.StartOfWeek()),
-                    async (Month opts) => await CreateWorkHoursReport(log, subscriber, DateUtils.StartOfMonth()),
                     async (Email opts) => await ResetEmail(log, subscriber),
-                    async (Info opts) => await Info(log, subscriber),
-                    async (Healthcheck opts) =>
-                    {
-                        double threshold = 0;
-                        if (update.Message.Text.Length > HealthcheckCommand.Length)
-                        {
-                            double.TryParse(update.Message.Text.Substring(HealthcheckCommand.Length), out threshold);
-                        }
-
-                        await CreateHealthCheckReport(log, subscriber, DateUtils.StartOfMonth(), threshold);
-                    },
                     async (Delete opts) => await Delete(log, subscriber),
                     async errs =>
                     {
@@ -245,12 +242,6 @@ namespace UnTaskAlert
             }
 
             return null;
-        }
-
-        private async Task Info(ILogger log, Subscriber subscriber)
-        {
-            log.LogInformation($"Information for subscriber '{subscriber.TelegramId}'");
-            await _notifier.AccountInfo(subscriber);
         }
 
         private async Task Delete(ILogger log, Subscriber subscriber)
@@ -303,16 +294,6 @@ namespace UnTaskAlert
                 _config.AzureDevOpsAddress,
                 _config.AzureDevOpsAccessToken,
                 startDate,
-                log);
-        }
-
-        private async Task CreateHealthCheckReport(ILogger log, Subscriber subscriber, DateTime startDate, double threshold)
-        {
-            await _service.CreateHealthCheckReport(subscriber,
-                _config.AzureDevOpsAddress,
-                _config.AzureDevOpsAccessToken,
-                startDate,
-                threshold,
                 log);
         }
     }
