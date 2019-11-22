@@ -9,6 +9,11 @@ namespace UnTaskAlert.Commands.Workflow
         protected abstract string Command { get; set; }
         protected abstract DateTime StartDate { get; set; }
 
+        protected override void InjectDependencies(IServiceProvider serviceProvider)
+        {
+            // no-op
+        }
+
         protected override async Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
         {
             await ReportingService.CreateWorkHoursReport(subscriber,

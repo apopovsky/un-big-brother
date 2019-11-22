@@ -25,7 +25,6 @@ namespace UnTaskAlert.Models
         public DateTime LastNoActiveTasksAlert { get; set; }
         public DateTime LastActiveTaskOutsideOfWorkingHoursAlert { get; set; }
         public DateTime LastMoreThanSingleTaskIsActiveAlert { get; set; }
-        public ExpectedActionType ExpectedAction { get; set; }
         public CommandWorkflow ActiveWorkflow { get; set; }
         public DateTime? SnoozeAlertsUntil { get; set; }
     }

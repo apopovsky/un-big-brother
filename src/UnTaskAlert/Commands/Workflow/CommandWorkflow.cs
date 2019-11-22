@@ -17,17 +17,15 @@ namespace UnTaskAlert.Commands.Workflow
 
         private bool _isInitialized;
 
-        private static readonly int PauseBeforeAnswer = 1000;
+        private static readonly int PauseBeforeAnswer = 2000;
 
-        protected IServiceProvider ServiceProvider { get; set; }
         protected ILogger Logger { get; set; }
         protected INotifier Notifier { get; set; }
-        protected IDbAccessor DbAccessor { get; set; }
         protected IReportingService ReportingService { get; set; }
         protected Config Config { get; set; }
 
         [JsonIgnore]
-        public virtual bool IsVerificationRequired { get; set; } = true;
+        public virtual bool IsVerificationRequired => true;
         [JsonIgnore]
         public bool IsExpired => DateTime.UtcNow > Expiration;
         public DateTime Expiration { get; set; }
@@ -37,13 +35,15 @@ namespace UnTaskAlert.Commands.Workflow
         {
             Logger = Arg.NotNull(logger, nameof(logger));
             Config = Arg.NotNull(config, nameof(config));
-            ServiceProvider = Arg.NotNull(serviceProvider, nameof(serviceProvider));
             Notifier = Arg.NotNull(serviceProvider.GetService<INotifier>(), $"Could not resolve '{nameof(INotifier)}'");
-            DbAccessor = Arg.NotNull(serviceProvider.GetService<IDbAccessor>(), $"Could not resolve '{nameof(IDbAccessor)}'");
-            ReportingService = Arg.NotNull(ServiceProvider.GetService<IReportingService>(), $"Could not resolve '{nameof(IReportingService)}'");
+            ReportingService = Arg.NotNull(serviceProvider.GetService<IReportingService>(), $"Could not resolve '{nameof(IReportingService)}'");
+
+            InjectDependencies(serviceProvider);
 
             _isInitialized = true;
         }
+
+        protected abstract void InjectDependencies(IServiceProvider serviceProvider);
 
         public async Task<WorkflowResult> Step(string input, Subscriber subscriber, long chatId)
         {
@@ -64,6 +64,7 @@ namespace UnTaskAlert.Commands.Workflow
             if (!IsVerificationRequired && !subscriber.IsVerified)
             {
                 // making a pause for security reasons
+                Logger.LogInformation($"Pause responding for {PauseBeforeAnswer} ms");
                 await Task.Delay(PauseBeforeAnswer);
             }
 
@@ -73,7 +74,17 @@ namespace UnTaskAlert.Commands.Workflow
                 return WorkflowResult.Finished;
             }
 
-            return await PerformStep(input, subscriber, chatId);
+            try
+            {
+                await Notifier.Typing(chatId.ToString());
+                return await PerformStep(input, subscriber, chatId);
+            }
+            catch (Exception e)
+            {
+                Logger.LogError(e.ToString());
+                await Notifier.Respond(chatId, "Something bad happened to the bot :(");
+                throw;
+            }
         }
 
         public bool Accepts(string input)

@@ -19,6 +19,11 @@ namespace UnTaskAlert.Commands.Workflow
             return WorkflowResult.Finished;
         }
 
+        protected override void InjectDependencies(IServiceProvider serviceProvider)
+        {
+            // no-op
+        }
+
         protected override bool DoesAccept(string input)
         {
             return input.StartsWith("/active", StringComparison.OrdinalIgnoreCase);
