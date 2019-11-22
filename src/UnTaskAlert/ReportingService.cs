@@ -8,29 +8,29 @@ using UnTaskAlert.Models;
 
 namespace UnTaskAlert
 {
-	public class ReportingService : IReportingService
+    public class ReportingService : IReportingService
     {
         public static readonly int HoursPerDay = 8;
 
         private readonly INotifier _notifier;
-		private readonly IBacklogAccessor _backlogAccessor;
+        private readonly IBacklogAccessor _backlogAccessor;
 
-		public ReportingService(INotifier notifier, IBacklogAccessor backlogAccessor)
-		{
-			_notifier = Arg.NotNull(notifier, nameof(notifier));
-			_backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
-		}
-
-		public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        public ReportingService(INotifier notifier, IBacklogAccessor backlogAccessor)
         {
-			var report = await GetTimeReport(subscriber, url, token, startDate, log);
+            _notifier = Arg.NotNull(notifier, nameof(notifier));
+            _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
+        }
 
-			log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
+        public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        {
+            var report = await GetTimeReport(subscriber, url, token, startDate, log);
+
+            log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
 
             await SendReport(subscriber, report, log);
-		}
+        }
 
-		public async Task<ActiveTaskInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        public async Task<ActiveTaskInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
         {
             var orgUrl = new Uri(url);
             var personalAccessToken = token;
@@ -43,97 +43,97 @@ namespace UnTaskAlert
             return activeTaskInfo;
         }
 
-		public async Task CreateHealthCheckReport(Subscriber subscriber, string url, string token, DateTime startDate, double threshold, ILogger log)
+        public async Task CreateHealthCheckReport(Subscriber subscriber, string url, string token, DateTime startDate, double threshold, ILogger log)
         {
-			var timeReport = await GetTimeReport(subscriber, url, token, startDate, log);
+            var timeReport = await GetTimeReport(subscriber, url, token, startDate, log);
 
-			log.LogInformation($"Query Result: totalActive:'{timeReport.TotalActive}', totalEstimated:'{timeReport.TotalEstimated}', totalCompleted:'{timeReport.TotalCompleted}', expected: '{timeReport.Expected}'");
-			
-			await _notifier.SendDetailedTimeReport(subscriber, timeReport, threshold);
-		}
+            log.LogInformation($"Query Result: totalActive:'{timeReport.TotalActive}', totalEstimated:'{timeReport.TotalEstimated}', totalCompleted:'{timeReport.TotalCompleted}', expected: '{timeReport.Expected}'");
+            
+            await _notifier.SendDetailedTimeReport(subscriber, timeReport, threshold);
+        }
 
         public async Task CreateStandupReport(Subscriber subscriber, string url, string token, ILogger log)
         {
             var startDate = PreviousWorkDay(DateTime.Today);
             var timeReport = await GetTimeReport(subscriber, url, token, startDate, log);
-            await _notifier.SendDetailedTimeReport(subscriber, timeReport, 0);
+            await _notifier.SendDetailedTimeReport(subscriber, timeReport, 0, includeSummary: false);
         }
 
         private async Task<TimeReport> GetTimeReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
-		{
-			var orgUrl = new Uri(url);
-			var personalAccessToken = token;
+        {
+            var orgUrl = new Uri(url);
+            var personalAccessToken = token;
 
-			var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
-			var workItemsIds = await _backlogAccessor.GetWorkItemsForPeriod(connection, subscriber.Email, startDate, log);
-			var workItems = await _backlogAccessor.GetWorkItemsById(connection, workItemsIds);
+            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
+            var workItemsIds = await _backlogAccessor.GetWorkItemsForPeriod(connection, subscriber.Email, startDate, log);
+            var workItems = await _backlogAccessor.GetWorkItemsById(connection, workItemsIds);
 
-			var report = new TimeReport();
-			foreach (var workItem in workItems)
-			{
-				if (workItem.Id != null)
-				{
-					var updates = await _backlogAccessor.GetWorkItemUpdates(connection, workItem.Id.Value);
-					DateTime? activeStart = null;
-					TimeSpan activeTime = TimeSpan.Zero;
-					foreach (var itemUpdate in updates)
-					{
-						if (itemUpdate.Fields == null || !itemUpdate.Fields.ContainsKey("System.State")) continue;
-						if (itemUpdate.Fields["System.State"].NewValue.ToString() == "Active")
-						{
-							activeStart = (DateTime) itemUpdate.Fields["System.ChangedDate"].NewValue;
-						}
+            var report = new TimeReport();
+            foreach (var workItem in workItems)
+            {
+                if (workItem.Id != null)
+                {
+                    var updates = await _backlogAccessor.GetWorkItemUpdates(connection, workItem.Id.Value);
+                    DateTime? activeStart = null;
+                    TimeSpan activeTime = TimeSpan.Zero;
+                    foreach (var itemUpdate in updates)
+                    {
+                        if (itemUpdate.Fields == null || !itemUpdate.Fields.ContainsKey("System.State")) continue;
+                        if (itemUpdate.Fields["System.State"].NewValue.ToString() == "Active")
+                        {
+                            activeStart = (DateTime) itemUpdate.Fields["System.ChangedDate"].NewValue;
+                        }
 
-						if (activeStart.HasValue && itemUpdate.Fields["System.State"].NewValue.ToString() != "Active")
-						{
-							var activeEnd = (DateTime) itemUpdate.Fields["System.ChangedDate"].NewValue;
-							var span = activeEnd - activeStart;
-							activeTime = activeTime.Add(span.GetValueOrDefault());
-							activeStart = null;
-						}
-					}
+                        if (activeStart.HasValue && itemUpdate.Fields["System.State"].NewValue.ToString() != "Active")
+                        {
+                            var activeEnd = (DateTime) itemUpdate.Fields["System.ChangedDate"].NewValue;
+                            var span = activeEnd - activeStart;
+                            activeTime = activeTime.Add(span.GetValueOrDefault());
+                            activeStart = null;
+                        }
+                    }
 
-					if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.OriginalEstimate", out var estimated))
-					{
-						estimated = 0;
-					}
+                    if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.OriginalEstimate", out var estimated))
+                    {
+                        estimated = 0;
+                    }
 
-					if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.CompletedWork", out var completed))
-					{
-						completed = 0;
-					}
+                    if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.CompletedWork", out var completed))
+                    {
+                        completed = 0;
+                    }
 
-					var workItemDate = workItem.Fields.Keys.Contains("Microsoft.VSTS.Common.ClosedDate")
-						? (DateTime) workItem.Fields["Microsoft.VSTS.Common.ClosedDate"]
-						: (DateTime) workItem.Fields["System.ChangedDate"];
+                    var workItemDate = workItem.Fields.Keys.Contains("Microsoft.VSTS.Common.ClosedDate")
+                        ? (DateTime) workItem.Fields["Microsoft.VSTS.Common.ClosedDate"]
+                        : (DateTime) workItem.Fields["System.ChangedDate"];
 
 
-					var item = new WorkItemTime
-					{
-						Id = workItem.Id.GetValueOrDefault(),
-						Date = workItemDate,
-						Title = workItem.Fields["System.Title"].ToString(),
-						Active = activeTime.TotalHours,
-						Estimated = estimated,
-						Completed = completed
-					};
-					report.AddWorkItem(item);
+                    var item = new WorkItemTime
+                    {
+                        Id = workItem.Id.GetValueOrDefault(),
+                        Date = workItemDate,
+                        Title = workItem.Fields["System.Title"].ToString(),
+                        Active = activeTime.TotalHours,
+                        Estimated = estimated,
+                        Completed = completed
+                    };
+                    report.AddWorkItem(item);
 
-					log.LogInformation($"{item.Title} {item.Estimated:F2} {item.Completed:F2} {item.Active:F2}");
-				}
-			}
+                    log.LogInformation($"{item.Title} {item.Estimated:F2} {item.Completed:F2} {item.Active:F2}");
+                }
+            }
 
-			report.StartDate = startDate;
-			report.EndDate = DateTime.UtcNow.Date;
-			report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
-			return report;
-		}
+            report.StartDate = startDate;
+            report.EndDate = DateTime.UtcNow.Date;
+            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
+            return report;
+        }
 
-		private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
-		{
-			log.LogInformation($"Sending info.");
-			await _notifier.SendTimeReport(subscriber, timeReport);
-		}
+        private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
+        {
+            log.LogInformation($"Sending info.");
+            await _notifier.SendTimeReport(subscriber, timeReport);
+        }
 
         public DateTime PreviousWorkDay(DateTime date)
         {

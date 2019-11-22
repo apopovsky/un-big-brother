@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using UnTaskAlert.Common;
@@ -15,6 +16,7 @@ namespace UnTaskAlert
         private CosmosClient _cosmosClient;
         private Database _database;
         private Container _container;
+        private readonly IServiceProvider _serviceProvider;
 
         // The name of the database and container we will create
         private string _databaseId = "UnBigBrotherDatabase";
@@ -22,9 +24,10 @@ namespace UnTaskAlert
 
         private readonly Config _config;
 
-        public DbAccessor(IOptions<Config> options)
+        public DbAccessor(IServiceProvider serviceProvider, IOptions<Config> options)
         {
             _config = Arg.NotNull(options.Value, nameof(options));
+            _serviceProvider = Arg.NotNull(serviceProvider, nameof(serviceProvider));
         }
 
         public async Task AddOrUpdateSubscriber(Subscriber subscriber)
@@ -33,7 +36,7 @@ namespace UnTaskAlert
             await _container.UpsertItemAsync<Subscriber>(subscriber);
         }
 
-        public async Task<Subscriber> GetSubscriberById(string telegramId)
+        public async Task<Subscriber> GetSubscriberById(string telegramId, ILogger logger)
         {
             await CreateDb();
             var result = _container
@@ -41,7 +44,10 @@ namespace UnTaskAlert
                 .Where(i => i.TelegramId == telegramId)
                 .ToList();
 
-            return result.SingleOrDefault();
+            var subscriber = result.SingleOrDefault();
+            subscriber?.ActiveWorkflow?.Inject(_serviceProvider, _config, logger);
+
+            return subscriber;
         }
 
         public async Task<List<Subscriber>> GetSubscribers()

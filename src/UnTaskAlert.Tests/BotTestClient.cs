@@ -75,17 +75,19 @@ namespace UnTaskAlert.Tests
             var notifier = new TelegramNotifier(optionsMock.Object, botProvider.Object, new MailSender(optionsMock.Object));
 
             var reportingService = new ReportingService(notifier, backlogAccessor);
-            var dbAccessor = new DbAccessor(optionsMock.Object);
 
-            var commandProcessor = new CommandProcessor(
-                notifier,
-                reportingService,
-                dbAccessor,
-                _mailSender,
-                new FakePingGenerator(),
-                optionsMock.Object);
+            throw new NotImplementedException();
+            //var dbAccessor = new DbAccessor(optionsMock.Object);
 
-            _target = new TelegramBotFunction(commandProcessor);
+            //var commandProcessor = new CommandProcessor(
+            //    notifier,
+            //    reportingService,
+            //    dbAccessor,
+            //    _mailSender,
+            //    new FakePingGenerator(),
+            //    optionsMock.Object);
+
+            //_target = new TelegramBotFunction(commandProcessor);
         }
 
         public BotTestClient Send(string message)

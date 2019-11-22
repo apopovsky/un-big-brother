@@ -107,7 +107,7 @@ namespace UnTaskAlert
                 $"Expected Hours: {timeReport.Expected:0.##}");
         }
 
-        public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold)
+        public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true)
         {
             await _bot.SendTextMessageAsync(subscriber.TelegramId,
                 $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}");
@@ -149,11 +149,14 @@ namespace UnTaskAlert
                 await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", ParseMode.Html);
             }
 
-            await _bot.SendTextMessageAsync(subscriber.TelegramId,
-                $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
-                $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
-                $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
-                $"Expected Hours: {timeReport.Expected:0.##}", ParseMode.Markdown);
+            if (includeSummary)
+            {
+                await _bot.SendTextMessageAsync(subscriber.TelegramId,
+                    $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
+                    $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
+                    $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
+                    $"Expected Hours: {timeReport.Expected:0.##}", ParseMode.Markdown);
+            }
         }
 
         public async Task Progress(Subscriber subscriber)

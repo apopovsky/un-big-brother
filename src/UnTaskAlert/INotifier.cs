@@ -11,7 +11,7 @@ namespace UnTaskAlert
         Task MoreThanSingleTaskIsActive(Subscriber subscriber);
         Task Ping(Subscriber subscriber);
         Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);
-        Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold);
+        Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true);
         Task Progress(Subscriber subscriber);
         Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo);
         Task IncorrectEmail(string chatId);

@@ -46,7 +46,7 @@ namespace UnTaskAlert
                 return;
             }
 
-			var now = DateTime.UtcNow.TimeOfDay;
+            var now = DateTime.UtcNow.TimeOfDay;
             if (now > subscriber.StartWorkingHoursUtc && now < subscriber.EndWorkingHoursUtc
                 && IsWeekDay())
             {

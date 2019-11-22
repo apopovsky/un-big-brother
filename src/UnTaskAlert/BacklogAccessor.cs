@@ -75,13 +75,13 @@ namespace UnTaskAlert
                 return new List<WorkItem>();
             }
 
-			var client = connection.GetClient<WorkItemTrackingHttpClient>();
+            var client = connection.GetClient<WorkItemTrackingHttpClient>();
             return await client.GetWorkItemsAsync(workItemsIds, expand: WorkItemExpand.Fields);
         }
 
         public async Task<IList<WorkItemUpdate>> GetWorkItemUpdates(VssConnection connection, int workItemId)
-		{
-			var client = connection.GetClient<WorkItemTrackingHttpClient>();
+        {
+            var client = connection.GetClient<WorkItemTrackingHttpClient>();
             return await client.GetUpdatesAsync(workItemId);
         }
     }

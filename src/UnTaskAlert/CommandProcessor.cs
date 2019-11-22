@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using CommandLine;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
@@ -21,6 +22,7 @@ namespace UnTaskAlert
         private readonly IDbAccessor _dbAccessor;
         private readonly IMailSender _mailSender;
         private readonly IPinGenerator _pinGenerator;
+        private readonly IServiceProvider _serviceProvider;
 
         private static readonly int MaxVerificationAttempts = 3;
         private static readonly Parser Parser = Parser.Default;
@@ -31,6 +33,7 @@ namespace UnTaskAlert
             IDbAccessor dbAccessor,
             IMailSender mailSender,
             IPinGenerator pinGenerator,
+            IServiceProvider serviceProvider,
             IOptions<Config> options)
         {
             _notifier = Arg.NotNull(notifier, nameof(notifier));
@@ -39,6 +42,7 @@ namespace UnTaskAlert
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
             _mailSender = Arg.NotNull(mailSender, nameof(mailSender));
             _pinGenerator = Arg.NotNull(pinGenerator, nameof(pinGenerator));
+            _serviceProvider = Arg.NotNull(serviceProvider, nameof(serviceProvider));
         }
         
         public async Task Process(Update update, ILogger log)
@@ -59,7 +63,7 @@ namespace UnTaskAlert
             log.LogInformation($"Processing the command: {update.Message.Text}");
             await _notifier.Typing(update.Message.Chat.Id.ToString());
 
-            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString());
+            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), log);
 
             if (subscriber == null)
             {
@@ -79,7 +83,7 @@ namespace UnTaskAlert
                                    $"LastMoreThanSingleTaskIsActiveAlert: {subscriber.LastMoreThanSingleTaskIsActiveAlert}{Environment.NewLine}" +
                                    $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}");
             }
-            
+
             if (subscriber == null)
             {
                 await NewUserFlow(log, chatId);
@@ -88,14 +92,14 @@ namespace UnTaskAlert
 
             if (subscriber.ActiveWorkflow != null && !subscriber.ActiveWorkflow.IsExpired)
             {
-                var result = await subscriber.ActiveWorkflow.Step(input, subscriber, _dbAccessor, _notifier, log, update.Message.Chat.Id);
+                var result = await subscriber.ActiveWorkflow.Step(input, subscriber,  update.Message.Chat.Id);
                 if (result == WorkflowResult.Finished)
                 {
                     subscriber.ActiveWorkflow = null;
                 }
                 await _dbAccessor.AddOrUpdateSubscriber(subscriber);
-				return;
-			}
+                return;
+            }
 
             if (subscriber.ExpectedAction == ExpectedActionType.ExpectedEmail)
             {
@@ -189,23 +193,22 @@ namespace UnTaskAlert
         {
             log.LogInformation($"VerifiedUserFlow() is executed for chatId '{subscriber.TelegramId}', input: '{input}'");
 
-            var commandWorkflow = ProcessInput(input, new SnoozeAlertWorkflow(), new SetSettingsWorkflow());
+            var commandWorkflow = ProcessInput(log, input,
+                new SnoozeAlertWorkflow(), new SetSettingsWorkflow(), new ActiveWorkflow(), new StandupWorkflow());
             if (commandWorkflow != null)
             {
-                var result = await commandWorkflow.Step(input, subscriber, _dbAccessor, _notifier, log, update.Message.Chat.Id);
+                var result = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id);
                 subscriber.ActiveWorkflow = result == WorkflowResult.Finished ? null : commandWorkflow;
-				await _dbAccessor.AddOrUpdateSubscriber(subscriber);
-				return;
+                await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+                return;
             }
 
-            await Parser.ParseArguments<Day, Week, Month, Standup, Email, Active, Info, Healthcheck, Delete>(input.Split(" "))
+            await Parser.ParseArguments<Day, Week, Month, Email, Info, Healthcheck, Delete>(input.Split(" "))
                 .MapResult(
                     async (Day opts) => await CreateWorkHoursReport(log, subscriber, DateTime.Today),
                     async (Week opts) => await CreateWorkHoursReport(log, subscriber, DateUtils.StartOfWeek()),
                     async (Month opts) => await CreateWorkHoursReport(log, subscriber, DateUtils.StartOfMonth()),
-                    async (Standup opts) => await CreateStandUpReport(log, subscriber),
                     async (Email opts) => await ResetEmail(log, subscriber),
-                    async (Active opts) => await CreateActiveTasksReport(log, subscriber, DateTime.Today),
                     async (Info opts) => await Info(log, subscriber),
                     async (Healthcheck opts) =>
                     {
@@ -228,12 +231,15 @@ namespace UnTaskAlert
                     });
         }
 
-        public CommandWorkflow ProcessInput(string input, params CommandWorkflow[] workflows)
+        public CommandWorkflow ProcessInput(ILogger logger, string input, params CommandWorkflow[] workflows)
         {
+            // todo: it would be nice to have a factory for workflows, maybe
+
             foreach (var commandWorkflow in workflows)
             {
                 if (commandWorkflow.Accepts(input))
                 {
+                    commandWorkflow.Inject(_serviceProvider, _config, logger);
                     return commandWorkflow;
                 }
             }
@@ -265,14 +271,6 @@ namespace UnTaskAlert
             await _notifier.RequestEmail(subscriber.TelegramId);
         }
 
-        private async Task CreateStandUpReport(ILogger log, Subscriber subscriber)
-        {
-            await _service.CreateStandupReport(subscriber,
-                _config.AzureDevOpsAddress,
-                _config.AzureDevOpsAccessToken,
-                log);
-        }
-
         private async Task VerifyAccount(ILogger log, Subscriber subscriber, int code)
         {
             log.LogInformation($"Verifying account for {subscriber.Email}, entered pin is '{code}'.");
@@ -297,15 +295,6 @@ namespace UnTaskAlert
             }
 
             await _dbAccessor.AddOrUpdateSubscriber(subscriber);
-        }
-
-        private async Task CreateActiveTasksReport(ILogger log, Subscriber subscriber, DateTime startDate)
-        {
-            await _service.ActiveTasksReport(subscriber,
-                _config.AzureDevOpsAddress,
-                _config.AzureDevOpsAccessToken,
-                startDate,
-                log);
         }
 
         private async Task CreateWorkHoursReport(ILogger log, Subscriber subscriber, DateTime startDate)
