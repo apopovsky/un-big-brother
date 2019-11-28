@@ -61,7 +61,24 @@ namespace UnTaskAlert.Reports
 							foreach (var rowProp in rowProperties)
 							{
 								var rowItemKey = $"@row.{rowProp.Name}";
-								rowContent = rowContent.Replace(rowItemKey, GetFormatterPropertyValue(rowProp, row));
+								var propValue = rowProp.GetValue(row);
+								rowContent = rowContent.Replace(rowItemKey, GetFormatterPropertyValue(rowProp, propValue));
+
+								if (rowProp.Name.Contains("offset", StringComparison.OrdinalIgnoreCase))
+								{
+									var offset = (double) propValue;
+									var color = "#ffffff";
+									if (offset > .25 && offset <= .75)
+									{
+										color = "#ffffe6";
+									}
+									else if(offset>.75)
+									{
+										color = "#ffcccc";
+									}
+									rowContent = rowContent.Replace("@row.Color", color);
+									
+								}
 							}
 							stringBuilder.AppendLine(rowContent);
 						}
@@ -73,17 +90,16 @@ namespace UnTaskAlert.Reports
 				}
 				else
 				{
-					content = content.Replace(itemKey, GetFormatterPropertyValue(property, timeReport));
+					content = content.Replace(itemKey, GetFormatterPropertyValue(property, property.GetValue(timeReport)));
 				}
 			}
 
 			return content;
 		}
 
-		private string GetFormatterPropertyValue(PropertyInfo property, object @object)
+		private string GetFormatterPropertyValue(PropertyInfo property, object propValue)
 		{
 			var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
-			var value = property.GetValue(@object);
 			if (property.PropertyType == typeof(double))
 			{
 				var format = "F2";
@@ -91,16 +107,16 @@ namespace UnTaskAlert.Reports
 				{
 					format = "P1";
 				}
-				return ((double) value).ToString(format);
+				return ((double) propValue).ToString(format);
 			}
 			else
 			{
 				if (property.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
 				{
-					var link = $"<a target=\"_blank\" href=\"{baseUrl.AppendPathSegment(value)}\">{value}</a>";
+					var link = $"<a target=\"_blank\" href=\"{baseUrl.AppendPathSegment(propValue)}\">{propValue}</a>";
 					return link;
 				}
-				return value?.ToString();
+				return propValue?.ToString();
 			}
 		}
 	}
