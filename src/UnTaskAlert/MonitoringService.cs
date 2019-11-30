@@ -40,7 +40,7 @@ namespace UnTaskAlert
 
         private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTaskInfo activeTaskInfo, ILogger log)
         {
-            if (subscriber.SnoozeAlertsUntil.GetValueOrDefault(DateTime.MaxValue) < DateTime.UtcNow)
+            if (subscriber.SnoozeAlertsUntil.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow)
             {
                 log.LogInformation($"Alert checks snoozed for subscriber {subscriber.Email} til {subscriber.SnoozeAlertsUntil:G}");
                 return;
