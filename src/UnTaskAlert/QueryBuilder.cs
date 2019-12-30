@@ -36,6 +36,7 @@ namespace UnTaskAlert
 								            [Microsoft.VSTS.Scheduling.CompletedWork] > 0
 								            AND [System.State] <> 'Closed'
 								        )
+								        OR ( [System.State] = 'Active')
 								    )";
 
 			return query;

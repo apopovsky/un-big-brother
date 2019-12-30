@@ -71,9 +71,9 @@ namespace UnTaskAlert
             await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.");
         }
 
-        public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTaskInfo activeTaskInfo)
+        public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
         {
-            var tasks = GetTasksLinks(activeTaskInfo);
+            var tasks = GetTasksLinks(activeTasksInfo);
             var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
                        $"Tasks: {string.Join(Environment.NewLine, tasks)}";
 
@@ -164,16 +164,26 @@ namespace UnTaskAlert
             await _bot.SendTextMessageAsync(subscriber.TelegramId, "Processing your request...");
         }
 
-        public async Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo)
+        public async Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
         {
-            var text = $"{subscriber.Email} has {activeTaskInfo.ActiveTaskCount} active tasks{Environment.NewLine}";
+            var text = $"{subscriber.Email} has {activeTasksInfo.ActiveTaskCount} active tasks{Environment.NewLine}";
 
-            var tasks = GetTasksLinks(activeTaskInfo);
-
-            if (activeTaskInfo.ActiveTaskCount != 0)
+            if (activeTasksInfo.ActiveTaskCount != 0)
             {
-                text +=
-                    $"Tasks: {string.Join(Environment.NewLine, tasks.Select(i => i.ToString()))}";
+                text +=  $"Tasks: {Environment.NewLine}";
+                var nextLine = false;
+                foreach (var taskInfo in activeTasksInfo.TasksInfo)
+                {
+                    if (nextLine)
+                    {
+                        text += Environment.NewLine;
+                    }
+                    else
+                    {
+                        nextLine = true;
+                    }
+                    text += $"{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime::0.##}hs)";
+                }
             }
 
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
@@ -234,13 +244,18 @@ namespace UnTaskAlert
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
 
-        private List<string> GetTasksLinks(ActiveTaskInfo activeTaskInfo)
+        private List<string> GetTasksLinks(ActiveTasksInfo activeTasksInfo)
         {
-            var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
-            var tasks = activeTaskInfo.WorkItemsIds.Select(id =>
-                    $"<a href=\"{baseUrl.AppendPathSegment(id)}\">{id}</a>{Environment.NewLine}")
+            var tasks = activeTasksInfo.TasksInfo.Select(taskInfo =>
+                    $"{GetSingleTaskLink(taskInfo)}{Environment.NewLine}")
                 .ToList();
             return tasks;
+        }
+
+        private string GetSingleTaskLink(TaskInfo taskInfo)
+        {
+            var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
+            return $"<a href=\"{baseUrl.AppendPathSegment(taskInfo.Id)}\">{taskInfo.Id}</a>";
         }
     }
 }

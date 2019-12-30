@@ -19,7 +19,7 @@ namespace UnTaskAlert
             _queryBuilder = queryBuilder;
         }
 
-        public async Task<ActiveTaskInfo> GetActiveWorkItems(VssConnection connection, string name, ILogger log)
+        public async Task<ActiveTasksInfo> GetActiveWorkItems(VssConnection connection, string name, ILogger log)
         {
             var query = _queryBuilder.GetActiveWorkItemsQuery(name);
 
@@ -31,11 +31,11 @@ namespace UnTaskAlert
                 log.LogInformation($"Executing query {query}");
                 var queryResult = await client.QueryByWiqlAsync(wiql);
 
-                var result = new ActiveTaskInfo
+                var result = new ActiveTasksInfo
                 {
                     ActiveTaskCount = queryResult.WorkItems.Count(),
                     User = name,
-                    WorkItemsIds = queryResult.WorkItems.Select(i => i.Id).ToList()
+                    TasksInfo = queryResult.WorkItems.Select(i => new TaskInfo{Id = i.Id}).ToList()
                 };
                 log.LogInformation($"Query Result: HasActiveTask is '{result.HasActiveTasks}', ActiveTaskCount is '{result.ActiveTaskCount}'");
 

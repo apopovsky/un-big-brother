@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace UnTaskAlert.Models
 {
@@ -22,20 +21,6 @@ namespace UnTaskAlert.Models
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string ReportDate => StartDate.ToString("MMMM yyyy");
-
-        public IList<WorkItemTime> DailyStats
-        {
-	        get
-	        {
-		        return _workItemTimes.GroupBy(x => x.Date.Date).Select(x => new WorkItemTime
-		        {
-					Date = x.Key,
-					Active = x.Sum(i=>i.Active),
-					Estimated = x.Sum(i=>i.Estimated),
-					Completed = x.Sum(i=>i.Completed),
-		        }).ToList();
-	        }
-        }
 
         public void AddWorkItem(WorkItemTime workItem)
 		{

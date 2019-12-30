@@ -7,13 +7,13 @@ namespace UnTaskAlert
     {
         Task Instruction(Subscriber subscriber);
         Task NoActiveTasksDuringWorkingHours(Subscriber subscriber);
-        Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTaskInfo activeTaskInfo);
+        Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
         Task MoreThanSingleTaskIsActive(Subscriber subscriber);
         Task Ping(Subscriber subscriber);
         Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);
         Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true);
         Task Progress(Subscriber subscriber);
-        Task ActiveTasks(Subscriber subscriber, ActiveTaskInfo activeTaskInfo);
+        Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
         Task IncorrectEmail(string chatId);
         Task EmailUpdated(Subscriber subscriber);
         Task NoEmail(string chatId);

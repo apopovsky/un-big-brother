@@ -38,7 +38,7 @@ namespace UnTaskAlert
             await CreateAlertIfNeeded(subscriber, activeTaskInfo, log);
         }
 
-        private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTaskInfo activeTaskInfo, ILogger log)
+        private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTasksInfo activeTasksInfo, ILogger log)
         {
             if (subscriber.SnoozeAlertsUntil.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow)
             {
@@ -51,7 +51,7 @@ namespace UnTaskAlert
                 && IsWeekDay())
             {
                 log.LogInformation($"It's working hours for {subscriber.Email}");
-                if (!activeTaskInfo.HasActiveTasks)
+                if (!activeTasksInfo.HasActiveTasks)
                 {
                     log.LogInformation($"No active tasks during working hours.");
                     if (DateTime.UtcNow - subscriber.LastNoActiveTasksAlert >= PauseBetweenAlerts)
@@ -64,20 +64,20 @@ namespace UnTaskAlert
             else
             {
                 log.LogInformation($"It's not working hours for {subscriber.Email}");
-                if (activeTaskInfo.HasActiveTasks
+                if (activeTasksInfo.HasActiveTasks
                     && DateTime.UtcNow - subscriber.LastActiveTaskOutsideOfWorkingHoursAlert >= PauseBetweenAlerts)
                 {
                     log.LogWarning($"There is an active task outside of working hours.");
                     subscriber.LastActiveTaskOutsideOfWorkingHoursAlert = DateTime.UtcNow;
-                    await _notifier.ActiveTaskOutsideOfWorkingHours(subscriber, activeTaskInfo);
+                    await _notifier.ActiveTaskOutsideOfWorkingHours(subscriber, activeTasksInfo);
                 }
             }
 
-            if (activeTaskInfo.ActiveTaskCount > 1
+            if (activeTasksInfo.ActiveTaskCount > 1
                 && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert >= PauseBetweenAlerts)
             {
                 log.LogInformation(
-                    $"{activeTaskInfo.ActiveTaskCount} active tasks at the same time.");
+                    $"{activeTasksInfo.ActiveTaskCount} active tasks at the same time.");
                 subscriber.LastMoreThanSingleTaskIsActiveAlert = DateTime.UtcNow;
                 await _notifier.MoreThanSingleTaskIsActive(subscriber);
             }
