@@ -166,11 +166,10 @@ namespace UnTaskAlert
 
         public async Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
         {
-            var text = $"{subscriber.Email} has {activeTasksInfo.ActiveTaskCount} active tasks{Environment.NewLine}";
+            var text = $"{subscriber.Email} has {activeTasksInfo.ActiveTaskCount} active task{(activeTasksInfo.ActiveTaskCount > 1 || activeTasksInfo.ActiveTaskCount == 0 ? "s" : string.Empty)}.{Environment.NewLine}";
 
             if (activeTasksInfo.ActiveTaskCount != 0)
             {
-                text +=  $"Tasks: {Environment.NewLine}";
                 var nextLine = false;
                 foreach (var taskInfo in activeTasksInfo.TasksInfo)
                 {
@@ -182,7 +181,7 @@ namespace UnTaskAlert
                     {
                         nextLine = true;
                     }
-                    text += $"{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime::0.##}hs)";
+                    text += $"{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs)";
                 }
             }
 
