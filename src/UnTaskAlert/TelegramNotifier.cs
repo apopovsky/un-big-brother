@@ -132,7 +132,7 @@ namespace UnTaskAlert
                 if (offset > offsetThreshold)
                 {
                     var message =
-                        $"{item.Date:dd-MM} <a href=\"{baseUrl.AppendPathSegment(item.Id)}\">{item.Id}</a> - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}";
+                        $"{item.Date:dd-MM} <a href=\"{baseUrl + item.Id}\">{item.Id}</a> - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}";
 
                     if (builder.Length + message.Length >= maxMessageLength)
                     {
