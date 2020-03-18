@@ -42,7 +42,7 @@ namespace UnTaskAlert
                 taskInfo.ActiveTime = (await GetWorkItemActiveTime(connection, taskInfo.Id)).TotalHours;
             }
 
-			await _notifier.ActiveTasks(subscriber, activeTaskInfo);
+            await _notifier.ActiveTasks(subscriber, activeTaskInfo);
 
             return activeTaskInfo;
         }
