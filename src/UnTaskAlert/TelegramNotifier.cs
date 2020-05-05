@@ -104,7 +104,8 @@ namespace UnTaskAlert
                 $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
                 $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
                 $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
-                $"Expected Hours: {timeReport.Expected:0.##}");
+                $"Expected Hours: {timeReport.Expected - timeReport.HoursOff:0.##}{Environment.NewLine}" +
+                $"Hours off: {timeReport.HoursOff}");
         }
 
         public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true)
@@ -232,6 +233,9 @@ namespace UnTaskAlert
 
         public async Task AccountInfo(Subscriber subscriber)
         {
+            var timeOff = subscriber?.TimeOff.Select(i => $"{i.HoursOff} {i.Date}").ToList();
+            var timeOffInfo = timeOff == null ? "n/a" : string.Join(Environment.NewLine, timeOff);
+
             var text = $"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
                        $"Email: {subscriber.Email}{Environment.NewLine}" +
                        $"Working hours (UTC): {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
@@ -239,7 +243,8 @@ namespace UnTaskAlert
                        $"Hours per day: {subscriber.HoursPerDay}{Environment.NewLine}" +
                        $"LastNoActiveTasksAlert: {subscriber.LastNoActiveTasksAlert}{Environment.NewLine}" +
                        $"LastMoreThanSingleTaskIsActiveAlert: {subscriber.LastMoreThanSingleTaskIsActiveAlert}{Environment.NewLine}" +
-                       $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}";
+                       $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}" +
+                       $"Time off: {timeOffInfo}{Environment.NewLine}";
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
         }
 

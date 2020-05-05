@@ -109,6 +109,7 @@ namespace UnTaskAlert
                 new YearWorkflow(),
                 new HealthcheckWorkflow(),
                 new InfoWorkflow(),
+                new AddTimeOff()
             };
             var commandWorkflow = ProcessInput(log, input, workflows);
 

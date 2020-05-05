@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.VisualStudio.Services.Common;
@@ -113,7 +114,20 @@ namespace UnTaskAlert
             report.StartDate = startDate;
             report.EndDate = DateTime.UtcNow.Date;
             report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
+            report.HoursOff = GetHoursOff(subscriber, startDate);
             return report;
+        }
+
+        private int GetHoursOff(Subscriber subscriber, DateTime startDate)
+        {
+            if (subscriber.TimeOff == null)
+            {
+                return 0;
+            }
+
+            var hoursOff = subscriber.TimeOff.Where(i => i.Date >= startDate).Sum(i => i.HoursOff);
+
+            return hoursOff;
         }
 
         private async Task<TimeSpan> GetWorkItemActiveTime(VssConnection connection, int workItemId)

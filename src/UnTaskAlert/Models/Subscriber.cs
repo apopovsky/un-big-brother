@@ -1,16 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnTaskAlert.Commands.Workflow;
 
 namespace UnTaskAlert.Models
 {
-    public enum ExpectedActionType
-    {
-        None = 0,
-        ExpectedEmail = 1,
-        ExpectedPin = 2,
-        VerifiedSubscriberCommand = 3
-    }
-
     public class Subscriber
     {
         public TimeSpan StartWorkingHoursUtc { get; set; }
@@ -27,5 +20,7 @@ namespace UnTaskAlert.Models
         public DateTime LastMoreThanSingleTaskIsActiveAlert { get; set; }
         public CommandWorkflow ActiveWorkflow { get; set; }
         public DateTime? SnoozeAlertsUntil { get; set; }
+        public IList<TimeOff> TimeOff { get; set; }
+        public bool IsAdmin { get; set; }
     }
 }

@@ -17,10 +17,10 @@ namespace UnTaskAlert.Models
         public double TotalActive { get; set; }
         public double Expected { get; set; }
         public double TotalOffset => Math.Abs((TotalCompleted - TotalActive) / TotalActive);
-
         public DateTime StartDate { get; set; }
         public DateTime EndDate { get; set; }
         public string ReportDate => StartDate.ToString("MMMM yyyy");
+        public int HoursOff { get; set; }
 
         public void AddWorkItem(WorkItemTime workItem)
         {

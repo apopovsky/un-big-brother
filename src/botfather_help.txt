@@ -8,3 +8,4 @@ snooze - snooze any alerts for 30 minutes
 delete - delete account
 healthcheck - [threshold] detailed report with a list of tasks where the difference between active and complete is bigger than a given threshold
 email - set email address
+addtimeoff - add time off in hours to the current month (ex. /addtimeoff 8)
