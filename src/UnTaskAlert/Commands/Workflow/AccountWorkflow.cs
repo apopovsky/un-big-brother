@@ -44,14 +44,14 @@ namespace UnTaskAlert.Commands.Workflow
 
             if (CurrentStep == (int)Steps.EnterEmail)
             {
-                if (string.IsNullOrWhiteSpace(input) || !input.EndsWith(Config.EmailDomain))
+                if (!IsEmail(input) || !input.EndsWith(Config.EmailDomain))
                 {
                     await Notifier.IncorrectEmail(subscriber.TelegramId);
                     CurrentStep = (int)Steps.EnterEmail;
 
                     return WorkflowResult.Continue;
                 }
-
+                
                 subscriber.Email = input;
                 subscriber.IsVerified = false;
                 subscriber.Pin = _pinGenerator.GetRandomPin();
@@ -85,6 +85,11 @@ namespace UnTaskAlert.Commands.Workflow
             }
 
             return WorkflowResult.Finished;
+        }
+
+        private static bool IsEmail(string input)
+        {
+            return !string.IsNullOrWhiteSpace(input) && input.Contains("@");
         }
 
         private static readonly int MaxVerificationAttempts = 3;

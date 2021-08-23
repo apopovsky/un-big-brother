@@ -14,3 +14,9 @@
 /src/UnTaskAlert.Tests/bin/Debug/netcoreapp3.0
 /src/UnTaskAlert.Tests/obj
 /src/UnTaskAlert.Tests/bin/Release/netcoreapp3.0
+/src/.vs/unbot
+/src/TestConsole/bin/Debug/netcoreapp3.1
+/src/TestConsole/obj
+/src/UnTaskAlert/Properties/PublishProfiles/UnTaskAlertProd - Zip Deploy.pubxml
+/src/UnTaskAlert/Properties/ServiceDependencies/UnTaskAlertProd - Zip Deploy
+*.user

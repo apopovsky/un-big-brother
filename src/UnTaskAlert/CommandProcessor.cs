@@ -109,7 +109,9 @@ namespace UnTaskAlert
                 new YearWorkflow(),
                 new HealthcheckWorkflow(),
                 new InfoWorkflow(),
-                new AddTimeOff()
+                new AddTimeOff(),
+                new DeleteWorkflow(),
+                new AccountWorkflow()
             };
             var commandWorkflow = ProcessInput(log, input, workflows);
 
@@ -164,12 +166,5 @@ namespace UnTaskAlert
 
             return null;
         }
-
-        // todo: implement using workflows
-        //private async Task Delete(ILogger log, Subscriber subscriber)
-        //{
-        //    log.LogInformation($"Deleting subscriber '{subscriber.TelegramId}'");
-        //    await _dbAccessor.DeleteIfExists(subscriber);
-        //}
     }
 }

@@ -32,7 +32,13 @@ namespace UnTaskAlert.MyNamespace
 				if (updateEventArgs.Update.Type == UpdateType.Message)
 				{
 					_logger.LogInformation($"Message received from: {updateEventArgs.Update.Message.From}. Message: {updateEventArgs.Update.Message.Text}");
-					Task.Run(() => _commandProcessor.Process(updateEventArgs.Update, _logger).GetAwaiter().GetResult());
+					Task.Run(() => _commandProcessor.Process(updateEventArgs.Update, _logger).GetAwaiter().GetResult())
+                        .ContinueWith((task) => {
+                            var exception = task.Exception;
+                            _logger.LogError(new EventId(), exception, exception.Message);
+                            _botClient.SendTextMessageAsync(updateEventArgs.Update.Message.Chat.Id, "Could not process your request");
+
+                        }, TaskContinuationOptions.OnlyOnFaulted);
 				}
 			}
 			catch (Exception exception)

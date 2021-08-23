@@ -58,7 +58,7 @@ namespace UnTaskAlert
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(fromAddress.Address, _config.EMailPassword)
+                Credentials = new NetworkCredential(_config.EMailUser, _config.EMailPassword)
             };
         }
     }

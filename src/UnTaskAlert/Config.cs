@@ -4,6 +4,7 @@
     {
         public string TelegramBotKey { get; set; }
         public string FromEmailAddress { get; set; }
+        public string EMailUser { get; set; }
         public string EMailPassword { get; set; }
         public string Smtp { get; set; }
         public string AzureDevOpsAddress { get; set; }

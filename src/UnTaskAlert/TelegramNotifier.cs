@@ -233,7 +233,7 @@ namespace UnTaskAlert
 
         public async Task AccountInfo(Subscriber subscriber)
         {
-            var timeOff = subscriber?.TimeOff.Select(i => $"{i.HoursOff} {i.Date}").ToList();
+            var timeOff = subscriber?.TimeOff?.Select(i => $"{i.HoursOff} {i.Date}").ToList();
             var timeOffInfo = timeOff == null ? "n/a" : string.Join(Environment.NewLine, timeOff);
 
             var text = $"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
