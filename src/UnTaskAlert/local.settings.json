@@ -1,18 +1,19 @@
 {
-  "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "dotnet",
-    "TelegramBotKey": "",
-    "FromEmailAddress": "",
-    "EMailPassword": "",
-    "SmtpAddress": "",
-    "SmtpPort": "587",
-    "SmtpSSL": "true",
-    "AzureDevOpsAddress": "",
-    "AzureDevOpsAccessToken": "",
-    "EmailDomain": "",
-    "CosmosDbConnectionString": "",
-    "DebugLocal": false
-  }
+	"IsEncrypted": false,
+	"Values": {
+		"AzureWebJobsStorage": "UseDevelopmentStorage=true",
+		"FUNCTIONS_WORKER_RUNTIME": "dotnet",
+		"TelegramBotKey": "",
+		"FromEmailAddress": "",
+		"EMailUser": "",
+		"EMailPassword": "",
+		"Smtp": "",
+		"SmtpPort": "587",
+		"SmtpSSL": "true",
+		"AzureDevOpsAddress": "",
+		"AzureDevOpsAccessToken": "",
+		"EmailDomain": "",
+		"CosmosDbConnectionString": "",
+		"DebugLocal": false
+	}
 }
