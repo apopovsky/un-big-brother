@@ -4,6 +4,5 @@ namespace UnTaskAlert.MyNamespace
 {
 	public interface ITelegramBotListener
 	{
-		void OnUpdateReceived(object sender, UpdateEventArgs updateEventArgs);
 	}
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Extensions.Logging;
@@ -33,7 +34,7 @@ namespace UnTaskAlert
                     await _service.PerformMonitoring(subscriber,
                         _config.AzureDevOpsAddress,
                         _config.AzureDevOpsAccessToken,
-                        log);
+                        log, CancellationToken.None);
                 }
                 catch (Exception e)
                 {

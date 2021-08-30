@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Logging;
@@ -30,10 +31,10 @@ namespace UnTaskAlert
             _serviceProvider = Arg.NotNull(serviceProvider, nameof(serviceProvider));
         }
 
-        public async Task AddOrUpdateSubscriber(Subscriber subscriber)
+        public async Task AddOrUpdateSubscriber(Subscriber subscriber, CancellationToken cancellationToken)
         {
             await CreateDb();
-            await _container.UpsertItemAsync<Subscriber>(subscriber);
+            await _container.UpsertItemAsync(subscriber, cancellationToken: cancellationToken);
         }
 
         public async Task<Subscriber> GetSubscriberById(string telegramId, ILogger logger)

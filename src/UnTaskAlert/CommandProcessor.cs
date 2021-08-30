@@ -1,11 +1,10 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
-using CommandLine;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using UnTaskAlert.Commands;
 using UnTaskAlert.Commands.Workflow;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
@@ -14,35 +13,28 @@ namespace UnTaskAlert
 {
     public class CommandProcessor : ICommandProcessor
     {
-        private readonly IReportingService _service;
         private readonly INotifier _notifier;
         private readonly Config _config;
         private readonly IDbAccessor _dbAccessor;
-        private readonly IMailSender _mailSender;
         private readonly IPinGenerator _pinGenerator;
         private readonly IServiceProvider _serviceProvider;
 
-        private static readonly Parser Parser = Parser.Default;
         private static readonly int PauseBeforeAnswer = 1000;
 
         public CommandProcessor(INotifier notifier,
-            IReportingService service,
             IDbAccessor dbAccessor,
-            IMailSender mailSender,
             IPinGenerator pinGenerator,
             IServiceProvider serviceProvider,
             IOptions<Config> options)
         {
             _notifier = Arg.NotNull(notifier, nameof(notifier));
-            _service = Arg.NotNull(service, nameof(service));
             _config = Arg.NotNull(options.Value, nameof(options));
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
-            _mailSender = Arg.NotNull(mailSender, nameof(mailSender));
             _pinGenerator = Arg.NotNull(pinGenerator, nameof(pinGenerator));
             _serviceProvider = Arg.NotNull(serviceProvider, nameof(serviceProvider));
         }
         
-        public async Task Process(Update update, ILogger log)
+        public async Task Process(Update update, ILogger log, CancellationToken cancellationToken)
         {
             if (update.Type != UpdateType.Message)
             {
@@ -58,13 +50,13 @@ namespace UnTaskAlert
             var chatId = update.Message.Chat.Id.ToString();
 
             log.LogInformation($"Processing the command: {update.Message.Text}");
-            await _notifier.Typing(update.Message.Chat.Id.ToString());
+            await _notifier.Typing(update.Message.Chat.Id.ToString(), cancellationToken);
 
             var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), log);
 
             if (subscriber == null)
             {
-                log.LogInformation($"Process: Subscriber is 'null'");
+                log.LogInformation("Process: Subscriber is 'null'");
             }
             else
             {
@@ -80,19 +72,16 @@ namespace UnTaskAlert
                                    $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}");
             }
 
-            if (subscriber == null)
-            {
-                subscriber = await NewUserFlow(log, chatId);
-            }
+            subscriber ??= await NewUserFlow(log, chatId, cancellationToken);
 
-            if (subscriber.ActiveWorkflow != null && !subscriber.ActiveWorkflow.IsExpired)
+            if (subscriber.ActiveWorkflow is { IsExpired: false })
             {
-                var result = await subscriber.ActiveWorkflow.Step(input, subscriber,  update.Message.Chat.Id);
+                var result = await subscriber.ActiveWorkflow.Step(input, subscriber,  update.Message.Chat.Id, cancellationToken);
                 if (result == WorkflowResult.Finished)
                 {
                     subscriber.ActiveWorkflow = null;
                 }
-                await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+                await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
                 return;
             }
 
@@ -115,22 +104,22 @@ namespace UnTaskAlert
             };
             var commandWorkflow = ProcessInput(log, input, workflows);
 
-            if (commandWorkflow != null)
-            {
-                var result = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id);
-                subscriber.ActiveWorkflow = result == WorkflowResult.Finished ? null : commandWorkflow;
-                await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+            if (commandWorkflow == null)
+                throw new InvalidOperationException(
+                    $"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}'.");
+            
+            var workflowResult = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id, cancellationToken);
+            subscriber.ActiveWorkflow = workflowResult == WorkflowResult.Finished ? null : commandWorkflow;
+            await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
 
-                return;
-            }
+            return;
 
-            throw new InvalidOperationException($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}'.");
         }
 
-        private async Task<Subscriber> NewUserFlow(ILogger log, string chatId)
+        private async Task<Subscriber> NewUserFlow(ILogger log, string chatId, CancellationToken cancellationToken)
         {
             log.LogInformation($"NewUserFlow() is executed for chatId '{chatId}'");
-            await Task.Delay(PauseBeforeAnswer);
+            await Task.Delay(PauseBeforeAnswer, cancellationToken);
             var workflow = new AccountWorkflow();
             workflow.Inject(_serviceProvider, _config, log);
 
@@ -147,12 +136,12 @@ namespace UnTaskAlert
                 ActiveWorkflow = workflow
             };
 
-            await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+            await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
 
             return subscriber;
         }
 
-        public CommandWorkflow ProcessInput(ILogger logger, string input, params CommandWorkflow[] workflows)
+        private CommandWorkflow ProcessInput(ILogger logger, string input, params CommandWorkflow[] workflows)
         {
             // todo: it would be nice to have a factory for workflows, maybe
             foreach (var commandWorkflow in workflows)

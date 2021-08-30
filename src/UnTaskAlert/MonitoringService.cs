@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.Services.Common;
 using Microsoft.VisualStudio.Services.WebApi;
@@ -22,7 +23,7 @@ namespace UnTaskAlert
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
         }
 
-        public async Task PerformMonitoring(Subscriber subscriber, string url, string token, ILogger log)
+        public async Task PerformMonitoring(Subscriber subscriber, string url, string token, ILogger log, CancellationToken cancellationToken)
         {
             var orgUrl = new Uri(url);
 
@@ -35,10 +36,10 @@ namespace UnTaskAlert
 
             var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
             var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
-            await CreateAlertIfNeeded(subscriber, activeTaskInfo, log);
+            await CreateAlertIfNeeded(subscriber, activeTaskInfo, log, cancellationToken);
         }
 
-        private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTasksInfo activeTasksInfo, ILogger log)
+        private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTasksInfo activeTasksInfo, ILogger log, CancellationToken cancellationToken)
         {
             if (subscriber.SnoozeAlertsUntil.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow)
             {
@@ -82,7 +83,7 @@ namespace UnTaskAlert
                 await _notifier.MoreThanSingleTaskIsActive(subscriber);
             }
 
-            await _dbAccessor.AddOrUpdateSubscriber(subscriber);
+            await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
         }
 
         private bool IsWeekDay()

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,13 +13,12 @@ using Telegram.Bot;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
-using UnTaskAlert.Common;
 
 namespace UnTaskAlert.Tests
 {
     public class BotTestClient
     {
-        private readonly TelegramBotFunction _target;
+        //private readonly TelegramBotFunction _target;
         private readonly IMailSender _mailSender;
         private readonly ILogger _logger;
         private readonly Stack<string> _messages = new Stack<string>();
@@ -63,9 +61,11 @@ namespace UnTaskAlert.Tests
                     It.IsAny<ChatId>(),
                     It.IsAny<string>(),
                     It.IsAny<ParseMode>(),
+                    It.IsAny<IEnumerable<MessageEntity>>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<int>(),
+                    It.IsAny<bool>(),
                     It.IsAny<IReplyMarkup>(),
                     It.IsAny<CancellationToken>()))
                 .Callback(new InvocationAction(action => _messages.Push((string)action.Arguments[1])));
@@ -93,7 +93,7 @@ namespace UnTaskAlert.Tests
         public BotTestClient Send(string message)
         {
             var request = GetRequest(_chatId, message);
-            _target.Run(request, _logger).Wait();
+            //_target.Run(request, _logger).Wait();
 
             return this;
         }

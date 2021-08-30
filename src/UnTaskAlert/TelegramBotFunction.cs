@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -24,7 +25,7 @@ namespace UnTaskAlert
         [FunctionName("bot")]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
-            ILogger log)
+            ILogger log, CancellationToken cancellationToken)
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync();
             log.LogInformation($"Incoming request:{Environment.NewLine}{requestBody}");
@@ -32,7 +33,7 @@ namespace UnTaskAlert
             try
             {
                 var update = JsonConvert.DeserializeObject<Update>(requestBody);
-                await _commandProcessor.Process(update, log);
+                await _commandProcessor.Process(update, log, cancellationToken);
             }
             catch (Exception e)
             {

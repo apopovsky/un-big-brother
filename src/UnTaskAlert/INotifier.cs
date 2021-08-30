@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Threading;
+using System.Threading.Tasks;
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert
@@ -19,7 +20,7 @@ namespace UnTaskAlert
         Task NoEmail(string chatId);
         Task AccountVerified(Subscriber subscriber);
         Task CouldNotVerifyAccount(Subscriber subscriber);
-        Task Typing(string chatId);
+        Task Typing(string chatId, CancellationToken cancellationToken);
         Task RequestEmail(string chatId);
         Task Respond(long chatId, string message);
         Task AccountInfo(Subscriber subscriber);

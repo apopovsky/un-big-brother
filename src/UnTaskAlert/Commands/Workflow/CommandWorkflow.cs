@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -45,7 +46,7 @@ namespace UnTaskAlert.Commands.Workflow
 
         protected abstract void InjectDependencies(IServiceProvider serviceProvider);
 
-        public async Task<WorkflowResult> Step(string input, Subscriber subscriber, long chatId)
+        public async Task<WorkflowResult> Step(string input, Subscriber subscriber, long chatId, CancellationToken cancellationToken)
         {
             Logger.LogInformation($"Executing workflow {this.GetType()} for subscriber '{subscriber.TelegramId}'");
 
@@ -76,7 +77,7 @@ namespace UnTaskAlert.Commands.Workflow
 
             try
             {
-                await Notifier.Typing(chatId.ToString());
+                await Notifier.Typing(chatId.ToString(), cancellationToken);
                 return await PerformStep(input, subscriber, chatId);
             }
             catch (Exception e)

@@ -1,4 +1,6 @@
-﻿using Microsoft.Azure.Functions.Extensions.DependencyInjection;
+﻿using System;
+using System.Net.Http;
+using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -29,7 +31,11 @@ namespace UnTaskAlert
                     {
                         configuration.Bind(settings);
                     });
-                builder.Services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(provider.GetService<IOptions<Config>>().Value.TelegramBotKey));
+                var httpClient = new HttpClient
+                {
+                    Timeout = TimeSpan.FromMinutes(2)
+                };
+                builder.Services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(provider.GetService<IOptions<Config>>().Value.TelegramBotKey, httpClient));
                 builder.Services.AddSingleton<ITelegramBotListener, TelegramBotListener>();
             }
         }
