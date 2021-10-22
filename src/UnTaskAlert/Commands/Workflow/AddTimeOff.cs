@@ -31,16 +31,17 @@ namespace UnTaskAlert.Commands.Workflow
                 var parsed = int.TryParse(inputParts[1], out timeOffInHours);
                 if (!parsed)
                 {
-                    await Notifier.Respond(chatId, "Please provide a valid number of hours off (ex. /addtimeoff 8");
+                    await Notifier.Respond(chatId, $"Please provide a valid number of hours off (ex. /addtimeoff 8 or /addtimeoff 8 01.05.{DateTime.Today.Year}]");
                     return WorkflowResult.Continue;
                 }
 
                 if (inputParts.Length == 3)
                 {
-                    parsed = DateTime.TryParseExact(inputParts[2], "dd.MM.yyyy", null, DateTimeStyles.None, out date);
+                    var dateString = inputParts[2].Replace('/', '.').Replace('-', '.');
+                    parsed = DateTime.TryParseExact(dateString, "dd.MM.yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
                     if (!parsed)
                     {
-                        await Notifier.Respond(chatId, "Please provide a valid date or leave empty to use current");
+                        await Notifier.Respond(chatId, "Please provide a valid date (dd.MM.yyyy format) or leave empty to use current");
                         return WorkflowResult.Continue;
                     }
                 }
@@ -51,32 +52,9 @@ namespace UnTaskAlert.Commands.Workflow
                 return WorkflowResult.Continue;
             }
 
-            if (subscriber.TimeOff == null)
-            {
-                subscriber.TimeOff = new List<TimeOff>();
-            }
+            subscriber.TimeOff ??= new List<TimeOff>();
 
-            if (timeOffInHours < 0)
-            {
-                var targetDay = subscriber.TimeOff.FirstOrDefault(x=>x.Date.Date.Equals(date));
-                if(targetDay==null)
-                {
-                    string message = $"No time off found for {date:dd.MM.yyyy}. Nothing to do.";
-                    await Notifier.Respond(chatId, message);
-                    return WorkflowResult.Continue;
-                }
-
-                if (targetDay.HoursOff <= Math.Abs(timeOffInHours))
-                {
-                    subscriber.TimeOff.Remove(targetDay);
-                }
-                else
-                {
-                    targetDay.HoursOff += timeOffInHours;
-                }
-                await Notifier.Respond(chatId, $"Time off removed from {date}");
-            }
-            else
+            if (timeOffInHours >= 0)
             {
                 var targetDay = subscriber.TimeOff.FirstOrDefault(x => x.Date.Date.Equals(date));
                 if (targetDay == null)
@@ -91,8 +69,29 @@ namespace UnTaskAlert.Commands.Workflow
                 {
                     targetDay.HoursOff += timeOffInHours;
                 }
-
+                
                 await Notifier.Respond(chatId, $"{timeOffInHours} hours added as time off on {date}");
+            }
+            else
+            {
+                var targetDay = subscriber.TimeOff.FirstOrDefault(x => x.Date.Date.Equals(date));
+                if (targetDay == null)
+                {
+                    string message = $"No time off found for {date:dd.MM.yyyy}. Nothing to do.";
+                    await Notifier.Respond(chatId, message);
+                    return WorkflowResult.Continue;
+                }
+
+                if (targetDay.HoursOff <= Math.Abs(timeOffInHours))
+                {
+                    subscriber.TimeOff.Remove(targetDay);
+                }
+                else
+                {
+                    targetDay.HoursOff += timeOffInHours;
+                }
+
+                await Notifier.Respond(chatId, $"Time off removed from {date}");
             }
 
             return WorkflowResult.Finished;

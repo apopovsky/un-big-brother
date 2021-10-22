@@ -30,29 +30,25 @@ namespace UnTaskAlert
             _handler = new DefaultUpdateHandler(HandleUpdateAsync, HandleErrorAsync);
         }
 
-		async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
+        private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
         {
             if (update.Type == UpdateType.Message)
             {
                 try
                 {
                     _logger.LogInformation($"Message received from: {update.Message.From}. Message: {update.Message.Text}");
-                    await _commandProcessor.Process(update, _logger, cancellationToken)
-                        .ContinueWith(async task => {
-                            var exception = task.Exception;
-                            _logger.LogError(new EventId(), exception, exception?.Message);
-                            await _botClient.SendTextMessageAsync(update.Message.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
-                        }, TaskContinuationOptions.OnlyOnFaulted);
+                    await _commandProcessor.Process(update, _logger, cancellationToken);
                 }
                 catch (Exception exception)
                 {
                     Debug.WriteLine(exception.ToString());
-                    _logger.LogError(exception, "Error processing message " + update.Id);
+                    _logger.LogError(new EventId(), exception, exception?.Message);
+                    await _botClient.SendTextMessageAsync(update.Message.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
                 }
             }
         }
 
-        Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception,
+        private Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception,
             CancellationToken cancellationToken)
         {
             _logger.LogError(new EventId(), exception, exception?.Message);
