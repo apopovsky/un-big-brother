@@ -34,9 +34,8 @@ namespace UnTaskAlert
         public async Task<ActiveTasksInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
         {
             var orgUrl = new Uri(url);
-            var personalAccessToken = token;
 
-            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
+            var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
             var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
             foreach (var taskInfo in activeTaskInfo.TasksInfo)
             {

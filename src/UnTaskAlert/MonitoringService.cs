@@ -77,10 +77,9 @@ namespace UnTaskAlert
             if (activeTasksInfo.ActiveTaskCount > 1
                 && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert >= PauseBetweenAlerts)
             {
-                log.LogInformation(
-                    $"{activeTasksInfo.ActiveTaskCount} active tasks at the same time.");
+                log.LogInformation($"{activeTasksInfo.ActiveTaskCount} active tasks at the same time.");
                 subscriber.LastMoreThanSingleTaskIsActiveAlert = DateTime.UtcNow;
-                await _notifier.MoreThanSingleTaskIsActive(subscriber);
+                await _notifier.MoreThanSingleTaskIsActive(subscriber, activeTasksInfo);
             }
 
             await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);

@@ -74,16 +74,18 @@ namespace UnTaskAlert
 
         public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
         {
-            var tasks = GetTasksLinks(activeTasksInfo);
             var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
-                       $"Tasks: {string.Join(Environment.NewLine, tasks)}";
+                       $"Tasks: {string.Join(Environment.NewLine, GetTasksLinks(activeTasksInfo))}";
 
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
         }
 
-        public async Task MoreThanSingleTaskIsActive(Subscriber subscriber)
+        public async Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo tasksInfo)
         {
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, "More than one active task at the same time. This is wrong, do something.");
+            var message = $"More than one active task at the same time!{Environment.NewLine}";
+            message += $"Tasks: {string.Join(Environment.NewLine, GetTasksLinks(tasksInfo))}";
+
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, message, ParseMode.Html);
         }
 
         public async Task Ping(Subscriber subscriber)

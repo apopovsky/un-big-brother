@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using UnTaskAlert.Models;
 
@@ -9,7 +10,7 @@ namespace UnTaskAlert
         Task Instruction(Subscriber subscriber);
         Task NoActiveTasksDuringWorkingHours(Subscriber subscriber);
         Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
-        Task MoreThanSingleTaskIsActive(Subscriber subscriber);
+        Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo tasksInfo);
         Task Ping(Subscriber subscriber);
         Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);
         Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true);
