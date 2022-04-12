@@ -21,3 +21,4 @@
 /src/UnTaskAlert/Properties/ServiceDependencies/UnTaskAlertProd - Zip Deploy
 *.user
 /src/TestConsole
+/src/UnTaskAlert.Tests/bin/Debug/netcoreapp3.1

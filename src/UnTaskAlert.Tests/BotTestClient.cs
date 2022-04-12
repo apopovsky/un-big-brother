@@ -72,7 +72,7 @@ namespace UnTaskAlert.Tests
 
             var botProvider = new Mock<ITelegramBotProvider>();
             botProvider.SetupGet(i => i.Client).Returns(botMock.Object);
-            var notifier = new TelegramNotifier(optionsMock.Object, botProvider.Object, new MailSender(optionsMock.Object));
+            var notifier = new TelegramNotifier(optionsMock.Object, botProvider.Object);
 
             var reportingService = new ReportingService(notifier, backlogAccessor);
 

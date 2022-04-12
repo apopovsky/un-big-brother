@@ -34,16 +34,14 @@ namespace UnTaskAlert
     public class TelegramNotifier : INotifier
     {
         private readonly ITelegramBotClient _bot;
-        private readonly IMailSender _mailSender;
         private readonly string _devOpsAddress;
         private static readonly int maxMessageLength = 4096;
         public static string RequestEmailMessage =
             "I'm here to help you track your time. First, let me know your work email address.";
 
-        public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider, IMailSender mailSender)
+        public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider)
         {
             Arg.NotNull(options, nameof(options));
-            _mailSender = Arg.NotNull(mailSender, nameof(mailSender));
 
             _devOpsAddress = options.Value.AzureDevOpsAddress;
             _bot = botProvider.Client;
@@ -51,7 +49,7 @@ namespace UnTaskAlert
 
         public async Task Instruction(Subscriber subscriber)
         {
-            var text = $"I'm here to help you track your working time. " +
+            var text = "I'm here to help you track your working time. " +
                        $"The following commands are available:{Environment.NewLine}" +
                        $"/standup - tasks of the previous work day{Environment.NewLine}" +
                        $"/active - show active tasks{Environment.NewLine}" +
@@ -75,7 +73,7 @@ namespace UnTaskAlert
         public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
         {
             var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
-                       $"Tasks: {string.Join(Environment.NewLine, GetTasksLinks(activeTasksInfo))}";
+                       $"Tasks: {Environment.NewLine}{string.Join(Environment.NewLine, GetTasksLinks(activeTasksInfo))}";
 
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
         }
@@ -83,8 +81,9 @@ namespace UnTaskAlert
         public async Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo tasksInfo)
         {
             var message = $"More than one active task at the same time!{Environment.NewLine}";
-            message += $"Tasks: {string.Join(Environment.NewLine, GetTasksLinks(tasksInfo))}";
-
+            message += $"Tasks: {Environment.NewLine}";
+            tasksInfo.TasksInfo.ForEach(taskInfo =>
+                message += $"-{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs){Environment.NewLine}");
             await _bot.SendTextMessageAsync(subscriber.TelegramId, message, ParseMode.Html);
         }
 
@@ -185,7 +184,7 @@ namespace UnTaskAlert
                     {
                         nextLine = true;
                     }
-                    text += $"{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs)";
+                    text += $"-{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs)";
                 }
             }
 
@@ -221,7 +220,7 @@ namespace UnTaskAlert
 
         public async Task Typing(string chatId, CancellationToken cancellationToken)
         {
-            await _bot.SendChatActionAsync(chatId, ChatAction.Typing);
+            await _bot.SendChatActionAsync(chatId, ChatAction.Typing, cancellationToken);
         }
 
         public async Task RequestEmail(string chatId)
@@ -253,10 +252,7 @@ namespace UnTaskAlert
 
         private List<string> GetTasksLinks(ActiveTasksInfo activeTasksInfo)
         {
-            var tasks = activeTasksInfo.TasksInfo.Select(taskInfo =>
-                    $"{GetSingleTaskLink(taskInfo)}{Environment.NewLine}")
-                .ToList();
-            return tasks;
+            return activeTasksInfo.TasksInfo.Select(taskInfo => $"{GetSingleTaskLink(taskInfo)}").ToList();
         }
 
         private string GetSingleTaskLink(TaskInfo taskInfo)
