@@ -22,3 +22,4 @@
 *.user
 /src/TestConsole
 /src/UnTaskAlert.Tests/bin/Debug/netcoreapp3.1
+/src/.vs/ProjectEvaluation
