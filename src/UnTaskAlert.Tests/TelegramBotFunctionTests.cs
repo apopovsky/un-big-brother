@@ -1,20 +1,11 @@
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
 using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
-using Telegram.Bot;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 using Telegram.Bot.Types;
-using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.ReplyMarkups;
-using UnTaskAlert.Common;
 
 namespace UnTaskAlert.Tests
 {

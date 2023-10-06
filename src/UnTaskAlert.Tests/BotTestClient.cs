@@ -18,7 +18,7 @@ namespace UnTaskAlert.Tests
 {
     public class BotTestClient
     {
-        //private readonly TelegramBotFunction _target;
+        private readonly TelegramBotFunction _target;
         private readonly IMailSender _mailSender;
         private readonly ILogger _logger;
         private readonly Stack<string> _messages = new Stack<string>();
@@ -62,6 +62,7 @@ namespace UnTaskAlert.Tests
                     It.IsAny<string>(),
                     It.IsAny<ParseMode>(),
                     It.IsAny<IEnumerable<MessageEntity>>(),
+                    It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<bool>(),
                     It.IsAny<int>(),

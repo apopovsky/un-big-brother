@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace UnTaskAlert.Models
+﻿namespace UnTaskAlert.Models
 {
     public class TimeReport
     {

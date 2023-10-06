@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace UnTaskAlert.Tests
+﻿namespace UnTaskAlert.Tests
 {
     public class FakePingGenerator : IPinGenerator
     {

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace UnTaskAlert
+﻿namespace UnTaskAlert
 {
 	public class QueryBuilder : IQueryBuilder
 	{

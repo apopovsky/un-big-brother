@@ -1,6 +1,4 @@
-﻿using Telegram.Bot.Args;
-
-namespace UnTaskAlert.MyNamespace
+﻿namespace UnTaskAlert.MyNamespace
 {
 	public interface ITelegramBotListener
 	{

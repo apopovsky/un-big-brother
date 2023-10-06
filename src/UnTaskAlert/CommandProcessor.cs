@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot.Types;
@@ -17,21 +15,21 @@ namespace UnTaskAlert
         private readonly Config _config;
         private readonly IDbAccessor _dbAccessor;
         private readonly IPinGenerator _pinGenerator;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _scopeFactory;
 
         private static readonly int PauseBeforeAnswer = 1000;
 
         public CommandProcessor(INotifier notifier,
             IDbAccessor dbAccessor,
             IPinGenerator pinGenerator,
-            IServiceProvider serviceProvider,
-            IOptions<Config> options)
+            IOptions<Config> options, 
+            IServiceScopeFactory scopeFactory)
         {
             _notifier = Arg.NotNull(notifier, nameof(notifier));
             _config = Arg.NotNull(options.Value, nameof(options));
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
             _pinGenerator = Arg.NotNull(pinGenerator, nameof(pinGenerator));
-            _serviceProvider = Arg.NotNull(serviceProvider, nameof(serviceProvider));
+            _scopeFactory = Arg.NotNull(scopeFactory, nameof(scopeFactory));
         }
         
         public async Task Process(Update update, ILogger log, CancellationToken cancellationToken)
@@ -85,7 +83,6 @@ namespace UnTaskAlert
                 return;
             }
 
-            // todo: it would be good to use DI to create these instances
             var workflows = new CommandWorkflow[]
             {
                 new SnoozeAlertWorkflow(),
@@ -111,9 +108,6 @@ namespace UnTaskAlert
             var workflowResult = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id, cancellationToken);
             subscriber.ActiveWorkflow = workflowResult == WorkflowResult.Finished ? null : commandWorkflow;
             await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
-
-            return;
-
         }
 
         private async Task<Subscriber> NewUserFlow(ILogger log, string chatId, CancellationToken cancellationToken)
@@ -121,7 +115,8 @@ namespace UnTaskAlert
             log.LogInformation($"NewUserFlow() is executed for chatId '{chatId}'");
             await Task.Delay(PauseBeforeAnswer, cancellationToken);
             var workflow = new AccountWorkflow();
-            workflow.Inject(_serviceProvider, _config, log);
+            var serviceScope = _scopeFactory.CreateScope();
+            workflow.Inject(serviceScope.ServiceProvider, _config, log);
 
             var subscriber = new Subscriber
             {
@@ -143,14 +138,13 @@ namespace UnTaskAlert
 
         private CommandWorkflow ProcessInput(ILogger logger, string input, params CommandWorkflow[] workflows)
         {
-            // todo: it would be nice to have a factory for workflows, maybe
             foreach (var commandWorkflow in workflows)
             {
-                if (commandWorkflow.Accepts(input))
-                {
-                    commandWorkflow.Inject(_serviceProvider, _config, logger);
-                    return commandWorkflow;
-                }
+                if (!commandWorkflow.Accepts(input)) continue;
+
+                var serviceScope = _scopeFactory.CreateScope();
+                commandWorkflow.Inject(serviceScope.ServiceProvider, _config, logger);
+                return commandWorkflow;
             }
 
             return null;

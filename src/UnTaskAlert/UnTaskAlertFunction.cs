@@ -1,7 +1,4 @@
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UnTaskAlert.Common;
@@ -21,10 +18,11 @@ namespace UnTaskAlert
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
         }
 
-        [FunctionName("activeTaskMonitoring")]
-        public async Task Run([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, ILogger log)
+        [Function("activeTaskMonitoring")]
+        public async Task Run([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, FunctionContext context)
         {
-            log.LogInformation($"Executing monitoring task");
+            var logger = context.GetLogger(nameof(UnTaskAlertFunction));
+            logger.LogInformation("Executing monitoring task");
 
             var subscribers = await _dbAccessor.GetSubscribers();
             foreach (var subscriber in subscribers)
@@ -34,11 +32,11 @@ namespace UnTaskAlert
                     await _service.PerformMonitoring(subscriber,
                         _config.AzureDevOpsAddress,
                         _config.AzureDevOpsAccessToken,
-                        log, CancellationToken.None);
+                        logger, context.CancellationToken);
                 }
                 catch (Exception e)
                 {
-                    log.LogError(e.ToString());
+                    logger.LogError(e, e.Message);
                 }
             }
         }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace UnTaskAlert.Common
+﻿namespace UnTaskAlert.Common
 {
     public static class Arg
     {

@@ -1,13 +1,7 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.WebJobs;
+﻿using System.Diagnostics;
+using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 using Telegram.Bot;
-using Telegram.Bot.Args;
-using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using UnTaskAlert.Common;
 using UnTaskAlert.MyNamespace;
@@ -26,7 +20,7 @@ namespace UnTaskAlert
         public TelegramBotListener(ICommandProcessor service, ITelegramBotClient botClient)
 		{
 			_botClient = botClient;
-			_commandProcessor = Arg.NotNull(service, nameof(service));
+            _commandProcessor = Arg.NotNull(service, nameof(service));
             _handler = new DefaultUpdateHandler(HandleUpdateAsync, HandleErrorAsync);
         }
 
@@ -63,11 +57,11 @@ namespace UnTaskAlert
             return Task.CompletedTask;
         }
 
-        [FunctionName("botListener")]
-		public async Task Run([TimerTrigger("0 0 */24 * * *", RunOnStartup = true)] TimerInfo myTimer, ILogger log)
+        [Function("botListener")]
+		public async Task Run([TimerTrigger("0 0 */24 * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
 		{
-            _logger = log;
-            _botClient.StartReceiving(_handler);
+            _logger = context.GetLogger(nameof(TelegramBotListener));
+            _botClient.StartReceiving(_handler, cancellationToken: context.CancellationToken);
 
             await Task.CompletedTask;
         }

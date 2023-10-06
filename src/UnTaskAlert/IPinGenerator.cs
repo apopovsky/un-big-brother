@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace UnTaskAlert
+﻿namespace UnTaskAlert
 {
     public interface IPinGenerator
     {

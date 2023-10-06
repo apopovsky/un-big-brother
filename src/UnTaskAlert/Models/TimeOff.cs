@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace UnTaskAlert.Models
+﻿namespace UnTaskAlert.Models
 {
     public class TimeOff
     {

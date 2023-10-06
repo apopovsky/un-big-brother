@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using UnTaskAlert.Commands.Workflow;
+﻿using UnTaskAlert.Commands.Workflow;
 
 namespace UnTaskAlert.Models
 {
