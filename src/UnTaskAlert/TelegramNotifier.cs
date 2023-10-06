@@ -62,12 +62,12 @@ namespace UnTaskAlert
                        $"/healthcheck [threshold] - detailed report with a list of tasks where the difference between active and complete is bigger than a given threshold{Environment.NewLine}" +
                        "/help";
 
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
         }
 
         public async Task NoActiveTasksDuringWorkingHours(Subscriber subscriber)
         {
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.");
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.", ParseMode.Html);
         }
 
         public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
@@ -169,8 +169,8 @@ namespace UnTaskAlert
 
         public async Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
         {
-            var text = $"{subscriber.Email} has {activeTasksInfo.ActiveTaskCount} active task{(activeTasksInfo.ActiveTaskCount > 1 || activeTasksInfo.ActiveTaskCount == 0 ? "s" : string.Empty)}.{Environment.NewLine}";
-
+            var sb = new StringBuilder();
+            sb.AppendFormat("{0} has {1} active task{2}.{3}", subscriber.Email, activeTasksInfo.ActiveTaskCount, activeTasksInfo.ActiveTaskCount > 1 || activeTasksInfo.ActiveTaskCount == 0 ? "s" : string.Empty, Environment.NewLine);
             if (activeTasksInfo.ActiveTaskCount != 0)
             {
                 var nextLine = false;
@@ -178,18 +178,18 @@ namespace UnTaskAlert
                 {
                     if (nextLine)
                     {
-                        text += Environment.NewLine;
+                        sb.Append(Environment.NewLine);
                     }
                     else
                     {
                         nextLine = true;
                     }
-                    text += $"-{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs)";
+                    sb.AppendFormat("-{0} (Active: {1:0.##} hs)", GetSingleTaskLink(taskInfo), taskInfo.ActiveTime);
                 }
             }
-
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), ParseMode.Html);
         }
+
 
         public async Task IncorrectEmail(string chatId)
         {

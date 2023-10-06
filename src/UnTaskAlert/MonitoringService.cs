@@ -36,6 +36,9 @@ namespace UnTaskAlert
 
             var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
             var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
+
+            //TODO _backlogAccessor.GetWorkItemsForPeriod()
+
             await CreateAlertIfNeeded(subscriber, activeTaskInfo, log, cancellationToken);
         }
 

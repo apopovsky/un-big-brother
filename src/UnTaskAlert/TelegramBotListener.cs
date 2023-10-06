@@ -11,7 +11,7 @@ using Telegram.Bot.Exceptions;
 using Telegram.Bot.Types.Enums;
 using UnTaskAlert.Common;
 using UnTaskAlert.MyNamespace;
-using Telegram.Bot.Extensions.Polling;
+using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 
 namespace UnTaskAlert
@@ -42,8 +42,16 @@ namespace UnTaskAlert
                 catch (Exception exception)
                 {
                     Debug.WriteLine(exception.ToString());
-                    _logger.LogError(new EventId(), exception, exception?.Message);
-                    await _botClient.SendTextMessageAsync(update.Message.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
+                    _logger.LogError(new EventId(), exception, exception.Message);
+                    try
+                    {
+                        await _botClient.SendTextMessageAsync(update.Message.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
+                    }
+                    catch (Exception e)
+                    {
+                        Debug.WriteLine(e.ToString());
+                        _logger.LogError(new EventId(), e, e.Message);
+                    }
                 }
             }
         }
