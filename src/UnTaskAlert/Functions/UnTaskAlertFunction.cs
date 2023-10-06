@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UnTaskAlert.Common;
 
-namespace UnTaskAlert
+namespace UnTaskAlert.Functions
 {
     public class UnTaskAlertFunction
     {
@@ -18,8 +18,8 @@ namespace UnTaskAlert
             _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
         }
 
-        [Function("activeTaskMonitoring")]
-        public async Task Run([TimerTrigger("0 */10 * * * *")]TimerInfo myTimer, FunctionContext context)
+        [Function(nameof(UnTaskAlertFunction))]
+        public async Task Run([TimerTrigger("0 */10 * * * *")] TimerInfo myTimer, FunctionContext context)
         {
             var logger = context.GetLogger(nameof(UnTaskAlertFunction));
             logger.LogInformation("Executing monitoring task");

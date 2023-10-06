@@ -8,6 +8,7 @@ using Telegram.Bot;
 using UnTaskAlert.MyNamespace;
 
 using UnTaskAlert;
+using UnTaskAlert.Functions;
 
 var host = new HostBuilder()
     .ConfigureFunctionsWorkerDefaults()
@@ -37,5 +38,5 @@ void Configure(HostBuilderContext context, IServiceCollection services)
         });
     services.AddHttpClient();
     services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(provider.GetService<IOptions<Config>>().Value.TelegramBotKey, provider.GetService<HttpClient>()));
-    services.AddSingleton<ITelegramBotListener, TelegramBotListener>();
+    services.AddSingleton<ITelegramBotListener, TelegramBotListenerFunction>();
 }

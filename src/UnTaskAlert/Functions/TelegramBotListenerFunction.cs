@@ -8,18 +8,18 @@ using UnTaskAlert.MyNamespace;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 
-namespace UnTaskAlert
+namespace UnTaskAlert.Functions
 {
-	public class TelegramBotListener : ITelegramBotListener
-	{
-		private readonly ITelegramBotClient _botClient;
-		private readonly ICommandProcessor _commandProcessor;
-		private ILogger _logger;
+    public class TelegramBotListenerFunction : ITelegramBotListener
+    {
+        private readonly ITelegramBotClient _botClient;
+        private readonly ICommandProcessor _commandProcessor;
+        private ILogger _logger;
         private readonly IUpdateHandler _handler;
 
-        public TelegramBotListener(ICommandProcessor service, ITelegramBotClient botClient)
-		{
-			_botClient = botClient;
+        public TelegramBotListenerFunction(ICommandProcessor service, ITelegramBotClient botClient)
+        {
+            _botClient = botClient;
             _commandProcessor = Arg.NotNull(service, nameof(service));
             _handler = new DefaultUpdateHandler(HandleUpdateAsync, HandleErrorAsync);
         }
@@ -57,13 +57,13 @@ namespace UnTaskAlert
             return Task.CompletedTask;
         }
 
-        [Function("botListener")]
-		public async Task Run([TimerTrigger("0 0 */24 * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
-		{
-            _logger = context.GetLogger(nameof(TelegramBotListener));
+        [Function(nameof(TelegramBotListenerFunction))]
+        public async Task Run([TimerTrigger("0 0 */24 * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
+        {
+            _logger = context.GetLogger(nameof(TelegramBotListenerFunction));
             _botClient.StartReceiving(_handler, cancellationToken: context.CancellationToken);
 
             await Task.CompletedTask;
         }
-	}
+    }
 }

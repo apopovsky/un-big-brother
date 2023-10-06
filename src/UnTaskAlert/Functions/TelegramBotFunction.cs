@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 using Telegram.Bot.Types;
 using UnTaskAlert.Common;
 
-namespace UnTaskAlert
+namespace UnTaskAlert.Functions
 {
     public class TelegramBotFunction
     {
@@ -17,7 +17,7 @@ namespace UnTaskAlert
             _commandProcessor = Arg.NotNull(commandProcessor, nameof(commandProcessor));
         }
 
-        [Function("bot")]
+        [Function(nameof(TelegramBotFunction))]
         public async Task<IActionResult> Run(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
             FunctionContext context)
