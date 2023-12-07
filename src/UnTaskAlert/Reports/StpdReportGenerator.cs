@@ -23,14 +23,12 @@ namespace UnTaskAlert.Reports
 			var assembly = Assembly.GetExecutingAssembly();
 			var resourceName = "UnTaskAlert.Reports.DetailReport.cshtml";
 
-			using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-			using (StreamReader reader = new StreamReader(stream))
-			{
-				var content = reader.ReadToEnd();
+            using Stream stream = assembly.GetManifestResourceStream(resourceName);
+            using StreamReader reader = new StreamReader(stream);
+            var content = reader.ReadToEnd();
 				
-				return ProcessReplacements(content, timeReport);
-			}
-;
+            return ProcessReplacements(content, timeReport);
+            ;
 		}
 
 		private string ProcessReplacements(string content, TimeReport timeReport)
@@ -64,7 +62,7 @@ namespace UnTaskAlert.Reports
 								{
 									var offset = (double) propValue;
 									var color = "#ffffff";
-									if (offset > .25 && offset <= .75)
+									if (offset is > .25 and <= .75)
 									{
 										color = "#ffffe6";
 									}
@@ -105,15 +103,18 @@ namespace UnTaskAlert.Reports
 				}
 				return ((double) propValue).ToString(format);
 			}
-			else
-			{
-				if (property.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
-				{
-					var link = $"<a target=\"_blank\" href=\"{baseUrl.AppendPathSegment(propValue)}\">{propValue}</a>";
-					return link;
-				}
-				return propValue?.ToString();
-			}
-		}
+
+            if (property.PropertyType == typeof(DateTime))
+            {
+                return ((DateTime)propValue).ToString("dd/MM/yyyy");
+            }
+
+            if (property.Name.Equals("id", StringComparison.OrdinalIgnoreCase))
+            {
+                var link = $"<a target=\"_blank\" href=\"{baseUrl.AppendPathSegment(propValue)}\">{propValue}</a>";
+                return link;
+            }
+            return propValue?.ToString();
+        }
 	}
 }

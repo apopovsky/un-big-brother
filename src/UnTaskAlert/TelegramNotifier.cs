@@ -97,7 +97,7 @@ namespace UnTaskAlert
             await _bot.SendDocumentAsync(subscriber.TelegramId, file, caption: "Your report.");
             
             await _bot.SendTextMessageAsync(subscriber.TelegramId,
-                $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
+                $"Your stats for {timeReport.StartDate.Date:yyyy-MM-dd}{timeReport.EndDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
                 $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
                 $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
                 $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +

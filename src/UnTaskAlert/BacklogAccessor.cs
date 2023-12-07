@@ -44,9 +44,10 @@ namespace UnTaskAlert
             }
         }
 
-        public async Task<List<int>> GetWorkItemsForPeriod(VssConnection connection, string userName, DateTime dateTime, ILogger log)
+        public async Task<List<int>> GetWorkItemsForPeriod(VssConnection connection, string userName, DateTime dateTime,
+            DateTime? dateTo, ILogger log)
         {
-            var query = _queryBuilder.GetWorkItemsByDate(userName, dateTime, null);
+            var query = _queryBuilder.GetWorkItemsByDate(userName, dateTime, dateTo);
 
             var wiql = new Wiql { Query = query };
 

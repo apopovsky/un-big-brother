@@ -19,9 +19,10 @@ namespace UnTaskAlert
             _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
         }
 
-        public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate,
+            ILogger log, DateTime? endDate)
         {
-            var report = await GetTimeReport(subscriber, url, token, startDate, log);
+            var report = await GetTimeReport(subscriber, url, token, startDate, log, endDate);
 
             log.LogInformation($"Query Result: totalActive:'{report.TotalActive}', totalEstimated:'{report.TotalEstimated}', totalCompleted:'{report.TotalCompleted}', expected: '{report.Expected}'");
 
@@ -44,9 +45,10 @@ namespace UnTaskAlert
             return activeTaskInfo;
         }
 
-        public async Task CreateHealthCheckReport(Subscriber subscriber, string url, string token, DateTime startDate, double threshold, ILogger log)
+        public async Task CreateHealthCheckReport(Subscriber subscriber, string url, string token, DateTime startDate,
+            double threshold, ILogger log)
         {
-            var timeReport = await GetTimeReport(subscriber, url, token, startDate, log);
+            var timeReport = await GetTimeReport(subscriber, url, token, startDate, log, null);
 
             log.LogInformation($"Query Result: totalActive:'{timeReport.TotalActive}', totalEstimated:'{timeReport.TotalEstimated}', totalCompleted:'{timeReport.TotalCompleted}', expected: '{timeReport.Expected}'");
             
@@ -56,17 +58,18 @@ namespace UnTaskAlert
         public async Task CreateStandupReport(Subscriber subscriber, string url, string token, ILogger log)
         {
             var startDate = PreviousWorkDay(DateTime.Today);
-            var timeReport = await GetTimeReport(subscriber, url, token, startDate, log);
+            var timeReport = await GetTimeReport(subscriber, url, token, startDate, log, null);
             await _notifier.SendDetailedTimeReport(subscriber, timeReport, 0, includeSummary: false);
         }
 
-        private async Task<TimeReport> GetTimeReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
+        private async Task<TimeReport> GetTimeReport(Subscriber subscriber, string url, string token,
+            DateTime startDate, ILogger log, DateTime? endDate)
         {
             var orgUrl = new Uri(url);
             var personalAccessToken = token;
 
             var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, personalAccessToken));
-            var workItemsIds = await _backlogAccessor.GetWorkItemsForPeriod(connection, subscriber.Email, startDate, log);
+            var workItemsIds = await _backlogAccessor.GetWorkItemsForPeriod(connection, subscriber.Email, startDate, endDate, log);
             var workItems = await _backlogAccessor.GetWorkItemsById(connection, workItemsIds);
 
             var report = new TimeReport();
@@ -108,13 +111,14 @@ namespace UnTaskAlert
             }
 
             report.StartDate = startDate;
-            report.EndDate = DateTime.UtcNow.Date;
-            report.Expected = GetBusinessDays(startDate, DateTime.UtcNow.Date) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
+            var reportEndDate = endDate ?? DateTime.UtcNow.Date;
+            report.EndDate = reportEndDate;
+            report.Expected = GetBusinessDays(startDate, reportEndDate) * (subscriber.HoursPerDay == 0 ? HoursPerDay : subscriber.HoursPerDay);
             report.HoursOff = GetHoursOff(subscriber, startDate);
             return report;
         }
 
-        private int GetHoursOff(Subscriber subscriber, DateTime startDate)
+        private static int GetHoursOff(Subscriber subscriber, DateTime startDate)
         {
             if (subscriber.TimeOff == null)
             {
@@ -158,13 +162,13 @@ namespace UnTaskAlert
             return activeTime;
         }
 
-        private async Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
+        private Task SendReport(Subscriber subscriber, TimeReport timeReport, ILogger log)
         {
-            log.LogInformation($"Sending info.");
-            await _notifier.SendTimeReport(subscriber, timeReport);
+            log.LogInformation("Sending info.");
+            return _notifier.SendTimeReport(subscriber, timeReport);
         }
 
-        public DateTime PreviousWorkDay(DateTime date)
+        private DateTime PreviousWorkDay(DateTime date)
         {
             do
             {
@@ -175,7 +179,7 @@ namespace UnTaskAlert
             return date;
         }
 
-        private bool IsWeekend(DateTime date)
+        private static bool IsWeekend(DateTime date)
         {
             return date.DayOfWeek == DayOfWeek.Saturday ||
                    date.DayOfWeek == DayOfWeek.Sunday;
