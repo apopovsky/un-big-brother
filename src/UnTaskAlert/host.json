@@ -1,11 +1,19 @@
 {
     "version": "2.0",
-    "logging": {
-        "applicationInsights": {
-            "samplingSettings": {
-                "isEnabled": true,
-                "excludedTypes": "Request"
-            }
-        }
+  "logging": {
+    "logLevel": {
+      "default": "Warning",
+      "Function": "Error",
+      "Host.Aggregator": "Error",
+      "Host.Results": "Information",
+      "UnTaskAlert.Functions": "Warning"
+    },
+    "applicationInsights": {
+      "samplingSettings": {
+        "isEnabled": true,
+        "maxTelemetryItemsPerSecond": 1,
+        "excludedTypes": "Exception"
+      }
     }
+  }
 }

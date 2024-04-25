@@ -13,7 +13,6 @@
 		"AzureDevOpsAddress": "",
 		"AzureDevOpsAccessToken": "",
 		"EmailDomain": "",
-		"CosmosDbConnectionString": "",
-		"DebugLocal": false
+		"CosmosDbConnectionString": ""
 	}
 }
