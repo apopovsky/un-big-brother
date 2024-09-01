@@ -43,11 +43,11 @@ namespace UnTaskAlert.Tests
                 .Send("hey")
                 .CheckResponse(TelegramNotifier.RequestEmailMessage)
                 .Send("fake@fake.fake")
-                .CheckResponse(s => Assert.IsTrue(s.StartsWith("Email address is set to fake@fake.fake")))
+                .CheckResponse(s => Assert.That(s.StartsWith("Email address is set to fake@fake.fake")))
                 .Send("4567")
-                .CheckResponse(s => Assert.AreEqual(s, "Your account could not be verified."))
+                .CheckResponse(s => Assert.Equals(s, "Your account could not be verified."))
                 .Send(FakePingGenerator.Pin.ToString())
-                .CheckResponse(s => Assert.AreEqual(s, "Your account is verified. Now you are able to request reports."))
+                .CheckResponse(s => Assert.Equals(s, "Your account is verified. Now you are able to request reports."))
                 .Send("/delete")
                 .CheckResponse("Account is deleted");
 
@@ -83,23 +83,23 @@ namespace UnTaskAlert.Tests
                 .Send("hey")
                 .CheckResponse(TelegramNotifier.RequestEmailMessage)
                 .Send("fake@fake.fake")
-                .CheckResponse(s => Assert.IsTrue(s.StartsWith("Email address is set to fake@fake.fake")))
+                .CheckResponse(s => Assert.That(s.StartsWith("Email address is set to fake@fake.fake")))
                 // 1st attempt
                 .Send("1111")
-                .CheckResponse(s => Assert.AreEqual(s, "Your account could not be verified."))
+                .CheckResponse(s => Assert.Equals(s, "Your account could not be verified."))
                 // 2nd attempt
                 .Send("2222")
-                .CheckResponse(s => Assert.AreEqual(s, "Your account could not be verified."))
+                .CheckResponse(s => Assert.Equals(s, "Your account could not be verified."))
                 // 3rd attempt
                 .Send("3333")
-                .CheckResponse(s => Assert.AreEqual(s, "Your account could not be verified."))
+                .CheckResponse(s => Assert.Equals(s, "Your account could not be verified."))
                 // User is locked and cannot use the correct pin
                 .Send(FakePingGenerator.Pin.ToString())
                 .CheckResponse(
-                    s => Assert.AreEqual(s, "Your account could not be verified."))
+                    s => Assert.Equals(s, "Your account could not be verified."))
                 // User is not verified and cannot request reports
                 .Send("/day")
-                .CheckResponse(s => Assert.AreEqual(s, "Your account could not be verified."));
+                .CheckResponse(s => Assert.Equals(s, "Your account could not be verified."));
             //.DeleteAccount();
         }
 
@@ -113,16 +113,16 @@ namespace UnTaskAlert.Tests
                 .Send("hey")
                 .CheckResponse(TelegramNotifier.RequestEmailMessage)
                 .Send("fake@fake.fake")
-                .CheckResponse(s => Assert.IsTrue(s.StartsWith("Email address is set to fake@fake.fake")))
+                .CheckResponse(s => Assert.That(s.StartsWith("Email address is set to fake@fake.fake")))
                 // 1st attempt
                 .Send("1111")
-                .CheckResponse(s => Assert.AreEqual(s, "Your account could not be verified."))
+                .CheckResponse(s => Assert.Equals(s, "Your account could not be verified."))
                 // 2nd attempt
                 .Send("2222")
-                .CheckResponse(s => Assert.AreEqual(s, "Your account could not be verified."))
+                .CheckResponse(s => Assert.Equals(s, "Your account could not be verified."))
                 // 3rd attempt
                 .Send(FakePingGenerator.Pin.ToString())
-                .CheckResponse(s => Assert.AreEqual(s, "Your account is verified.Now you are able to request reports."));
+                .CheckResponse(s => Assert.Equals(s, "Your account is verified.Now you are able to request reports."));
             //.DeleteAccount();
         }
 

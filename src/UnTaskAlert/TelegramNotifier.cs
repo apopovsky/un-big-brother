@@ -2,8 +2,8 @@
 using Flurl;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
+using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using Telegram.Bot.Types.InputFiles;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
 using UnTaskAlert.Reports;
@@ -31,7 +31,7 @@ namespace UnTaskAlert
         private readonly ITelegramBotClient _bot;
         private readonly string _devOpsAddress;
         private static readonly int maxMessageLength = 4096;
-        public static string RequestEmailMessage =
+        public static readonly string RequestEmailMessage =
             "I'm here to help you track your time. First, let me know your work email address.";
 
         public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider)
@@ -57,12 +57,12 @@ namespace UnTaskAlert
                        $"/healthcheck [threshold] - detailed report with a list of tasks where the difference between active and complete is bigger than a given threshold{Environment.NewLine}" +
                        "/help";
 
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.Html);
         }
 
         public async Task NoActiveTasksDuringWorkingHours(Subscriber subscriber)
         {
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.", ParseMode.Html);
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.", parseMode: ParseMode.Html);
         }
 
         public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
@@ -70,7 +70,7 @@ namespace UnTaskAlert
             var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
                        $"Tasks: {Environment.NewLine}{string.Join(Environment.NewLine, GetTasksLinks(activeTasksInfo))}";
 
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, text, ParseMode.Html);
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.Html);
         }
 
         public async Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo tasksInfo)
@@ -79,7 +79,7 @@ namespace UnTaskAlert
             message += $"Tasks: {Environment.NewLine}";
             tasksInfo.TasksInfo.ForEach(taskInfo =>
                 message += $"-{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs){Environment.NewLine}");
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, message, ParseMode.Html);
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, message, parseMode: ParseMode.Html);
         }
 
         public async Task Ping(Subscriber subscriber)
@@ -92,7 +92,7 @@ namespace UnTaskAlert
             var content = new StpdReportGenerator(_devOpsAddress).GenerateReport(timeReport);
             var byteArray = Encoding.UTF8.GetBytes(content);
             var contentStream = new MemoryStream(byteArray);
-            var file = new InputOnlineFile(contentStream) { FileName = "report.html" };
+            var file = new InputFileStream(contentStream, "report.html");
 
             await _bot.SendDocumentAsync(subscriber.TelegramId, file, caption: "Your report.");
             
@@ -134,7 +134,7 @@ namespace UnTaskAlert
 
                     if (builder.Length + message.Length >= maxMessageLength)
                     {
-                        await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", ParseMode.Html);
+                        await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
                         builder = new StringBuilder();
                     }
 
@@ -144,7 +144,7 @@ namespace UnTaskAlert
 
             if (builder.Length > 0)
             {
-                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", ParseMode.Html);
+                await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
             }
 
             if (includeSummary)
@@ -153,7 +153,7 @@ namespace UnTaskAlert
                     $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
                     $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
                     $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
-                    $"Expected Hours: {timeReport.Expected:0.##}", ParseMode.Markdown);
+                    $"Expected Hours: {timeReport.Expected:0.##}", parseMode: ParseMode.Markdown);
             }
         }
 
@@ -182,7 +182,7 @@ namespace UnTaskAlert
                     sb.AppendFormat("-{0} (Active: {1:0.##} hs)", GetSingleTaskLink(taskInfo), taskInfo.ActiveTime);
                 }
             }
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), ParseMode.Html);
+            await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.Html);
         }
 
 
@@ -215,7 +215,7 @@ namespace UnTaskAlert
 
         public async Task Typing(string chatId, CancellationToken cancellationToken)
         {
-            await _bot.SendChatActionAsync(chatId, ChatAction.Typing, cancellationToken);
+            await _bot.SendChatActionAsync(chatId, ChatAction.Typing, cancellationToken: cancellationToken);
         }
 
         public async Task RequestEmail(string chatId)

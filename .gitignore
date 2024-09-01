@@ -24,3 +24,6 @@
 /src/UnTaskAlert.Tests/bin/Debug/netcoreapp3.1
 /src/.vs/ProjectEvaluation
 /src/UnTaskAlert.Tests/bin/Debug/net7.0
+/src/UnTaskAlert/Properties/PublishProfiles/UnTaskAlertProd - Zip Deploy1.pubxml
+/src/UnTaskAlert/Properties/ServiceDependencies/UnTaskAlertProd - Zip Deploy1
+/src/UnTaskAlert.Tests/bin/Debug/net8.0

@@ -49,8 +49,6 @@ namespace UnTaskAlert.Common
 				{
 					writer.Formatting = Newtonsoft.Json.Formatting.None;
 					Serializer.Serialize(writer, input);
-					writer.Flush();
-					streamWriter.Flush();
 				}
 			}
 

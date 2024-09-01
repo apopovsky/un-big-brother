@@ -61,6 +61,7 @@ namespace UnTaskAlert.Tests
             botMock.Setup(i => i.SendTextMessageAsync(
                     It.IsAny<ChatId>(),
                     It.IsAny<string>(),
+                    It.IsAny<int?>(),
                     It.IsAny<ParseMode>(),
                     It.IsAny<IEnumerable<MessageEntity>>(),
                     It.IsAny<bool>(),
@@ -111,7 +112,7 @@ namespace UnTaskAlert.Tests
         public BotTestClient CheckResponse(string expected)
         {
             var reply = _messages.Pop();
-            Assert.AreEqual(reply, TelegramNotifier.RequestEmailMessage);
+            Assert.Equals(reply, TelegramNotifier.RequestEmailMessage);
 
             return this;
         }

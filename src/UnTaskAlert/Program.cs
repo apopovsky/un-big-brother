@@ -11,7 +11,7 @@ using UnTaskAlert;
 using UnTaskAlert.Functions;
 
 var host = new HostBuilder()
-    .ConfigureFunctionsWorkerDefaults()
+    .ConfigureFunctionsWebApplication()
     .ConfigureServices(Configure)
     .Build();
 
