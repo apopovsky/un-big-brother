@@ -1,6 +1,5 @@
-﻿namespace UnTaskAlert.MyNamespace
+﻿namespace UnTaskAlert.MyNamespace;
+
+public interface ITelegramBotListener
 {
-	public interface ITelegramBotListener
-	{
-	}
 }

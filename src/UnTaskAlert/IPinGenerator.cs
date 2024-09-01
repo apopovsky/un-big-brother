@@ -1,7 +1,6 @@
-﻿namespace UnTaskAlert
+﻿namespace UnTaskAlert;
+
+public interface IPinGenerator
 {
-    public interface IPinGenerator
-    {
-        int GetRandomPin();
-    }
+    int GetRandomPin();
 }

@@ -1,13 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
 using UnTaskAlert.Models;
 
-namespace UnTaskAlert
+namespace UnTaskAlert;
+
+public interface IDbAccessor
 {
-    public interface IDbAccessor
-    {
-        Task AddOrUpdateSubscriber(Subscriber subscriber, CancellationToken cancellationToken);
-        Task<Subscriber> GetSubscriberById(string telegramId, ILogger logger);
-        Task<List<Subscriber>> GetSubscribers();
-        Task DeleteIfExists(Subscriber subscriber);
-    }
+    Task AddOrUpdateSubscriber(Subscriber subscriber, CancellationToken cancellationToken);
+    Task<Subscriber> GetSubscriberById(string telegramId, ILogger logger);
+    Task<List<Subscriber>> GetSubscribers();
+    Task DeleteIfExists(Subscriber subscriber);
 }

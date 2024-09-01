@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using Telegram.Bot.Types;
 
-namespace UnTaskAlert
+namespace UnTaskAlert;
+
+public interface ICommandProcessor
 {
-    public interface ICommandProcessor
-    {
-        Task Process(Update update, ILogger log, CancellationToken cancellationToken);
-    }
+    Task Process(Update update, ILogger log, CancellationToken cancellationToken);
 }

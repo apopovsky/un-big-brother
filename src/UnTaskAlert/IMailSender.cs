@@ -1,8 +1,7 @@
-﻿namespace UnTaskAlert
+﻿namespace UnTaskAlert;
+
+public interface IMailSender
 {
-    public interface IMailSender
-    {
-        void SendMessage(string subject, string body, string to);
-        void SendHtmlMessage(string subject, string body, string to);
-    }
+    void SendMessage(string subject, string body, string to);
+    void SendHtmlMessage(string subject, string body, string to);
 }

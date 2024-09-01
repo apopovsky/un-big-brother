@@ -1,61 +1,60 @@
-﻿namespace UnTaskAlert.Common
+﻿namespace UnTaskAlert.Common;
+
+public static class Arg
 {
-    public static class Arg
+    public static string NotNullOrWhitespace(string arg, string argName)
     {
-        public static string NotNullOrWhitespace(string arg, string argName)
+        if (arg == null)
         {
-            if (arg == null)
-            {
-                throw new ArgumentNullException(argName);
-            }
-
-            if (string.IsNullOrWhiteSpace(arg))
-            {
-                throw new ArgumentException($"{argName} can not be empty or whitespace.", argName);
-            }
-
-            return arg;
+            throw new ArgumentNullException(argName);
         }
 
-        public static T NotNull<T>(T arg, string argName)
-            where T : class =>
-            arg ?? throw new ArgumentNullException(argName);
-
-        public static ICollection<T> NotNullOrEmpty<T>(ICollection<T> arg, string argName)
+        if (string.IsNullOrWhiteSpace(arg))
         {
-            NotNull(arg, argName);
-
-            if (arg.Count == 0)
-            {
-                throw new ArgumentException($"{argName} collection can not be empty.", argName);
-            }
-
-            return arg;
+            throw new ArgumentException($"{argName} can not be empty or whitespace.", argName);
         }
 
-        public static T InRange<T>(T arg, T min, T max, string argName)
-            where T : IComparable
-        {
-            if (arg.CompareTo(min) < 0)
-            {
-                throw new ArgumentOutOfRangeException(
-                    argName,
-                    arg,
-                    $"{argName} should be between '{min}' and '{max}'.");
-            }
+        return arg;
+    }
 
-            return arg;
+    public static T NotNull<T>(T arg, string argName)
+        where T : class =>
+        arg ?? throw new ArgumentNullException(argName);
+
+    public static ICollection<T> NotNullOrEmpty<T>(ICollection<T> arg, string argName)
+    {
+        NotNull(arg, argName);
+
+        if (arg.Count == 0)
+        {
+            throw new ArgumentException($"{argName} collection can not be empty.", argName);
         }
 
-        public static T NotDefault<T>(T arg, string argName)
-            where T : struct
-        {
-            if (EqualityComparer<T>.Default.Equals(arg, default))
-            {
-                throw new ArgumentException($"{argName} has default value.", argName);
-            }
+        return arg;
+    }
 
-            return arg;
+    public static T InRange<T>(T arg, T min, T max, string argName)
+        where T : IComparable
+    {
+        if (arg.CompareTo(min) < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                argName,
+                arg,
+                $"{argName} should be between '{min}' and '{max}'.");
         }
+
+        return arg;
+    }
+
+    public static T NotDefault<T>(T arg, string argName)
+        where T : struct
+    {
+        if (EqualityComparer<T>.Default.Equals(arg, default))
+        {
+            throw new ArgumentException($"{argName} has default value.", argName);
+        }
+
+        return arg;
     }
 }

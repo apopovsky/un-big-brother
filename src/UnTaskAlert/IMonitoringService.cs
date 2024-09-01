@@ -1,10 +1,9 @@
 ﻿using Microsoft.Extensions.Logging;
 using UnTaskAlert.Models;
 
-namespace UnTaskAlert
+namespace UnTaskAlert;
+
+public interface IMonitoringService
 {
-    public interface IMonitoringService
-    {
-        Task PerformMonitoring(Subscriber subscriber, string url, string token, ILogger log, CancellationToken cancellationToken);
-    }
+    Task PerformMonitoring(Subscriber subscriber, string url, string token, ILogger log, CancellationToken cancellationToken);
 }

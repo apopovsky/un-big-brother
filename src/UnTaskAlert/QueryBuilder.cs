@@ -1,22 +1,22 @@
-﻿namespace UnTaskAlert
-{
-	public class QueryBuilder : IQueryBuilder
-	{
-		public string GetActiveWorkItemsQuery(string userName)
-		{
-			var query = "Select [State], [Title] " +
-			            "From WorkItems " +
-			            "Where [Work Item Type] = 'Task' " +
-			            $"And [Assigned To] = '{userName}' " +
-			            "And [State] = 'Active' " +
-			            "Order By [State] Asc, [Changed Date] Desc";
-			return query;
-		}
+﻿namespace UnTaskAlert;
 
-		public string GetWorkItemsByDate(string userName, DateTime @from, DateTime? to)
-		{
-			var dateTo = (to ?? DateTime.UtcNow).Date.AddDays(1);
-			var query = $@"SELECT [System.Id],
+public class QueryBuilder : IQueryBuilder
+{
+	public string GetActiveWorkItemsQuery(string userName)
+	{
+		var query = "Select [State], [Title] " +
+		            "From WorkItems " +
+		            "Where [Work Item Type] = 'Task' " +
+		            $"And [Assigned To] = '{userName}' " +
+		            "And [State] = 'Active' " +
+		            "Order By [State] Asc, [Changed Date] Desc";
+		return query;
+	}
+
+	public string GetWorkItemsByDate(string userName, DateTime @from, DateTime? to)
+	{
+		var dateTo = (to ?? DateTime.UtcNow).Date.AddDays(1);
+		var query = $@"SELECT [System.Id],
 								    [System.WorkItemType],
 								    [System.Title],
 								    [System.AssignedTo],
@@ -39,7 +39,6 @@
 								        OR ( [System.State] = 'Active')
 								    )";
 
-			return query;
-		}
+		return query;
 	}
 }
