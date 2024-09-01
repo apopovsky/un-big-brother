@@ -1,6 +1,5 @@
-﻿using System;
-using System.Globalization;
-using System.Threading.Tasks;
+﻿using System.Globalization;
+using Microsoft.Extensions.DependencyInjection;
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
@@ -11,7 +10,7 @@ namespace UnTaskAlert.Commands.Workflow
         protected abstract DateTime StartDate { get; set; }
         protected virtual DateTime? EndDate { get; set; }
 
-        protected override void InjectDependencies(IServiceProvider serviceProvider)
+        protected override void InjectDependencies(IServiceScopeFactory serviceScopeFactory)
         {
             // no-op
         }
@@ -20,7 +19,7 @@ namespace UnTaskAlert.Commands.Workflow
         {
             var strings = input.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             if (strings.Length > 1 && DateTime.TryParseExact(strings[1],
-                    new[] { "yyyy.MM.dd", "yyyyMMdd", "dd.MM.yyyy", "dd/MM/yyyy" },
+                    ["yyyy.MM.dd", "yyyyMMdd", "dd.MM.yyyy", "dd/MM/yyyy"],
                     CultureInfo.CurrentCulture,
                     DateTimeStyles.None, out var startDate))
             {
@@ -33,7 +32,7 @@ namespace UnTaskAlert.Commands.Workflow
             }
 
             if (strings.Length > 2 && DateTime.TryParseExact(strings[2],
-                    new[] { "yyyy.MM.dd", "yyyyMMdd", "dd.MM.yyyy", "dd/MM/yyyy" },
+                    ["yyyy.MM.dd", "yyyyMMdd", "dd.MM.yyyy", "dd/MM/yyyy"],
                     CultureInfo.CurrentCulture,
                     DateTimeStyles.None, out var endDate))
             {
@@ -53,16 +52,13 @@ namespace UnTaskAlert.Commands.Workflow
             return WorkflowResult.Finished;
         }
 
-        protected override bool DoesAccept(string input)
-        {
-            return input.StartsWith(Command, StringComparison.OrdinalIgnoreCase);
-        }
+        protected override bool DoesAccept(string input) => input.StartsWith(Command, StringComparison.OrdinalIgnoreCase);
 
-        private bool TryParseMonth(string input, out int month)
+        private static bool TryParseMonth(string input, out int month)
         {
             if (int.TryParse(input, out month))
             {
-                if (month >= 1 && month <= 12)
+                if (month is >= 1 and <= 12)
                 {
                     return true;
                 }
@@ -71,7 +67,7 @@ namespace UnTaskAlert.Commands.Workflow
             {
                 var culture = CultureInfo.GetCultureInfo("en-US");
                 var monthNames = culture.DateTimeFormat.MonthNames;
-                for (int i = 0; i < monthNames.Length; i++)
+                for (var i = 0; i < monthNames.Length; i++)
                 {
                     if (string.Equals(monthNames[i], input, StringComparison.OrdinalIgnoreCase))
                     {
@@ -82,7 +78,7 @@ namespace UnTaskAlert.Commands.Workflow
 
                 culture = CultureInfo.GetCultureInfo("es-ES");
                 monthNames = culture.DateTimeFormat.MonthNames;
-                for (int i = 0; i < monthNames.Length; i++)
+                for (var i = 0; i < monthNames.Length; i++)
                 {
                     if (string.Equals(monthNames[i], input, StringComparison.OrdinalIgnoreCase))
                     {
@@ -96,7 +92,7 @@ namespace UnTaskAlert.Commands.Workflow
             return false;
         }
 
-        private DateTime GetStartOfMonth(int month)
+        private static DateTime GetStartOfMonth(int month)
         {
             var today = DateTime.Today;
             var year = today.Year;

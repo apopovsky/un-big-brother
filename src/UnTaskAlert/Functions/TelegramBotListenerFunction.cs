@@ -13,6 +13,7 @@ namespace UnTaskAlert.Functions
     public class TelegramBotListenerFunction : ITelegramBotListener
     {
         private readonly ITelegramBotClient _botClient;
+        private readonly IServiceProvider _serviceProvider;
         private readonly ICommandProcessor _commandProcessor;
         private ILogger _logger;
         private readonly IUpdateHandler _handler;

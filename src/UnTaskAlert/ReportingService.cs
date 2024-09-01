@@ -134,7 +134,7 @@ namespace UnTaskAlert
         {
             var updates = await _backlogAccessor.GetWorkItemUpdates(connection, workItemId);
             DateTime? activeStart = null;
-            TimeSpan activeTime = TimeSpan.Zero;
+            var activeTime = TimeSpan.Zero;
             foreach (var itemUpdate in updates)
             {
                 if (itemUpdate.Fields == null || !itemUpdate.Fields.ContainsKey("System.State")) continue;
@@ -179,15 +179,13 @@ namespace UnTaskAlert
             return date;
         }
 
-        private static bool IsWeekend(DateTime date)
-        {
-            return date.DayOfWeek == DayOfWeek.Saturday ||
-                   date.DayOfWeek == DayOfWeek.Sunday;
-        }
+        private static bool IsWeekend(DateTime date) =>
+            date.DayOfWeek == DayOfWeek.Saturday ||
+            date.DayOfWeek == DayOfWeek.Sunday;
 
         private static double GetBusinessDays(DateTime startDate, DateTime endDate)
         {
-            double calcBusinessDays =
+            var calcBusinessDays =
                 1 + ((endDate - startDate).TotalDays * 5 -
                      (startDate.DayOfWeek - endDate.DayOfWeek) * 2) / 7;
 

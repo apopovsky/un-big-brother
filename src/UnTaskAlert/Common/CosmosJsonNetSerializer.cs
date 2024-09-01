@@ -30,9 +30,9 @@ namespace UnTaskAlert.Common
 					return (T)(object)(stream);
 				}
 
-				using (StreamReader sr = new StreamReader(stream))
+				using (var sr = new StreamReader(stream))
 				{
-					using (JsonTextReader jsonTextReader = new JsonTextReader(sr))
+					using (var jsonTextReader = new JsonTextReader(sr))
 					{
 						return Serializer.Deserialize<T>(jsonTextReader);
 					}
@@ -42,8 +42,8 @@ namespace UnTaskAlert.Common
 
 		public override Stream ToStream<T>(T input)
 		{
-			MemoryStream streamPayload = new MemoryStream();
-			using (StreamWriter streamWriter = new StreamWriter(streamPayload, encoding: DefaultEncoding, bufferSize: 1024, leaveOpen: true))
+			var streamPayload = new MemoryStream();
+			using (var streamWriter = new StreamWriter(streamPayload, encoding: DefaultEncoding, bufferSize: 1024, leaveOpen: true))
 			{
 				using (JsonWriter writer = new JsonTextWriter(streamWriter))
 				{

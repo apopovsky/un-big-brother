@@ -132,27 +132,18 @@ namespace UnTaskAlert.Tests
         // 4. new user confirms email
         // 5. new user requests reports
         //[Test]
-        public Task NewUser1()
-        {
-            throw new NotImplementedException();
-        }
+        public Task NewUser1() => throw new NotImplementedException();
 
         // 1. new user sends message
         // 2. new user sets email
         // 3. cannot verify email and is blocked
         //[Test]
-        public Task NewUser2()
-        {
-            throw new NotImplementedException();
-        }
+        public Task NewUser2() => throw new NotImplementedException();
 
         // 1. new user sends message
         // 2. new user incorrect email
         //[Test]
-        public Task NewUser3()
-        {
-            throw new NotImplementedException();
-        }
+        public Task NewUser3() => throw new NotImplementedException();
 
         // todo: monitoring tests
 

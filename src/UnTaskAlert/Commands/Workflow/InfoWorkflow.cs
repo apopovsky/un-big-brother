@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using Microsoft.Extensions.DependencyInjection;
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
@@ -13,14 +14,11 @@ namespace UnTaskAlert.Commands.Workflow
             return WorkflowResult.Finished;
         }
 
-        protected override void InjectDependencies(IServiceProvider serviceProvider)
+        protected override void InjectDependencies(IServiceScopeFactory serviceScopeFactory)
         {
             // no-op
         }
 
-        protected override bool DoesAccept(string input)
-        {
-            return input.StartsWith("/info", StringComparison.OrdinalIgnoreCase);
-        }
+        protected override bool DoesAccept(string input) => input.StartsWith("/info", StringComparison.OrdinalIgnoreCase);
     }
 }

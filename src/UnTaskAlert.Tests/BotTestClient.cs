@@ -117,10 +117,7 @@ namespace UnTaskAlert.Tests
             return this;
         }
 
-        public BotTestClient DeleteAccount()
-        {
-            return Send("/delete").CheckResponse("Account is deleted");
-        }
+        public BotTestClient DeleteAccount() => Send("/delete").CheckResponse("Account is deleted");
 
         private HttpRequest GetRequest(string chatId, string text)
         {

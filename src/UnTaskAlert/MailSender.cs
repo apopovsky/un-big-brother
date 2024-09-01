@@ -19,11 +19,9 @@ namespace UnTaskAlert
             var fromAddress = new MailAddress(_config.FromEmailAddress);
             var toAddress = new MailAddress(to);
 
-            using (SmtpClient smtp = CreateSmtpClient(fromAddress))
-            using (var message = CreateMessage(subject, body, fromAddress, toAddress))
-            {
-                smtp.Send(message);
-            }
+            using var smtp = CreateSmtpClient(fromAddress);
+            using var message = CreateMessage(subject, body, fromAddress, toAddress);
+            smtp.Send(message);
         }
 
         public void SendHtmlMessage(string subject, string body, string to)
@@ -31,27 +29,22 @@ namespace UnTaskAlert
             var fromAddress = new MailAddress(_config.FromEmailAddress);
             var toAddress = new MailAddress(to);
 
-            using (SmtpClient smtp = CreateSmtpClient(fromAddress))
-            using (var message = CreateMessage(subject, body, fromAddress, toAddress, isHtml: true))
-            {
-                smtp.Send(message);
-            }
+            using var smtp = CreateSmtpClient(fromAddress);
+            using var message = CreateMessage(subject, body, fromAddress, toAddress, isHtml: true);
+            smtp.Send(message);
         }
 
         private static MailMessage CreateMessage(string subject, string body, 
-            MailAddress fromAddress, MailAddress toAddress, bool isHtml = false)
-        {
-            return new MailMessage(fromAddress, toAddress)
+            MailAddress fromAddress, MailAddress toAddress, bool isHtml = false) =>
+            new(fromAddress, toAddress)
             {
                 Subject = subject,
                 Body = body,
                 IsBodyHtml = isHtml
             };
-        }
 
-        private SmtpClient CreateSmtpClient(MailAddress fromAddress)
-        {
-            return new SmtpClient
+        private SmtpClient CreateSmtpClient(MailAddress fromAddress) =>
+            new()
             {
                 Host = _config.Smtp,
                 Port = 587,
@@ -60,6 +53,5 @@ namespace UnTaskAlert
                 UseDefaultCredentials = false,
                 Credentials = new NetworkCredential(_config.EMailUser, _config.EMailPassword)
             };
-        }
     }
 }

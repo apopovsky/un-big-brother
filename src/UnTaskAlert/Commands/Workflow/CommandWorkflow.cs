@@ -32,19 +32,20 @@ namespace UnTaskAlert.Commands.Workflow
         public DateTime Expiration { get; set; }
         public int CurrentStep { get; set; }
 
-        public void Inject(IServiceProvider serviceProvider, Config config, ILogger logger)
+        public void Inject(IServiceScopeFactory serviceScopeFactory, Config config, ILogger logger)
         {
             Logger = Arg.NotNull(logger, nameof(logger));
             Config = Arg.NotNull(config, nameof(config));
-            Notifier = Arg.NotNull(serviceProvider.GetService<INotifier>(), $"Could not resolve '{nameof(INotifier)}'");
-            ReportingService = Arg.NotNull(serviceProvider.GetService<IReportingService>(), $"Could not resolve '{nameof(IReportingService)}'");
+            var serviceScope = serviceScopeFactory.CreateScope();
+            Notifier = Arg.NotNull(serviceScope.ServiceProvider.GetService<INotifier>(), $"Could not resolve '{nameof(INotifier)}'");
+            ReportingService = Arg.NotNull(serviceScope.ServiceProvider.GetService<IReportingService>(), $"Could not resolve '{nameof(IReportingService)}'");
 
-            InjectDependencies(serviceProvider);
+            InjectDependencies(serviceScopeFactory);
 
             _isInitialized = true;
         }
 
-        protected abstract void InjectDependencies(IServiceProvider serviceProvider);
+        protected abstract void InjectDependencies(IServiceScopeFactory serviceScopeFactory);
 
         public async Task<WorkflowResult> Step(string input, Subscriber subscriber, long chatId, CancellationToken cancellationToken)
         {

@@ -1,21 +1,18 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using UnTaskAlert.Common;
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
 {
-    public class DeleteWorkflow : CommandWorkflow
+    public class DeleteWorkflow() : CommandWorkflow
     {
         private IDbAccessor _dbAccessor;
 
-        enum Steps
+        private enum Steps
         {
             Confirm = 0,
-            Delete = 1
+            Delete = 1,
         }
 
         protected override async Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
@@ -26,24 +23,21 @@ namespace UnTaskAlert.Commands.Workflow
                 return WorkflowResult.Continue;
             }
 
-            if (input.Equals("y", StringComparison.OrdinalIgnoreCase) ||
-                input.Equals("yes", StringComparison.OrdinalIgnoreCase))
-            {
-                Logger.LogInformation($"Deleting subscriber '{subscriber.TelegramId}'");
-                await _dbAccessor.DeleteIfExists(subscriber);
-            }
+            if (!input.Equals("y", StringComparison.OrdinalIgnoreCase) &&
+                !input.Equals("yes", StringComparison.OrdinalIgnoreCase)) return WorkflowResult.Finished;
+            
+            Logger.LogInformation("Deleting subscriber '{id}'", subscriber.TelegramId);
+            await _dbAccessor.DeleteIfExists(subscriber);
 
             return WorkflowResult.Finished;
         }
 
-        protected override void InjectDependencies(IServiceProvider serviceProvider)
+        protected override void InjectDependencies(IServiceScopeFactory serviceScopeFactory)
         {
-            _dbAccessor = new DbAccessor(serviceProvider, serviceProvider.GetService<IOptions<Config>>());
+            var options = serviceScopeFactory.CreateScope().ServiceProvider.GetService<IOptions<Config>>();
+            _dbAccessor = new DbAccessor(serviceScopeFactory, options);
         }
 
-        protected override bool DoesAccept(string input)
-        {
-            return input.StartsWith("/delete", StringComparison.OrdinalIgnoreCase);
-        }
+        protected override bool DoesAccept(string input) => input.StartsWith("/delete", StringComparison.OrdinalIgnoreCase);
     }
 }

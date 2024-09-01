@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using UnTaskAlert.Common;
 using UnTaskAlert.Models;
@@ -21,18 +19,16 @@ namespace UnTaskAlert.Commands.Workflow
 
         public override bool IsVerificationRequired => false;
 
-        protected override void InjectDependencies(IServiceProvider serviceProvider)
+        protected override void InjectDependencies(IServiceScopeFactory serviceScopeFactory)
         {
+            var serviceProvider = serviceScopeFactory.CreateScope().ServiceProvider;
             _pinGenerator = Arg.NotNull(serviceProvider.GetService<IPinGenerator>(), $"{nameof(IPinGenerator)} is not resolved");
             _mailSender = Arg.NotNull(serviceProvider.GetService<IMailSender>(), $"{nameof(IMailSender)} is not resolved");
         }
 
-        protected override bool DoesAccept(string input)
-        {
-            return input.StartsWith("/email", StringComparison.OrdinalIgnoreCase);
-        }
+        protected override bool DoesAccept(string input) => input.StartsWith("/email", StringComparison.OrdinalIgnoreCase);
 
-        protected async override Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
+        protected override async Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
         {
             if (CurrentStep == (int) Steps.Start)
             {
@@ -68,7 +64,7 @@ namespace UnTaskAlert.Commands.Workflow
 
             if (CurrentStep == (int) Steps.VerifyEmail)
             {
-                var isNumeric = int.TryParse(input, out int code);
+                var isNumeric = int.TryParse(input, out var code);
                 if (isNumeric)
                 {
                     if (await VerifyAccount(subscriber, code))
@@ -87,10 +83,7 @@ namespace UnTaskAlert.Commands.Workflow
             return WorkflowResult.Finished;
         }
 
-        private static bool IsEmail(string input)
-        {
-            return !string.IsNullOrWhiteSpace(input) && input.Contains("@");
-        }
+        private static bool IsEmail(string input) => !string.IsNullOrWhiteSpace(input) && input.Contains("@");
 
         private static readonly int MaxVerificationAttempts = 3;
 

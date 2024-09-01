@@ -1,4 +1,5 @@
 ﻿using Microsoft.Azure.Cosmos;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -12,18 +13,19 @@ namespace UnTaskAlert
         private CosmosClient _cosmosClient;
         private Database _database;
         private Container _container;
-        private readonly IServiceProvider _serviceProvider;
 
         // The name of the database and container we will create
-        private string _databaseId = "UnBigBrotherDatabase";
-        private string _containerId = "UnBigBrotherContainer";
+        private const string DatabaseId = "UnBigBrotherDatabase";
+        private const string ContainerId = "UnBigBrotherContainer";
 
         private readonly Config _config;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
 
-        public DbAccessor(IServiceProvider serviceProvider, IOptions<Config> options)
-        {
+        public DbAccessor(IServiceScopeFactory scopeFactory, IOptions<Config> options)
+        { 
+            Arg.NotNull(scopeFactory, nameof(scopeFactory));
             _config = Arg.NotNull(options.Value, nameof(options));
-            _serviceProvider = Arg.NotNull(serviceProvider, nameof(serviceProvider));
+            _serviceScopeFactory = scopeFactory;
         }
 
         public async Task AddOrUpdateSubscriber(Subscriber subscriber, CancellationToken cancellationToken)
@@ -41,7 +43,7 @@ namespace UnTaskAlert
                 .ToList();
 
             var subscriber = result.SingleOrDefault();
-            subscriber?.ActiveWorkflow?.Inject(_serviceProvider, _config, logger);
+            subscriber?.ActiveWorkflow?.Inject(_serviceScopeFactory, _config, logger);
 
             return subscriber;
         }
@@ -83,8 +85,8 @@ namespace UnTaskAlert
             _cosmosClient = new CosmosClient(_config.CosmosDbConnectionString, cosmosClientOptions);
             //_database = _cosmosClient.GetDatabase(_databaseId);
             //_container = _cosmosClient.GetContainer(_databaseId, _containerId);
-            _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(_databaseId);
-            _container = await _database.CreateContainerIfNotExistsAsync(_containerId, "/TelegramId");
+            _database = await _cosmosClient.CreateDatabaseIfNotExistsAsync(DatabaseId);
+            _container = await _database.CreateContainerIfNotExistsAsync(ContainerId, "/TelegramId");
         }
     }
 }

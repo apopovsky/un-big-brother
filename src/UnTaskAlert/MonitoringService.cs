@@ -85,10 +85,6 @@ namespace UnTaskAlert
             await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
         }
 
-        private bool IsWeekDay()
-        {
-            return DateTime.UtcNow.DayOfWeek != DayOfWeek.Saturday && DateTime.UtcNow.DayOfWeek != DayOfWeek.Sunday;
-        }
-
+        private bool IsWeekDay() => DateTime.UtcNow.DayOfWeek != DayOfWeek.Saturday && DateTime.UtcNow.DayOfWeek != DayOfWeek.Sunday;
     }
 }

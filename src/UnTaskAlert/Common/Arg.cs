@@ -18,10 +18,8 @@
         }
 
         public static T NotNull<T>(T arg, string argName)
-            where T : class
-        {
-            return arg ?? throw new ArgumentNullException(argName);
-        }
+            where T : class =>
+            arg ?? throw new ArgumentNullException(argName);
 
         public static ICollection<T> NotNullOrEmpty<T>(ICollection<T> arg, string argName)
         {

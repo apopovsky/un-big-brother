@@ -96,14 +96,11 @@ namespace UnTaskAlert.Commands.Workflow
             }
         }
 
-        private bool IsSettingNameValid(string settingName)
-        {
-            return !string.IsNullOrWhiteSpace(settingName) || SettingNames.Contains(settingName);
-        }
+        private bool IsSettingNameValid(string settingName) => !string.IsNullOrWhiteSpace(settingName) || SettingNames.Contains(settingName);
 
         private bool TryChangeSetting(Subscriber subscriber,string settingName, string settingValue, long chatId)
         {
-            bool success = false;
+            var success = false;
             if (settingName == HoursperdaySetting)
             {
                 if(int.TryParse(settingValue, out var intValue))
@@ -131,13 +128,10 @@ namespace UnTaskAlert.Commands.Workflow
             return success;
         }
 
-        protected override void InjectDependencies(IServiceProvider serviceProvider)
+        protected override void InjectDependencies(IServiceScopeFactory serviceScopeFactory)
         {
 		}
 
-        protected override bool DoesAccept(string input)
-        {
-            return input.StartsWith("/setsettings", StringComparison.OrdinalIgnoreCase);
-        }
+        protected override bool DoesAccept(string input) => input.StartsWith("/setsettings", StringComparison.OrdinalIgnoreCase);
     }
 }

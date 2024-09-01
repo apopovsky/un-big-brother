@@ -30,7 +30,8 @@ namespace UnTaskAlert
     {
         private readonly ITelegramBotClient _bot;
         private readonly string _devOpsAddress;
-        private static readonly int maxMessageLength = 4096;
+        private const int MaxMessageLength = 4096;
+
         public static readonly string RequestEmailMessage =
             "I'm here to help you track your time. First, let me know your work email address.";
 
@@ -132,7 +133,7 @@ namespace UnTaskAlert
                     var message =
                         $"{item.Date:dd-MM} <a href=\"{baseUrl + item.Id}\">{item.Id}</a> - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}";
 
-                    if (builder.Length + message.Length >= maxMessageLength)
+                    if (builder.Length + message.Length >= MaxMessageLength)
                     {
                         await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
                         builder = new StringBuilder();

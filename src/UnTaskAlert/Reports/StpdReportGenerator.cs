@@ -9,22 +9,15 @@ namespace UnTaskAlert.Reports
     /// <summary>
     /// A stupid Html report generator because nothing else works inside an Azure function
     /// </summary>
-    public class StpdReportGenerator
+    public class StpdReportGenerator(string devOpsAddress)
     {
-        private readonly string _devOpsAddress;
-
-        public StpdReportGenerator(string devOpsAddress)
-        {
-            _devOpsAddress = devOpsAddress;
-        }
-
         public string GenerateReport(TimeReport timeReport)
         {
             var assembly = Assembly.GetExecutingAssembly();
-            var resourceName = "UnTaskAlert.Reports.DetailReport.cshtml";
+            const string resourceName = "UnTaskAlert.Reports.DetailReport.cshtml";
 
-            using Stream stream = assembly.GetManifestResourceStream(resourceName);
-            using StreamReader reader = new StreamReader(stream);
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            using var reader = new StreamReader(stream);
             var content = reader.ReadToEnd();
                 
             return ProcessReplacements(content, timeReport);
@@ -46,7 +39,7 @@ namespace UnTaskAlert.Reports
                         var template = content.Substring(blockStart + 1, blockEnd - blockStart - 1);
                         var stringBuilder = new StringBuilder();
 
-                        var values = property.GetValue(timeReport) as IEnumerable;
+                        var values = (IEnumerable)property.GetValue(timeReport);
                         foreach (var row in values)
                         {
                             var rowProperties = row.GetType().GetProperties();
@@ -60,15 +53,12 @@ namespace UnTaskAlert.Reports
                                 if (rowProp.Name.Contains("offset", StringComparison.OrdinalIgnoreCase))
                                 {
                                     var offset = (double) propValue;
-                                    var color = "#ffffff";
-                                    if (offset is > .25 and <= .75)
+                                    var color = offset switch
                                     {
-                                        color = "#ffffe6";
-                                    }
-                                    else if(offset>.75)
-                                    {
-                                        color = "#ffcccc";
-                                    }
+                                        > .25 and <= .75 => "#ffffe6",
+                                        > .75 => "#ffcccc",
+                                        _ => "#ffffff",
+                                    };
                                     rowContent = rowContent.Replace("@row.Color", color);
                                     
                                 }
@@ -92,7 +82,7 @@ namespace UnTaskAlert.Reports
 
         private string GetFormatterPropertyValue(PropertyInfo property, object propValue)
         {
-            var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
+            var baseUrl = new Url(devOpsAddress).AppendPathSegment("/_workitems/edit/");
             if (property.PropertyType == typeof(double))
             {
                 var format = "F2";

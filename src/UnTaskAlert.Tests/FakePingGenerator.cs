@@ -4,9 +4,6 @@
     {
         public static int Pin = 1234;
 
-        public int GetRandomPin()
-        {
-            return Pin;
-        }
+        public int GetRandomPin() => Pin;
     }
 }

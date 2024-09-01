@@ -97,13 +97,12 @@ namespace UnTaskAlert
                 new InfoWorkflow(),
                 new AddTimeOff(),
                 new DeleteWorkflow(),
-                new AccountWorkflow()
+                new AccountWorkflow(),
             };
             var commandWorkflow = ProcessInput(log, input, workflows);
 
             if (commandWorkflow == null)
-                throw new InvalidOperationException(
-                    $"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}'.");
+                throw new InvalidOperationException($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}'.");
             
             var workflowResult = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id, cancellationToken);
             subscriber.ActiveWorkflow = workflowResult == WorkflowResult.Finished ? null : commandWorkflow;
@@ -115,8 +114,7 @@ namespace UnTaskAlert
             log.LogInformation($"NewUserFlow() is executed for chatId '{chatId}'");
             await Task.Delay(PauseBeforeAnswer, cancellationToken);
             var workflow = new AccountWorkflow();
-            var serviceScope = _scopeFactory.CreateScope();
-            workflow.Inject(serviceScope.ServiceProvider, _config, log);
+            workflow.Inject(_scopeFactory, _config, log);
 
             var subscriber = new Subscriber
             {
@@ -142,8 +140,7 @@ namespace UnTaskAlert
             {
                 if (!commandWorkflow.Accepts(input)) continue;
 
-                var serviceScope = _scopeFactory.CreateScope();
-                commandWorkflow.Inject(serviceScope.ServiceProvider, _config, logger);
+                commandWorkflow.Inject(_scopeFactory, _config, logger);
                 return commandWorkflow;
             }
 
