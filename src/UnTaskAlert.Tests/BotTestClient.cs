@@ -25,9 +25,10 @@ namespace UnTaskAlert.Tests
         private readonly Stack<string> _messages = new Stack<string>();
         private readonly string _chatId;
 
-        public BotTestClient(string chatId)
+        public BotTestClient(string chatId, TelegramBotFunction target)
         {
             _chatId = chatId;
+            _target = target;
 
             var mailSenderMock = new Mock<IMailSender>();
             _mailSender = mailSenderMock.Object;

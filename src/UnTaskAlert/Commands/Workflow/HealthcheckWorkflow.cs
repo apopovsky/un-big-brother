@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
@@ -14,7 +12,7 @@ namespace UnTaskAlert.Commands.Workflow
             double threshold = 0;
             if (input.Length > HealthcheckCommand.Length)
             {
-                double.TryParse(input.Substring(HealthcheckCommand.Length), out threshold);
+                double.TryParse(input[HealthcheckCommand.Length..], out threshold);
             }
 
             await ReportingService.CreateHealthCheckReport(subscriber,

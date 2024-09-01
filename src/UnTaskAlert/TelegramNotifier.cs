@@ -16,14 +16,9 @@ namespace UnTaskAlert
         ITelegramBotClient Client { get; }
     }
 
-    public class TelegramBotProvider : ITelegramBotProvider
+    public class TelegramBotProvider(ITelegramBotClient client) : ITelegramBotProvider
     {
-        public TelegramBotProvider(ITelegramBotClient client)
-        {
-            this.Client = Arg.NotNull(client, nameof(client));
-        }
-
-        public ITelegramBotClient Client { get; }
+        public ITelegramBotClient Client { get; } = Arg.NotNull(client, nameof(client));
     }
 
     public class TelegramNotifier : INotifier
@@ -69,7 +64,12 @@ namespace UnTaskAlert
         public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
         {
             var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
-                       $"Tasks: {Environment.NewLine}{string.Join(Environment.NewLine, GetTasksLinks(activeTasksInfo))}";
+                       $"Tasks: {Environment.NewLine}";
+
+            foreach (var taskInfo in activeTasksInfo.TasksInfo)
+            {
+                text += $"-{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs){Environment.NewLine}";
+            }
 
             await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.Html);
         }

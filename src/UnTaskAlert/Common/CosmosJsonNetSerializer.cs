@@ -4,22 +4,10 @@ using Newtonsoft.Json;
 
 namespace UnTaskAlert.Common
 {
-	public class CosmosJsonNetSerializer : CosmosSerializer
+	public class CosmosJsonNetSerializer(JsonSerializerSettings serializerSettings) : CosmosSerializer
 	{
 		private static readonly Encoding DefaultEncoding = new UTF8Encoding(false, true);
-		private readonly JsonSerializer Serializer;
-		private readonly JsonSerializerSettings serializerSettings;
-
-		public CosmosJsonNetSerializer()
-			: this(new JsonSerializerSettings())
-		{
-		}
-
-		public CosmosJsonNetSerializer(JsonSerializerSettings serializerSettings)
-		{
-			this.serializerSettings = serializerSettings;
-			this.Serializer = JsonSerializer.Create(this.serializerSettings);
-		}
+		private readonly JsonSerializer _serializer = JsonSerializer.Create(serializerSettings);
 
 		public override T FromStream<T>(Stream stream)
 		{
@@ -30,27 +18,19 @@ namespace UnTaskAlert.Common
 					return (T)(object)(stream);
 				}
 
-				using (var sr = new StreamReader(stream))
-				{
-					using (var jsonTextReader = new JsonTextReader(sr))
-					{
-						return Serializer.Deserialize<T>(jsonTextReader);
-					}
-				}
+				using var sr = new StreamReader(stream);
+				using var jsonTextReader = new JsonTextReader(sr);
+				return _serializer.Deserialize<T>(jsonTextReader);
 			}
 		}
 
 		public override Stream ToStream<T>(T input)
 		{
 			var streamPayload = new MemoryStream();
-			using (var streamWriter = new StreamWriter(streamPayload, encoding: DefaultEncoding, bufferSize: 1024, leaveOpen: true))
-			{
-				using (JsonWriter writer = new JsonTextWriter(streamWriter))
-				{
-					writer.Formatting = Newtonsoft.Json.Formatting.None;
-					Serializer.Serialize(writer, input);
-				}
-			}
+			using var streamWriter = new StreamWriter(streamPayload, encoding: DefaultEncoding, bufferSize: 1024, leaveOpen: true);
+			using JsonWriter writer = new JsonTextWriter(streamWriter);
+			writer.Formatting = Formatting.None;
+			_serializer.Serialize(writer, input);
 
 			streamPayload.Position = 0;
 			return streamPayload;

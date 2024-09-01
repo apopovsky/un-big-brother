@@ -17,7 +17,6 @@ var host = new HostBuilder()
 
 host.Run();
 
-
 void Configure(HostBuilderContext context, IServiceCollection services)
 {
     services.AddLogging(builder => builder.AddDebug().AddConsole());

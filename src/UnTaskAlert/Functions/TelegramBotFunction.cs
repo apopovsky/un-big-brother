@@ -8,14 +8,10 @@ using UnTaskAlert.Common;
 
 namespace UnTaskAlert.Functions
 {
-    public class TelegramBotFunction
+    // ReSharper disable once ClassNeverInstantiated.Global
+    public class TelegramBotFunction(ICommandProcessor commandProcessor)
     {
-        private readonly ICommandProcessor _commandProcessor;
-
-        public TelegramBotFunction(ICommandProcessor commandProcessor)
-        {
-            _commandProcessor = Arg.NotNull(commandProcessor, nameof(commandProcessor));
-        }
+        private readonly ICommandProcessor _commandProcessor = Arg.NotNull(commandProcessor, nameof(commandProcessor));
 
         [Function(nameof(TelegramBotFunction))]
         public async Task<IActionResult> Run(
@@ -24,7 +20,7 @@ namespace UnTaskAlert.Functions
         {
             var requestBody = await new StreamReader(req.Body).ReadToEndAsync(context.CancellationToken);
             var log = context.GetLogger(nameof(TelegramBotFunction));
-            log.LogInformation($"Incoming request:{Environment.NewLine}{requestBody}");
+            log.LogInformation("Incoming request:{NewLine}{RequestBody}", Environment.NewLine, requestBody);
 
             try
             {
@@ -33,7 +29,7 @@ namespace UnTaskAlert.Functions
             }
             catch (Exception e)
             {
-                log.LogError(e, e.Message);
+                log.LogError(e, "Error while processing the update.");
                 return new ConflictResult();
             }
 

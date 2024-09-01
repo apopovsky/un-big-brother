@@ -5,14 +5,13 @@ using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
 {
-    public class DeleteWorkflow() : CommandWorkflow
+    public class DeleteWorkflow : CommandWorkflow
     {
-        private IDbAccessor _dbAccessor;
+        private DbAccessor _dbAccessor;
 
         private enum Steps
         {
             Confirm = 0,
-            Delete = 1,
         }
 
         protected override async Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
@@ -34,8 +33,10 @@ namespace UnTaskAlert.Commands.Workflow
 
         protected override void InjectDependencies(IServiceScopeFactory serviceScopeFactory)
         {
-            var options = serviceScopeFactory.CreateScope().ServiceProvider.GetService<IOptions<Config>>();
-            _dbAccessor = new DbAccessor(serviceScopeFactory, options);
+            var serviceProvider = serviceScopeFactory.CreateScope().ServiceProvider;
+            var options = serviceProvider.GetService<IOptions<Config>>();
+            var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+            _dbAccessor = new DbAccessor(serviceScopeFactory, options, loggerFactory);
         }
 
         protected override bool DoesAccept(string input) => input.StartsWith("/delete", StringComparison.OrdinalIgnoreCase);

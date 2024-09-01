@@ -5,14 +5,9 @@ using UnTaskAlert.Common;
 
 namespace UnTaskAlert
 {
-    public class MailSender : IMailSender
+    public class MailSender(IOptions<Config> options) : IMailSender
     {
-        private readonly Config _config;
-
-        public MailSender(IOptions<Config> options)
-        {
-            _config = Arg.NotNull(options.Value, nameof(options));
-        }
+        private readonly Config _config = Arg.NotNull(options.Value, nameof(options));
 
         public void SendMessage(string subject, string body, string to)
         {
@@ -40,7 +35,7 @@ namespace UnTaskAlert
             {
                 Subject = subject,
                 Body = body,
-                IsBodyHtml = isHtml
+                IsBodyHtml = isHtml,
             };
 
         private SmtpClient CreateSmtpClient(MailAddress fromAddress) =>
@@ -51,7 +46,7 @@ namespace UnTaskAlert
                 EnableSsl = true,
                 DeliveryMethod = SmtpDeliveryMethod.Network,
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(_config.EMailUser, _config.EMailPassword)
+                Credentials = new NetworkCredential(_config.EMailUser, _config.EMailPassword),
             };
     }
 }

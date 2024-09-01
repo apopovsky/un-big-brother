@@ -6,7 +6,7 @@
 
         public TimeReport()
         {
-            _workItemTimes = new List<WorkItemTime>();
+            _workItemTimes = [];
         }
 
         public double TotalEstimated { get; set; }

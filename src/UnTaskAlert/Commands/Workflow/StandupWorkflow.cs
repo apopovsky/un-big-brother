@@ -1,6 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
@@ -9,8 +7,6 @@ namespace UnTaskAlert.Commands.Workflow
     {
         protected override async Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
         {
-            var startDate = DateTime.Now;
-
             await ReportingService.CreateStandupReport(subscriber,
                 Config.AzureDevOpsAddress,
                 Config.AzureDevOpsAccessToken,

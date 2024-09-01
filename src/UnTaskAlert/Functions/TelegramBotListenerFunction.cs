@@ -13,15 +13,14 @@ namespace UnTaskAlert.Functions
     public class TelegramBotListenerFunction : ITelegramBotListener
     {
         private readonly ITelegramBotClient _botClient;
-        private readonly IServiceProvider _serviceProvider;
         private readonly ICommandProcessor _commandProcessor;
         private ILogger _logger;
         private readonly IUpdateHandler _handler;
 
-        public TelegramBotListenerFunction(ICommandProcessor service, ITelegramBotClient botClient)
+        public TelegramBotListenerFunction(ICommandProcessor commandProcessor, ITelegramBotClient botClient)
         {
             _botClient = botClient;
-            _commandProcessor = Arg.NotNull(service, nameof(service));
+            _commandProcessor = Arg.NotNull(commandProcessor, nameof(commandProcessor));
             _handler = new DefaultUpdateHandler(HandleUpdateAsync, HandleErrorAsync);
         }
 
@@ -31,35 +30,35 @@ namespace UnTaskAlert.Functions
             {
                 try
                 {
-                    _logger.LogInformation($"Message received from: {update.Message.From}. Message: {update.Message.Text}");
+                    _logger.LogInformation("Message received from: {From}. Message: {Text}", update.Message?.From, update.Message?.Text);
                     await _commandProcessor.Process(update, _logger, cancellationToken);
                 }
                 catch (Exception exception)
                 {
                     Debug.WriteLine(exception.ToString());
-                    _logger.LogError(new EventId(), exception, exception.Message);
+                    _logger.LogError(exception, "Error processing the update.");
                     try
                     {
-                        await _botClient.SendTextMessageAsync(update.Message.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
+                        await _botClient.SendTextMessageAsync(update.Message!.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
                     }
                     catch (Exception e)
                     {
                         Debug.WriteLine(e.ToString());
-                        _logger.LogError(new EventId(), e, e.Message);
+                        _logger.LogError(e, "Error processing the bot request.");
                     }
                 }
             }
         }
 
-        private Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception,
-            CancellationToken cancellationToken)
+        private Task HandleErrorAsync(ITelegramBotClient botClient, Exception exception, CancellationToken cancellationToken)
         {
-            _logger.LogError(new EventId(), exception, exception?.Message);
+            _logger.LogError(exception, "Error processing");
             return Task.CompletedTask;
         }
 
         [Function(nameof(TelegramBotListenerFunction))]
-        public async Task Run([TimerTrigger("0 0 */24 * * *", RunOnStartup = true)] TimerInfo myTimer, FunctionContext context)
+        // ReSharper disable once UnusedParameter.Global
+        public async Task Run([TimerTrigger("0 0 */24 * * *", RunOnStartup = true)] TimerInfo timerInfo, FunctionContext context)
         {
             _logger = context.GetLogger(nameof(TelegramBotListenerFunction));
             _botClient.StartReceiving(_handler, cancellationToken: context.CancellationToken);

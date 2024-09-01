@@ -12,5 +12,6 @@ namespace UnTaskAlert
             DateTime? dateTo, ILogger log);
         Task<IList<WorkItem>> GetWorkItemsById(VssConnection connection, List<int> workItemsIds);
         Task<IList<WorkItemUpdate>> GetWorkItemUpdates(VssConnection connection, int workItemId);
+        Task<TimeSpan> GetWorkItemActiveTime(VssConnection connection, int taskInfoId);
     }
 }

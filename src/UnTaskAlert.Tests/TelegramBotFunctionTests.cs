@@ -37,7 +37,7 @@ namespace UnTaskAlert.Tests
             // todo: call DeleteAccount() in case of an error
 
             var chatId = "666";
-            var client = new BotTestClient(chatId);
+            var client = new BotTestClient(chatId, null);
 
             client
                 .Send("hey")
@@ -77,7 +77,7 @@ namespace UnTaskAlert.Tests
         public void NewUserEntersWrongPinAndIsBlocked()
         {
             var chatId = "667";
-            var client = new BotTestClient(chatId);
+            var client = new BotTestClient(chatId, null);
 
             client
                 .Send("hey")
@@ -107,7 +107,7 @@ namespace UnTaskAlert.Tests
         public void NewUserCanVerifyAccountOnLastAttempt()
         {
             var chatId = "668";
-            var client = new BotTestClient(chatId);
+            var client = new BotTestClient(chatId, null);
 
             client
                 .Send("hey")

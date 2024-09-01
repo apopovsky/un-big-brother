@@ -1,10 +1,6 @@
-﻿using System;
-using System.Globalization;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Globalization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using UnTaskAlert.Common;
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
@@ -12,16 +8,16 @@ namespace UnTaskAlert.Commands.Workflow
     public class SetSettingsWorkflow : CommandWorkflow
     {
         private const string WorkingHoursSetting = "Workhours";
-        private const string HoursperdaySetting = "HoursPerDay";
+        private const string HoursPerDaySetting = "HoursPerDay";
 
         enum Steps
         {
             Start = 0,
             PreferenceName = 1,
-            PreferenceValue = 2
+            PreferenceValue = 2,
         }
 
-        private static readonly string[] SettingNames = {WorkingHoursSetting, HoursperdaySetting};
+        private static readonly string[] SettingNames = [WorkingHoursSetting, HoursPerDaySetting];
         
         protected override async Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
         {
@@ -66,7 +62,7 @@ namespace UnTaskAlert.Commands.Workflow
                 settingValue = input;
             }
 
-            var success = TryChangeSetting(subscriber, settingName, settingValue, chatId);
+            var success = TryChangeSetting(subscriber, settingName, settingValue);
 			if (success)
             {
                 await Notifier.Respond(chatId, $"From now on {settingName}={settingValue}");
@@ -87,7 +83,7 @@ namespace UnTaskAlert.Commands.Workflow
         {
             switch (settingName)
             {
-				case HoursperdaySetting:
+				case HoursPerDaySetting:
                     return subscriber.HoursPerDay.ToString();
 				case WorkingHoursSetting:
                     return $"{subscriber.StartWorkingHoursUtc:hh\\:mm}-{subscriber.EndWorkingHoursUtc:hh\\:mm}";
@@ -96,32 +92,39 @@ namespace UnTaskAlert.Commands.Workflow
             }
         }
 
-        private bool IsSettingNameValid(string settingName) => !string.IsNullOrWhiteSpace(settingName) || SettingNames.Contains(settingName);
+        private static bool IsSettingNameValid(string settingName) => !string.IsNullOrWhiteSpace(settingName) || SettingNames.Contains(settingName);
 
-        private bool TryChangeSetting(Subscriber subscriber,string settingName, string settingValue, long chatId)
+        private static bool TryChangeSetting(Subscriber subscriber,string settingName, string settingValue)
         {
             var success = false;
-            if (settingName == HoursperdaySetting)
+            switch (settingName)
             {
-                if(int.TryParse(settingValue, out var intValue))
+                case HoursPerDaySetting:
                 {
-                    subscriber.HoursPerDay = Convert.ToInt32(intValue);
-                    success = true;
-                }
-            }
-            else if (settingName == WorkingHoursSetting)
-            {
-                var values = settingValue.Split(new[]{'-',' '},StringSplitOptions.RemoveEmptyEntries);
-                if (values.Length == 2)
-                {
-                    var startProvided = TimeSpan.TryParseExact(values[0], "hh\\:mm", CultureInfo.InvariantCulture, TimeSpanStyles.None, out var startValue);
-                    var endProvided = TimeSpan.TryParseExact(values[1], "hh\\:mm", CultureInfo.InvariantCulture, TimeSpanStyles.None, out var endValue);
-                    if (startProvided && endProvided && endValue > startValue)
+                    if(int.TryParse(settingValue, out var intValue))
                     {
-                        subscriber.StartWorkingHoursUtc = startValue;
-                        subscriber.EndWorkingHoursUtc = endValue;
+                        subscriber.HoursPerDay = Convert.ToInt32(intValue);
                         success = true;
                     }
+
+                    break;
+                }
+                case WorkingHoursSetting:
+                {
+                    var values = settingValue.Split(['-',' '],StringSplitOptions.RemoveEmptyEntries);
+                    if (values.Length == 2)
+                    {
+                        var startProvided = TimeSpan.TryParseExact(values[0], "hh\\:mm", CultureInfo.InvariantCulture, TimeSpanStyles.None, out var startValue);
+                        var endProvided = TimeSpan.TryParseExact(values[1], "hh\\:mm", CultureInfo.InvariantCulture, TimeSpanStyles.None, out var endValue);
+                        if (startProvided && endProvided && endValue > startValue)
+                        {
+                            subscriber.StartWorkingHoursUtc = startValue;
+                            subscriber.EndWorkingHoursUtc = endValue;
+                            success = true;
+                        }
+                    }
+
+                    break;
                 }
             }
 

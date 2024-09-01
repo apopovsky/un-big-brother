@@ -7,11 +7,11 @@ namespace UnTaskAlert.Commands.Workflow
 {
     public class AccountWorkflow : CommandWorkflow
     {
-        enum Steps
+        private enum Steps
         {
             Start = 0,
             EnterEmail = 1,
-            VerifyEmail = 2
+            VerifyEmail = 2,
         }
 
         private IPinGenerator _pinGenerator;
@@ -83,13 +83,14 @@ namespace UnTaskAlert.Commands.Workflow
             return WorkflowResult.Finished;
         }
 
-        private static bool IsEmail(string input) => !string.IsNullOrWhiteSpace(input) && input.Contains("@");
+        private static bool IsEmail(string input) => !string.IsNullOrWhiteSpace(input) && input.Contains('@');
 
-        private static readonly int MaxVerificationAttempts = 3;
+        private const int MaxVerificationAttempts = 3;
 
         private async Task<bool> VerifyAccount(Subscriber subscriber, int code)
         {
-            Logger.LogInformation($"Verifying account for {subscriber.Email}, entered PIN is '{code}'.");
+            Logger.LogInformation("Verifying account for {Email}, entered PIN is '{Code}'.", subscriber.Email, code);
+
             if (subscriber.IsVerified)
             {
                 // no need to verify anything

@@ -50,7 +50,7 @@
         public static T NotDefault<T>(T arg, string argName)
             where T : struct
         {
-            if (EqualityComparer<T>.Default.Equals(arg, default(T)))
+            if (EqualityComparer<T>.Default.Equals(arg, default))
             {
                 throw new ArgumentException($"{argName} has default value.", argName);
             }

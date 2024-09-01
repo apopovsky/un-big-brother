@@ -20,12 +20,14 @@ namespace UnTaskAlert
 
         private readonly Config _config;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILoggerFactory _loggerFactory;
 
-        public DbAccessor(IServiceScopeFactory scopeFactory, IOptions<Config> options)
+        public DbAccessor(IServiceScopeFactory scopeFactory, IOptions<Config> options, ILoggerFactory loggerFactory)
         { 
             Arg.NotNull(scopeFactory, nameof(scopeFactory));
             _config = Arg.NotNull(options.Value, nameof(options));
             _serviceScopeFactory = scopeFactory;
+            _loggerFactory = loggerFactory;
         }
 
         public async Task AddOrUpdateSubscriber(Subscriber subscriber, CancellationToken cancellationToken)
@@ -43,7 +45,7 @@ namespace UnTaskAlert
                 .ToList();
 
             var subscriber = result.SingleOrDefault();
-            subscriber?.ActiveWorkflow?.Inject(_serviceScopeFactory, _config, logger);
+            subscriber?.ActiveWorkflow?.Inject(_serviceScopeFactory, _config, _loggerFactory);
 
             return subscriber;
         }
@@ -78,8 +80,8 @@ namespace UnTaskAlert
             {
                 Serializer = new CosmosJsonNetSerializer(new JsonSerializerSettings
                 {
-                    TypeNameHandling = TypeNameHandling.Auto
-                })
+                    TypeNameHandling = TypeNameHandling.Auto,
+                }),
             };
 
             _cosmosClient = new CosmosClient(_config.CosmosDbConnectionString, cosmosClientOptions);

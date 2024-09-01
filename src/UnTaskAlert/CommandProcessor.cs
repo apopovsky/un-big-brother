@@ -9,29 +9,27 @@ using UnTaskAlert.Models;
 
 namespace UnTaskAlert
 {
-    public class CommandProcessor : ICommandProcessor
+    public class CommandProcessor(
+        INotifier notifier,
+        IDbAccessor dbAccessor,
+        IPinGenerator pinGenerator,
+        IOptions<Config> options,
+        IServiceScopeFactory scopeFactory,
+        ILoggerFactory loggerFactory)
+        : ICommandProcessor
     {
-        private readonly INotifier _notifier;
-        private readonly Config _config;
-        private readonly IDbAccessor _dbAccessor;
-        private readonly IPinGenerator _pinGenerator;
-        private readonly IServiceScopeFactory _scopeFactory;
+        private readonly INotifier _notifier = Arg.NotNull(notifier, nameof(notifier));
+        private readonly Config _config = Arg.NotNull(options.Value, nameof(options));
+        private readonly IDbAccessor _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
+        private readonly IPinGenerator _pinGenerator = Arg.NotNull(pinGenerator, nameof(pinGenerator));
+        private readonly IServiceScopeFactory _scopeFactory = Arg.NotNull(scopeFactory, nameof(scopeFactory));
+        private readonly ILogger<CommandProcessor> _logger = loggerFactory.CreateLogger<CommandProcessor>();
 
-        private static readonly int PauseBeforeAnswer = 1000;
+        private const int PauseBeforeAnswer = 1000;
 
-        public CommandProcessor(INotifier notifier,
-            IDbAccessor dbAccessor,
-            IPinGenerator pinGenerator,
-            IOptions<Config> options, 
-            IServiceScopeFactory scopeFactory)
-        {
-            _notifier = Arg.NotNull(notifier, nameof(notifier));
-            _config = Arg.NotNull(options.Value, nameof(options));
-            _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
-            _pinGenerator = Arg.NotNull(pinGenerator, nameof(pinGenerator));
-            _scopeFactory = Arg.NotNull(scopeFactory, nameof(scopeFactory));
-        }
-        
+
+        // Inside the CommandProcessor class constructor, add the following code
+
         public async Task Process(Update update, ILogger log, CancellationToken cancellationToken)
         {
             if (update.Type != UpdateType.Message)
@@ -47,18 +45,18 @@ namespace UnTaskAlert
 
             var chatId = update.Message.Chat.Id.ToString();
 
-            log.LogInformation($"Processing the command: {update.Message.Text}");
+            _logger.LogInformation($"Processing the command: {update.Message.Text}");
             await _notifier.Typing(update.Message.Chat.Id.ToString(), cancellationToken);
 
-            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), log);
+            var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), _logger);
 
             if (subscriber == null)
             {
-                log.LogInformation("Process: Subscriber is 'null'");
+                _logger.LogInformation("Process: Subscriber is 'null'");
             }
             else
             {
-                log.LogInformation($"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
+                _logger.LogInformation($"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
                                    $"VerificationAttempts: {subscriber.VerificationAttempts}{Environment.NewLine}" +
                                    $"PIN: {subscriber.Pin}{Environment.NewLine}" +
                                    $"Email: {subscriber.Email}{Environment.NewLine}" +
@@ -70,11 +68,11 @@ namespace UnTaskAlert
                                    $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}");
             }
 
-            subscriber ??= await NewUserFlow(log, chatId, cancellationToken);
+            subscriber ??= await NewUserFlow(chatId, cancellationToken);
 
             if (subscriber.ActiveWorkflow is { IsExpired: false })
             {
-                var result = await subscriber.ActiveWorkflow.Step(input, subscriber,  update.Message.Chat.Id, cancellationToken);
+                var result = await subscriber.ActiveWorkflow.Step(input, subscriber, update.Message.Chat.Id, cancellationToken);
                 if (result == WorkflowResult.Finished)
                 {
                     subscriber.ActiveWorkflow = null;
@@ -85,48 +83,49 @@ namespace UnTaskAlert
 
             var workflows = new CommandWorkflow[]
             {
-                new SnoozeAlertWorkflow(),
-                new SetSettingsWorkflow(),
-                new ActiveWorkflow(),
-                new StandupWorkflow(),
-                new DayWorkflow(),
-                new WeekWorkflow(),
-                new MonthWorkflow(),
-                new YearWorkflow(),
-                new HealthcheckWorkflow(),
-                new InfoWorkflow(),
-                new AddTimeOff(),
-                new DeleteWorkflow(),
-                new AccountWorkflow(),
+                    new SnoozeAlertWorkflow(),
+                    new SetSettingsWorkflow(),
+                    new ActiveWorkflow(),
+                    new StandupWorkflow(),
+                    new DayWorkflow(),
+                    new WeekWorkflow(),
+                    new MonthWorkflow(),
+                    new YearWorkflow(),
+                    new HealthcheckWorkflow(),
+                    new InfoWorkflow(),
+                    new AddTimeOff(),
+                    new DeleteWorkflow(),
+                    new AccountWorkflow(),
             };
-            var commandWorkflow = ProcessInput(log, input, workflows);
+            var commandWorkflow = ProcessInput(input, workflows);
 
             if (commandWorkflow == null)
                 throw new InvalidOperationException($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}'.");
-            
+
             var workflowResult = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id, cancellationToken);
             subscriber.ActiveWorkflow = workflowResult == WorkflowResult.Finished ? null : commandWorkflow;
             await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
         }
 
-        private async Task<Subscriber> NewUserFlow(ILogger log, string chatId, CancellationToken cancellationToken)
+        private async Task<Subscriber> NewUserFlow(string chatId, CancellationToken cancellationToken)
         {
-            log.LogInformation($"NewUserFlow() is executed for chatId '{chatId}'");
+            var logger = loggerFactory.CreateLogger<Subscriber>();
+            logger.LogInformation($"NewUserFlow() is executed for chatId '{chatId}'");
             await Task.Delay(PauseBeforeAnswer, cancellationToken);
             var workflow = new AccountWorkflow();
-            workflow.Inject(_scopeFactory, _config, log);
+            workflow.Inject(_scopeFactory, _config, loggerFactory);
 
             var subscriber = new Subscriber
             {
                 Email = string.Empty,
                 TelegramId = chatId,
-                StartWorkingHoursUtc =  default,
-                EndWorkingHoursUtc =  default,
-                HoursPerDay =  ReportingService.HoursPerDay,
+                StartWorkingHoursUtc = default,
+                EndWorkingHoursUtc = default,
+                HoursPerDay = ReportingService.HoursPerDay,
                 IsVerified = false,
                 Pin = _pinGenerator.GetRandomPin(),
                 VerificationAttempts = default,
-                ActiveWorkflow = workflow
+                ActiveWorkflow = workflow,
             };
 
             await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
@@ -134,13 +133,13 @@ namespace UnTaskAlert
             return subscriber;
         }
 
-        private CommandWorkflow ProcessInput(ILogger logger, string input, params CommandWorkflow[] workflows)
+        private CommandWorkflow ProcessInput(string input, params CommandWorkflow[] workflows)
         {
             foreach (var commandWorkflow in workflows)
             {
                 if (!commandWorkflow.Accepts(input)) continue;
 
-                commandWorkflow.Inject(_scopeFactory, _config, logger);
+                commandWorkflow.Inject(_scopeFactory, _config, loggerFactory);
                 return commandWorkflow;
             }
 

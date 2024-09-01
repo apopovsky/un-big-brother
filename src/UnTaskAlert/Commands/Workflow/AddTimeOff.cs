@@ -30,7 +30,7 @@ namespace UnTaskAlert.Commands.Workflow
                 return WorkflowResult.Finished;
             }
 
-            subscriber.TimeOff ??= new List<TimeOff>();
+            subscriber.TimeOff ??= [];
 
             var targetDay = subscriber.TimeOff.FirstOrDefault(x => x.Date.Date.Equals(date.Value.Date));
             if (targetDay == null)
@@ -40,7 +40,7 @@ namespace UnTaskAlert.Commands.Workflow
                     subscriber.TimeOff.Add(new TimeOff
                     {
                         Date = date.Value.Date,
-                        HoursOff = timeOffInHours
+                        HoursOff = timeOffInHours,
                     });
                     await Notifier.Respond(chatId, $"{timeOffInHours} hours added as time off on {date.Value.Date}");
                 }
@@ -76,7 +76,8 @@ namespace UnTaskAlert.Commands.Workflow
 
         private static DateTime? ParseDate(string[] inputParts) =>
             inputParts.Length >= 3
-                ? DateTime.TryParseExact(inputParts[2].Replace('/', '.').Replace('-', '.'),
+                ? DateTime.TryParseExact(
+                    inputParts[2],
                     ["dd.MM.yyyy", "yyyyMMdd", "dd/MM/yyyy", "dd-MM-yyyy"], CultureInfo.InvariantCulture,
                     DateTimeStyles.None, out var date)
                     ? date

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using UnTaskAlert.Common;
@@ -9,18 +6,14 @@ using UnTaskAlert.Models;
 
 namespace UnTaskAlert.Commands.Workflow
 {
+    [Serializable]
     public abstract class CommandWorkflow
     {
-        protected CommandWorkflow()
-        {
-            Expiration = DateTime.UtcNow.AddMinutes(5);
-        }
-
         private bool _isInitialized;
 
-        private static readonly int PauseBeforeAnswer = 2000;
+        private const int PauseBeforeAnswer = 2000;
 
-        protected ILogger Logger { get; set; }
+        protected ILogger<CommandWorkflow> Logger { get; set; }
         protected INotifier Notifier { get; set; }
         protected IReportingService ReportingService { get; set; }
         protected Config Config { get; set; }
@@ -29,12 +22,12 @@ namespace UnTaskAlert.Commands.Workflow
         public virtual bool IsVerificationRequired => true;
         [JsonIgnore]
         public bool IsExpired => DateTime.UtcNow > Expiration;
-        public DateTime Expiration { get; set; }
+        public DateTime Expiration { get; set; } = DateTime.UtcNow.AddMinutes(5);
         public int CurrentStep { get; set; }
 
-        public void Inject(IServiceScopeFactory serviceScopeFactory, Config config, ILogger logger)
+        public void Inject(IServiceScopeFactory serviceScopeFactory, Config config, ILoggerFactory loggerFactory)
         {
-            Logger = Arg.NotNull(logger, nameof(logger));
+            Logger = loggerFactory.CreateLogger<CommandWorkflow>();
             Config = Arg.NotNull(config, nameof(config));
             var serviceScope = serviceScopeFactory.CreateScope();
             Notifier = Arg.NotNull(serviceScope.ServiceProvider.GetService<INotifier>(), $"Could not resolve '{nameof(INotifier)}'");
@@ -49,7 +42,7 @@ namespace UnTaskAlert.Commands.Workflow
 
         public async Task<WorkflowResult> Step(string input, Subscriber subscriber, long chatId, CancellationToken cancellationToken)
         {
-            Logger.LogInformation($"Executing workflow {this.GetType()} for subscriber '{subscriber.TelegramId}'");
+            Logger.LogInformation("Executing workflow {WorkflowType} for subscriber '{TelegramId}'", this.GetType(), subscriber.TelegramId);
 
             if (!_isInitialized)
             {
@@ -58,7 +51,7 @@ namespace UnTaskAlert.Commands.Workflow
 
             if (IsVerificationRequired && !subscriber.IsVerified)
             {
-                Logger.LogInformation($"Command '{input} is available only for verified users'");
+                Logger.LogInformation("Command '{Command}' is available only for verified users", input);
                 await Notifier.Respond(chatId, "Verification is required");
                 return WorkflowResult.Finished;
             }
@@ -66,13 +59,13 @@ namespace UnTaskAlert.Commands.Workflow
             if (!IsVerificationRequired && !subscriber.IsVerified)
             {
                 // making a pause for security reasons
-                Logger.LogInformation($"Pause responding for {PauseBeforeAnswer} ms");
-                await Task.Delay(PauseBeforeAnswer);
+                Logger.LogInformation("Pause responding for {PauseDuration} ms", PauseBeforeAnswer);
+                await Task.Delay(PauseBeforeAnswer, cancellationToken);
             }
 
             if (input.Equals("/cancel", StringComparison.OrdinalIgnoreCase))
             {
-                await Notifier.Respond(chatId, $"Command cancelled");
+                await Notifier.Respond(chatId, "Command cancelled");
                 return WorkflowResult.Finished;
             }
 
@@ -83,7 +76,7 @@ namespace UnTaskAlert.Commands.Workflow
             }
             catch (Exception e)
             {
-                Logger.LogError(e.ToString());
+                Logger.LogError(e, "Something bad happened to the bot :(");
                 await Notifier.Respond(chatId, "Something bad happened to the bot :(");
                 throw;
             }
@@ -99,7 +92,6 @@ namespace UnTaskAlert.Commands.Workflow
             return DoesAccept(input);
         }
 
-        //TODO: an evil todo. This could be a serialized object of different classes using the type name stored by json.net
         public string Data { get; set; }
 
         protected abstract bool DoesAccept(string input);
@@ -109,6 +101,6 @@ namespace UnTaskAlert.Commands.Workflow
     public enum WorkflowResult
     {
         Continue,
-        Finished
+        Finished,
     }
 }
