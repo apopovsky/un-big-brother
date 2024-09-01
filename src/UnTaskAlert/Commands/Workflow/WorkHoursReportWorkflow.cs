@@ -26,6 +26,11 @@ namespace UnTaskAlert.Commands.Workflow
             {
                 StartDate = startDate;
             }
+            else if (strings.Length > 1 && TryParseMonth(strings[1], out var month))
+            {
+                StartDate = GetStartOfMonth(month);
+                EndDate = GetEndOfMonth(month);
+            }
 
             if (strings.Length > 2 && DateTime.TryParseExact(strings[2],
                     new[] { "yyyy.MM.dd", "yyyyMMdd", "dd.MM.yyyy", "dd/MM/yyyy" },
@@ -33,6 +38,10 @@ namespace UnTaskAlert.Commands.Workflow
                     DateTimeStyles.None, out var endDate))
             {
                 EndDate = endDate;
+            }
+            else if (strings.Length > 2 && TryParseMonth(strings[2], out var month))
+            {
+                EndDate = GetEndOfMonth(month);
             }
 
             await ReportingService.CreateWorkHoursReport(subscriber,
@@ -47,6 +56,67 @@ namespace UnTaskAlert.Commands.Workflow
         protected override bool DoesAccept(string input)
         {
             return input.StartsWith(Command, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool TryParseMonth(string input, out int month)
+        {
+            if (int.TryParse(input, out month))
+            {
+                if (month >= 1 && month <= 12)
+                {
+                    return true;
+                }
+            }
+            else
+            {
+                var culture = CultureInfo.GetCultureInfo("en-US");
+                var monthNames = culture.DateTimeFormat.MonthNames;
+                for (int i = 0; i < monthNames.Length; i++)
+                {
+                    if (string.Equals(monthNames[i], input, StringComparison.OrdinalIgnoreCase))
+                    {
+                        month = i + 1;
+                        return true;
+                    }
+                }
+
+                culture = CultureInfo.GetCultureInfo("es-ES");
+                monthNames = culture.DateTimeFormat.MonthNames;
+                for (int i = 0; i < monthNames.Length; i++)
+                {
+                    if (string.Equals(monthNames[i], input, StringComparison.OrdinalIgnoreCase))
+                    {
+                        month = i + 1;
+                        return true;
+                    }
+                }
+            }
+
+            month = 0;
+            return false;
+        }
+
+        private DateTime GetStartOfMonth(int month)
+        {
+            var today = DateTime.Today;
+            var year = today.Year;
+            if (month > today.Month)
+            {
+                year--;
+            }
+            return new DateTime(year, month, 1);
+        }
+
+        private DateTime GetEndOfMonth(int month)
+        {
+            var today = DateTime.Today;
+            var year = today.Year;
+            if (month > today.Month)
+            {
+                year--;
+            }
+            var lastDayOfMonth = DateTime.DaysInMonth(year, month);
+            return new DateTime(year, month, lastDayOfMonth);
         }
     }
 
