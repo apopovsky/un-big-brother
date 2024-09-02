@@ -106,57 +106,94 @@ public class TelegramNotifier : INotifier
             $"Hours off: {timeReport.HoursOff}");
     }
 
-    public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true)
+public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true)
+{
+    const int maxTitleLength = 20; // Ajuste de la longitud máxima del título
+    
+    var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
+    var builder = new StringBuilder();
+    var links = new HashSet<string>(); // Usar HashSet para almacenar enlaces únicos
+
+    // Agregar encabezado de la tabla utilizando <pre> para el texto con formato fijo
+    builder.AppendLine($"<b>Standup tasks {timeReport.StartDate.Date:dd/MM/yyyy}</b>{Environment.NewLine}");
+    builder.AppendLine("<pre>");
+    builder.AppendLine("Date  | ID     | Title                | C       ");
+    builder.AppendLine("------|--------|----------------------|---------");
+
+    foreach (var item in timeReport.WorkItemTimes.OrderBy(x => x.Date))
     {
-        await _bot.SendTextMessageAsync(subscriber.TelegramId,
-            $"Your stats since {timeReport.StartDate.Date:yyyy-MM-dd}");
+        var title = item.Title;
 
-        const int maxTitleLength = 50;
-        //Support threshold values from decimal or percentage
-        if (offsetThreshold > 1)
+        // Crear el enlace y almacenarlo en el HashSet
+        var link = $"{baseUrl}{item.Id}";
+        links.Add($"<a href=\"{link}\">Task {item.Id} - {title}</a>");
+
+        // Dividir el título en líneas de no más de maxTitleLength caracteres
+        var wrappedTitle = WrapText(title, maxTitleLength);
+        var titleLines = wrappedTitle.Split([Environment.NewLine], StringSplitOptions.None);
+
+        // Formatear la primera fila de la tabla con todas las columnas
+        var message = $"{item.Date:dd/MM} | {item.Id,-6} | {titleLines[0],-maxTitleLength} | {item.Completed,7:F2}";
+        builder.AppendLine(message);
+
+        // Agregar líneas adicionales para el título, si las hay
+        for (int i = 1; i < titleLines.Length; i++)
         {
-            offsetThreshold /= 100;
-        }
-
-        var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
-        var builder = new StringBuilder();
-        foreach (var item in timeReport.WorkItemTimes.OrderBy(x => x.Date))
-        {
-            var title = item.Title;
-            if (title.Length > maxTitleLength) title = title.Substring(0, maxTitleLength);
-            title = title.PadRight(maxTitleLength);
-
-            var offset = Math.Abs(item.Active - item.Completed) / item.Active;
-                
-            if (offset > offsetThreshold)
-            {
-                var message =
-                    $"{item.Date:dd-MM} <a href=\"{baseUrl + item.Id}\">{item.Id}</a> - {title} C:{item.Completed:F2} A:{item.Active:F2} E:{item.Estimated:F2} Off:{offset:P}";
-
-                if (builder.Length + message.Length >= MaxMessageLength)
-                {
-                    await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
-                    builder = new StringBuilder();
-                }
-
-                builder.AppendLine($"{message}");
-            }
-        }
-
-        if (builder.Length > 0)
-        {
-            await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
-        }
-
-        if (includeSummary)
-        {
-            await _bot.SendTextMessageAsync(subscriber.TelegramId,
-                $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
-                $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
-                $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
-                $"Expected Hours: {timeReport.Expected:0.##}", parseMode: ParseMode.Markdown);
+            builder.AppendLine($"      |        | {titleLines[i].PadRight(maxTitleLength)} |         ");
         }
     }
+    builder.AppendLine("------|--------|----------------------|---------");
+
+    // Cerrar la etiqueta <pre>
+    builder.AppendLine("</pre>");
+
+    // Agregar los enlaces únicos al final del mensaje
+    builder.AppendLine("<b>Links to tasks:</b>");
+    foreach (var link in links)
+    {
+        builder.AppendLine(link);
+    }
+
+    // Enviar el mensaje completo
+    if (builder.Length > 0)
+    {
+        await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
+    }
+
+    if (includeSummary)
+    {
+        // Incluir resumen de datos al final usando HTML
+        await _bot.SendTextMessageAsync(subscriber.TelegramId,
+            $"<b>Estimated Hours:</b> {timeReport.TotalEstimated:0.##}<br>" +
+            $"<b>Completed Hours:</b> {timeReport.TotalCompleted:0.##}<br>" +
+            $"<b>Active Hours:</b> {timeReport.TotalActive:0.##}<br>" +
+            $"<b>Expected Hours:</b> {timeReport.Expected:0.##}",
+            parseMode: ParseMode.Html);
+    }
+}
+
+// Método para realizar el word wrap manual
+private static string WrapText(string text, int maxLength)
+{
+    var lines = new List<string>();
+    while (text.Length > maxLength)
+    {
+        // Cortar hasta el máximo de caracteres permitido
+        var line = text.Substring(0, maxLength);
+        lines.Add(line);
+
+        // Remover la parte cortada y continuar
+        text = text.Substring(maxLength);
+    }
+
+    // Agregar cualquier texto restante
+    if (text.Length > 0)
+    {
+        lines.Add(text);
+    }
+
+    return string.Join(Environment.NewLine, lines);
+}
 
     public async Task Progress(Subscriber subscriber)
     {
@@ -253,7 +290,7 @@ public class TelegramNotifier : INotifier
                    $"*Time off:*\n```{timeOffTable}```"; // Usar texto pre-formateado con backticks
 
         // Enviar el mensaje con parse_mode Markdown para mantener el formato
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+        await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
     }
 
     private List<string> GetTasksLinks(ActiveTasksInfo activeTasksInfo)
