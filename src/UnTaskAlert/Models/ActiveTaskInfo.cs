@@ -11,5 +11,6 @@ public class ActiveTasksInfo
 public class TaskInfo
 {
     public int Id { get; set; }
+    public string Title { get; set; }
     public double ActiveTime { get; set; }
 }

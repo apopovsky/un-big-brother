@@ -2,6 +2,8 @@
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi;
+using System.Threading.Tasks;
+
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert;
@@ -19,12 +21,18 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
         {
             log.LogInformation("Executing query {Query}", query);
             var queryResult = await client.QueryByWiqlAsync(wiql);
+            IList<WorkItem> tasks = new List<WorkItem>();
+            if (queryResult.WorkItems.Any())
+            {
+                tasks = await GetWorkItemsById(connection, queryResult.WorkItems.Select(x=>x.Id).ToList());
+            }
 
             var result = new ActiveTasksInfo
             {
                 ActiveTaskCount = queryResult.WorkItems.Count(),
                 User = name,
-                TasksInfo = queryResult.WorkItems.Select(i => new TaskInfo { Id = i.Id }).ToList(),
+                TasksInfo = queryResult.WorkItems.Select(i => new TaskInfo
+                    { Id = i.Id, Title = tasks.First(x => x.Id == i.Id).Fields["System.Title"].ToString() }).ToList(),
             };
             log.LogInformation("Query Result: HasActiveTask is '{HasActiveTasks}', ActiveTaskCount is '{ActiveTaskCount}'", result.HasActiveTasks, result.ActiveTaskCount);
 

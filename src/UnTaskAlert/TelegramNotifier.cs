@@ -58,20 +58,29 @@ public class TelegramNotifier : INotifier
 
     public async Task NoActiveTasksDuringWorkingHours(Subscriber subscriber)
     {
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, "No active tasks during working hours. You are working for free.", parseMode: ParseMode.Html);
+        const string alertMessage = "⚠️ *Alert\\!* ⚠️\n" +
+                                    "No active tasks during working hours\\.\n" +
+                                    "*You are working for free\\!* 😱";
+
+        await _bot.SendTextMessageAsync(subscriber.TelegramId, alertMessage, parseMode: ParseMode.MarkdownV2);
+        ;
     }
 
     public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
     {
-        var text = $"Active task outside of working hours. Doing some overtime, hah?{Environment.NewLine}" +
-                   $"Tasks: {Environment.NewLine}";
+        // Formatear el mensaje de alerta con MarkdownV2 escapando caracteres especiales
+        var text = "🕒 *Active task outside of working hours\\!* 🕒\n" + // Escapando el carácter '!'
+                   "Doing some overtime, hah? 😉\n\n" +
+                   "*Tasks:*\n";
 
-        foreach (var taskInfo in activeTasksInfo.TasksInfo)
-        {
-            text += $"-{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs){Environment.NewLine}";
-        }
+        // Agregar las tareas en formato de lista
+        text = activeTasksInfo.TasksInfo.Aggregate(text,
+            (current, taskInfo) =>
+                current +
+                $"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)} \\(Active: {taskInfo.ActiveTime:0.##} hs\\)\n");
 
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.Html);
+        // Enviar el mensaje formateado con MarkdownV2
+        await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
     }
 
     public async Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo tasksInfo)
@@ -90,20 +99,31 @@ public class TelegramNotifier : INotifier
 
     public async Task SendTimeReport(Subscriber subscriber, TimeReport timeReport)
     {
+        // Generar el contenido del reporte y enviarlo como archivo adjunto
         var content = new StpdReportGenerator(_devOpsAddress).GenerateReport(timeReport);
         var byteArray = Encoding.UTF8.GetBytes(content);
         var contentStream = new MemoryStream(byteArray);
         var file = new InputFileStream(contentStream, "report.html");
 
         await _bot.SendDocumentAsync(subscriber.TelegramId, file, caption: "Your report.");
-            
-        await _bot.SendTextMessageAsync(subscriber.TelegramId,
-            $"Your stats for {timeReport.StartDate.Date:yyyy-MM-dd}{timeReport.EndDate.Date:yyyy-MM-dd}{Environment.NewLine}{Environment.NewLine}" +
-            $"Estimated Hours: {timeReport.TotalEstimated:0.##}{Environment.NewLine}" +
-            $"Completed Hours: {timeReport.TotalCompleted:0.##}{Environment.NewLine}" +
-            $"Active Hours: {timeReport.TotalActive:0.##}{Environment.NewLine}" +
-            $"Expected Hours: {timeReport.Expected - timeReport.HoursOff:0.##}{Environment.NewLine}" +
-            $"Hours off: {timeReport.HoursOff}");
+    
+        // Crear el formato de la tabla del reporte
+        var reportMessage = new StringBuilder();
+        reportMessage.AppendLine("```");
+        reportMessage.AppendLine("Your stats:");
+        reportMessage.AppendLine("----------------------------");
+        reportMessage.AppendLine($"| Metric          | Value  |");
+        reportMessage.AppendLine("----------------------------");
+        reportMessage.AppendLine($"| Estimated Hours | {timeReport.TotalEstimated,6:0.##} |");
+        reportMessage.AppendLine($"| Completed Hours | {timeReport.TotalCompleted,6:0.##} |");
+        reportMessage.AppendLine($"| Active Hours    | {timeReport.TotalActive,6:0.##} |");
+        reportMessage.AppendLine($"| Expected Hours  | {(timeReport.Expected - timeReport.HoursOff),6:0.##} |");
+        reportMessage.AppendLine($"| Hours off       | {timeReport.HoursOff,6:0.##} |");
+        reportMessage.AppendLine("----------------------------");
+        reportMessage.AppendLine("```");
+
+        // Enviar el mensaje con MarkdownV2
+        await _bot.SendTextMessageAsync(subscriber.TelegramId, reportMessage.ToString(), parseMode: ParseMode.MarkdownV2);
     }
 
 public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true)
@@ -217,7 +237,8 @@ private static string WrapText(string text, int maxLength)
                 {
                     nextLine = true;
                 }
-                sb.AppendFormat("-{0} (Active: {1:0.##} hs)", GetSingleTaskLink(taskInfo), taskInfo.ActiveTime);
+
+                sb.Append($"-{GetSingleTaskLink(taskInfo)}: {taskInfo.Title} (Active: {taskInfo.ActiveTime:0.##} hs)");
             }
         }
         await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.Html);
@@ -298,9 +319,16 @@ private static string WrapText(string text, int maxLength)
         return activeTasksInfo.TasksInfo.Select(taskInfo => $"{GetSingleTaskLink(taskInfo)}").ToList();
     }
 
-    private string GetSingleTaskLink(TaskInfo taskInfo)
+    private string GetSingleTaskLink(TaskInfo taskInfo, ParseMode format = ParseMode.Html)
     {
         var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
-        return $"<a href=\"{baseUrl.AppendPathSegment(taskInfo.Id)}\">{taskInfo.Id}</a>";
+        var taskUrl = baseUrl.AppendPathSegment(taskInfo.Id).ToString();
+
+        return format switch
+        {
+            ParseMode.Markdown or ParseMode.MarkdownV2 => $"[{taskInfo.Id}]({taskUrl})", // Markdown format
+            ParseMode.Html => $"<a href=\"{taskUrl}\">{taskInfo.Id}</a>", // HTML format
+            _ => taskUrl, // Default: plain URL
+        };
     }
 }
