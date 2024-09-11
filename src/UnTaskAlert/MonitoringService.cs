@@ -36,9 +36,6 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
 
     private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTasksInfo activeTasksInfo, ILogger log, CancellationToken cancellationToken)
     {
-        await _notifier.NoActiveTasksDuringWorkingHours(subscriber);
-        await _notifier.ActiveTaskOutsideOfWorkingHours(subscriber, activeTasksInfo);
-
         if (subscriber.SnoozeAlertsUntil.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow)
         {
             log.LogInformation("Alert checks snoozed for subscriber {Email} til {SnoozeAlertsUntil:G}", subscriber.Email, subscriber.SnoozeAlertsUntil);

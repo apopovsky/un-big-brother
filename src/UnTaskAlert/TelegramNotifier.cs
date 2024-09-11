@@ -25,7 +25,6 @@ public class TelegramNotifier : INotifier
 {
     private readonly ITelegramBotClient _bot;
     private readonly string _devOpsAddress;
-    private const int MaxMessageLength = 4096;
 
     public static readonly string RequestEmailMessage =
         "I'm here to help you track your time. First, let me know your work email address.";
@@ -63,7 +62,6 @@ public class TelegramNotifier : INotifier
                                     "*You are working for free\\!* 😱";
 
         await _bot.SendTextMessageAsync(subscriber.TelegramId, alertMessage, parseMode: ParseMode.MarkdownV2);
-        ;
     }
 
     public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
@@ -83,13 +81,16 @@ public class TelegramNotifier : INotifier
         await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
     }
 
-    public async Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo tasksInfo)
+    public async Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
     {
-        var message = $"More than one active task at the same time!{Environment.NewLine}";
-        message += $"Tasks: {Environment.NewLine}";
-        tasksInfo.TasksInfo.ForEach(taskInfo =>
-            message += $"-{GetSingleTaskLink(taskInfo)} (Active: {taskInfo.ActiveTime:0.##} hs){Environment.NewLine}");
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, message, parseMode: ParseMode.Html);
+        var message = "🚨 *More than one active task at the same time\\!* 🚨\n" + // Escapando el carácter '!'
+                      "*Tasks:*\n";
+        // Agregar las tareas en formato de lista
+        message = activeTasksInfo.TasksInfo.Aggregate(message,
+            (current, taskInfo) =>
+                current +
+                $"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title} \\(Active: {taskInfo.ActiveTime:0.##} hs\\)\n");
+        await _bot.SendTextMessageAsync(subscriber.TelegramId, message, parseMode: ParseMode.MarkdownV2);
     }
 
     public async Task Ping(Subscriber subscriber)
@@ -109,10 +110,10 @@ public class TelegramNotifier : INotifier
     
         // Crear el formato de la tabla del reporte
         var reportMessage = new StringBuilder();
+        reportMessage.AppendLine($"📅 Your stats for period: {GetStatsPeriod(timeReport)}");
         reportMessage.AppendLine("```");
-        reportMessage.AppendLine("Your stats:");
         reportMessage.AppendLine("----------------------------");
-        reportMessage.AppendLine($"| Metric          | Value  |");
+        reportMessage.AppendLine("| Metric          | Value  |");
         reportMessage.AppendLine("----------------------------");
         reportMessage.AppendLine($"| Estimated Hours | {timeReport.TotalEstimated,6:0.##} |");
         reportMessage.AppendLine($"| Completed Hours | {timeReport.TotalCompleted,6:0.##} |");
@@ -125,6 +126,22 @@ public class TelegramNotifier : INotifier
         // Enviar el mensaje con MarkdownV2
         await _bot.SendTextMessageAsync(subscriber.TelegramId, reportMessage.ToString(), parseMode: ParseMode.MarkdownV2);
     }
+
+    private static string GetStatsPeriod(TimeReport timeReport)
+    {
+        if (timeReport.StartDate == timeReport.EndDate)
+        {
+            return timeReport.StartDate.ToString("dd/MM/yyyy");
+        }
+
+        if (timeReport.StartDate.Day == 1 && timeReport.EndDate.Day == DateTime.DaysInMonth(timeReport.EndDate.Year, timeReport.EndDate.Month))
+        {
+            return timeReport.StartDate.ToString("MMMM yyyy");
+        }
+
+        return $"{timeReport.StartDate:dd/MM/yyyy} \\- {timeReport.EndDate:dd/MM/yyyy}";
+    }
+
 
 public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true)
 {
@@ -223,25 +240,14 @@ private static string WrapText(string text, int maxLength)
     public async Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
     {
         var sb = new StringBuilder();
-        sb.AppendFormat("{0} has {1} active task{2}.{3}", subscriber.Email, activeTasksInfo.ActiveTaskCount, activeTasksInfo.ActiveTaskCount > 1 || activeTasksInfo.ActiveTaskCount == 0 ? "s" : string.Empty, Environment.NewLine);
-        if (activeTasksInfo.ActiveTaskCount != 0)
-        {
-            var nextLine = false;
-            foreach (var taskInfo in activeTasksInfo.TasksInfo)
-            {
-                if (nextLine)
-                {
-                    sb.Append(Environment.NewLine);
-                }
-                else
-                {
-                    nextLine = true;
-                }
+        sb.Append($"ℹ You have **{activeTasksInfo.ActiveTaskCount}** active task{(activeTasksInfo.ActiveTaskCount is > 1 or 0 ? "s" : string.Empty)}\\.{Environment.NewLine}");
 
-                sb.Append($"-{GetSingleTaskLink(taskInfo)}: {taskInfo.Title} (Active: {taskInfo.ActiveTime:0.##} hs)");
-            }
+        foreach (var taskInfo in activeTasksInfo.TasksInfo)
+        {
+            sb.AppendLine($@"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title} \(Active: {taskInfo.ActiveTime:0.##} hs\)");
         }
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.Html);
+
+        await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
     }
 
 
@@ -293,7 +299,7 @@ private static string WrapText(string text, int maxLength)
         const string timeOffHeader = "Fecha......|.Horas";
 
         // Formatear cada entrada de "Time off" como una fila de la tabla con espacios para alineación
-        var timeOff = subscriber?.TimeOff?.OrderBy(off => off.Date).Select(i => $"{i.Date:dd/MM/yyyy} | {i.HoursOff,2} ").ToList();
+        var timeOff = subscriber.TimeOff?.OrderBy(off => off.Date).Select(i => $"{i.Date:dd/MM/yyyy} | {i.HoursOff,2} ").ToList();
         var timeOffInfo = timeOff == null ? "n/a" : string.Join(Environment.NewLine, timeOff);
 
         // Concatenar el encabezado de la tabla con el contenido
@@ -312,11 +318,6 @@ private static string WrapText(string text, int maxLength)
 
         // Enviar el mensaje con parse_mode Markdown para mantener el formato
         await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
-    }
-
-    private List<string> GetTasksLinks(ActiveTasksInfo activeTasksInfo)
-    {
-        return activeTasksInfo.TasksInfo.Select(taskInfo => $"{GetSingleTaskLink(taskInfo)}").ToList();
     }
 
     private string GetSingleTaskLink(TaskInfo taskInfo, ParseMode format = ParseMode.Html)

@@ -2,8 +2,6 @@
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi;
 using Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models;
 using Microsoft.VisualStudio.Services.WebApi;
-using System.Threading.Tasks;
-
 using UnTaskAlert.Models;
 
 namespace UnTaskAlert;
