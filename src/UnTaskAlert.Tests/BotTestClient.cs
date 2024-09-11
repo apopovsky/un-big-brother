@@ -5,6 +5,7 @@ using System.Threading;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
@@ -76,7 +77,7 @@ namespace UnTaskAlert.Tests
 
             var botProvider = new Mock<ITelegramBotProvider>();
             botProvider.SetupGet(i => i.Client).Returns(botMock.Object);
-            var notifier = new TelegramNotifier(optionsMock.Object, botProvider.Object);
+            var notifier = new TelegramNotifier(optionsMock.Object, botProvider.Object, NullLogger<TelegramNotifier>.Instance);
 
             var reportingService = new ReportingService(notifier, backlogAccessor);
 

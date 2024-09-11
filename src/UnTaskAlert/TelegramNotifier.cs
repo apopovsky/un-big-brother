@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Flurl;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
 using Telegram.Bot.Types;
@@ -23,14 +24,16 @@ public class TelegramBotProvider(ITelegramBotClient client) : ITelegramBotProvid
 
 public class TelegramNotifier : INotifier
 {
+    private readonly ILogger<TelegramNotifier> _logger;
     private readonly ITelegramBotClient _bot;
     private readonly string _devOpsAddress;
 
     public static readonly string RequestEmailMessage =
         "I'm here to help you track your time. First, let me know your work email address.";
 
-    public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider)
+    public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider, ILogger<TelegramNotifier> logger)
     {
+        _logger = logger;
         Arg.NotNull(options, nameof(options));
 
         _devOpsAddress = options.Value.AzureDevOpsAddress;
@@ -74,8 +77,7 @@ public class TelegramNotifier : INotifier
         // Agregar las tareas en formato de lista
         text = activeTasksInfo.TasksInfo.Aggregate(text,
             (current, taskInfo) =>
-                current +
-                $"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)} \\(Active: {taskInfo.ActiveTime:0.##} hs\\)\n");
+                $"{current}{GetSingleTaskFormatted(taskInfo)}\n");
 
         // Enviar el mensaje formateado con MarkdownV2
         await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
@@ -87,9 +89,7 @@ public class TelegramNotifier : INotifier
                       "*Tasks:*\n";
         // Agregar las tareas en formato de lista
         message = activeTasksInfo.TasksInfo.Aggregate(message,
-            (current, taskInfo) =>
-                current +
-                $"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title} \\(Active: {taskInfo.ActiveTime:0.##} hs\\)\n");
+            (current, taskInfo) => $"{current}{GetSingleTaskFormatted(taskInfo)}\n");
         await _bot.SendTextMessageAsync(subscriber.TelegramId, message, parseMode: ParseMode.MarkdownV2);
     }
 
@@ -244,11 +244,13 @@ private static string WrapText(string text, int maxLength)
 
         foreach (var taskInfo in activeTasksInfo.TasksInfo)
         {
-            sb.AppendLine($@"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title} \(Active: {taskInfo.ActiveTime:0.##} hs\)");
+            sb.AppendLine(GetSingleTaskFormatted(taskInfo));
         }
 
+        _logger.LogInformation(sb.ToString());
         await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
     }
+
 
 
     public async Task IncorrectEmail(string chatId)
@@ -319,6 +321,8 @@ private static string WrapText(string text, int maxLength)
         // Enviar el mensaje con parse_mode Markdown para mantener el formato
         await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
     }
+
+    private string GetSingleTaskFormatted(TaskInfo taskInfo) => $@"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title.EscapeMarkdownV2()} \(Active: {taskInfo.ActiveTime.ToString("0.##").EscapeMarkdownV2()} hs\)";
 
     private string GetSingleTaskLink(TaskInfo taskInfo, ParseMode format = ParseMode.Html)
     {
