@@ -7,7 +7,7 @@ public interface INotifier
     Task Instruction(Subscriber subscriber);
     Task NoActiveTasksDuringWorkingHours(Subscriber subscriber);
     Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
-    Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo tasksInfo);
+    Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
     Task Ping(Subscriber subscriber);
     Task SendTimeReport(Subscriber subscriber, TimeReport timeReport);
     Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true);

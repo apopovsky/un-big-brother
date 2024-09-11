@@ -7,7 +7,7 @@ namespace UnTaskAlert.Commands.Workflow;
 
 public class DeleteWorkflow : CommandWorkflow
 {
-    private DbAccessor _dbAccessor;
+    private IDbAccessor _dbAccessor;
 
     private enum Steps
     {
@@ -35,8 +35,7 @@ public class DeleteWorkflow : CommandWorkflow
     {
         var serviceProvider = serviceScopeFactory.CreateScope().ServiceProvider;
         var options = serviceProvider.GetService<IOptions<Config>>();
-        var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-        _dbAccessor = new DbAccessor(serviceScopeFactory, options, loggerFactory);
+        _dbAccessor = serviceProvider.GetService<IDbAccessor>();
     }
 
     protected override bool DoesAccept(string input) => input.StartsWith("/delete", StringComparison.OrdinalIgnoreCase);
