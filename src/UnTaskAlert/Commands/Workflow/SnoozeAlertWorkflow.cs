@@ -15,10 +15,10 @@ public class SnoozeAlertWorkflow : CommandWorkflow
         if (inputParts.Length > 1)
         {
             var parsed = int.TryParse(inputParts[1], out minutes);
-            if (!parsed || minutes<=0)
+            if (!parsed || minutes < 0)
             {
-                await Notifier.Respond(chatId,"Please provide a valid number of minutes to snooze alerts");
-                return WorkflowResult.Continue;
+                await Notifier.Respond(chatId, "Please provide a valid number of minutes to snooze alerts");
+                return WorkflowResult.Finished;
             }
         }
         else
@@ -27,7 +27,9 @@ public class SnoozeAlertWorkflow : CommandWorkflow
         }
 
         subscriber.SnoozeAlertsUntil = DateTime.UtcNow.AddMinutes(minutes);
-        await Notifier.Respond(chatId, $"You won't receive any alerts for the next {minutes} minutes.");
+        await Notifier.Respond(chatId, minutes == 0
+            ? "Alerts are no longer snoozed."
+            : $"You won't receive any alerts for the next {minutes} minutes.");
 
         return WorkflowResult.Finished;
     }
