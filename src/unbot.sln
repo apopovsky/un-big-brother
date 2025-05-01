@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnTaskAlert.Tests", "UnTaskAlert.Tests\UnTaskAlert.Tests.csproj", "{4460BBB5-8A82-49FA-A682-91C3FCDEAA79}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{D48A86E2-07F1-4AC5-AC20-E964F6DBD961}"
 	ProjectSection(SolutionItems) = preProject
 		botfather_help.txt = botfather_help.txt
@@ -18,10 +16,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4460BBB5-8A82-49FA-A682-91C3FCDEAA79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4460BBB5-8A82-49FA-A682-91C3FCDEAA79}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4460BBB5-8A82-49FA-A682-91C3FCDEAA79}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4460BBB5-8A82-49FA-A682-91C3FCDEAA79}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8F97F6F5-7695-4EB8-875A-B861E0AF2BC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{8F97F6F5-7695-4EB8-875A-B861E0AF2BC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F97F6F5-7695-4EB8-875A-B861E0AF2BC1}.Release|Any CPU.ActiveCfg = Release|Any CPU

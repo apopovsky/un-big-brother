@@ -70,7 +70,7 @@ public class CommandProcessor(
 
         subscriber ??= await NewUserFlow(chatId, cancellationToken);
 
-        if (subscriber.ActiveWorkflow is { IsExpired: false })
+        if (subscriber.ActiveWorkflow is { IsExpired: false } || input.StartsWith("/abort"))
         {
             var result = await subscriber.ActiveWorkflow.Step(input, subscriber, update.Message.Chat.Id, cancellationToken);
             if (result == WorkflowResult.Finished)

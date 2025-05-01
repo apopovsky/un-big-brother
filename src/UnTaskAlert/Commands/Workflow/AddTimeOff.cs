@@ -6,6 +6,8 @@ namespace UnTaskAlert.Commands.Workflow;
 
 public class AddTimeOff : CommandWorkflow
 {
+    private static readonly string[] validFormats = ["dd.MM.yyyy", "yyyyMMdd", "dd/MM/yyyy", "dd-MM-yyyy", "yyyy-MM-dd", "yyyyMMdd"];
+
     protected override void InjectDependencies(IServiceScopeFactory serviceScopeFactory)
     {
         // no-op
@@ -20,7 +22,10 @@ public class AddTimeOff : CommandWorkflow
 
         if (date == null)
         {
-            await Notifier.Respond(chatId, "Please provide a valid date (dd.MM.yyyy, yyyyMMdd, dd/MM/yyyy, or dd-MM-yyyy format) or leave empty to use the current date.");
+            await Notifier.Respond(chatId, "Please provide a valid date or leave empty to use the current date.\n" +
+                                           "Accepted formats: \n" +
+                                           validFormats.Select(x => $"\u25cf {x}\n")
+                                           );
             return WorkflowResult.Finished;
         }
 
@@ -42,7 +47,7 @@ public class AddTimeOff : CommandWorkflow
                     Date = date.Value.Date,
                     HoursOff = timeOffInHours,
                 });
-                await Notifier.Respond(chatId, $"{timeOffInHours} hours added as time off on {date.Value.Date}");
+                await Notifier.Respond(chatId, $"{timeOffInHours} hours added as time off on {date.Value.ToShortDateString()}");
             }
             else
             {
@@ -55,7 +60,7 @@ public class AddTimeOff : CommandWorkflow
             if (timeOffInHours >= 0)
             {
                 targetDay.HoursOff += timeOffInHours;
-                await Notifier.Respond(chatId, $"{timeOffInHours} hours added as time off on {date.Value.Date}");
+                await Notifier.Respond(chatId, $"{timeOffInHours} hours added as time off on {date.Value.ToShortDateString()}");
             }
             else
             {
@@ -67,7 +72,7 @@ public class AddTimeOff : CommandWorkflow
                 {
                     targetDay.HoursOff += timeOffInHours;
                 }
-                await Notifier.Respond(chatId, $"Time off removed from {date.Value.Date}");
+                await Notifier.Respond(chatId, $"Time off removed from {date.Value.ToShortDateString()}");
             }
         }
 
@@ -78,7 +83,7 @@ public class AddTimeOff : CommandWorkflow
         inputParts.Length >= 3
             ? DateTime.TryParseExact(
                 inputParts[2],
-                ["dd.MM.yyyy", "yyyyMMdd", "dd/MM/yyyy", "dd-MM-yyyy"], CultureInfo.InvariantCulture,
+                validFormats, CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out var date)
                 ? date
                 : null

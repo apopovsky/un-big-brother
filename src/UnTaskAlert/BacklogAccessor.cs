@@ -14,7 +14,7 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
 
         var wiql = new Wiql { Query = query };
 
-        var client = connection.GetClient<WorkItemTrackingHttpClient>();
+        var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
         try
         {
             log.LogInformation("Executing query {Query}", query);
@@ -22,7 +22,7 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
             IList<WorkItem> tasks = new List<WorkItem>();
             if (queryResult.WorkItems.Any())
             {
-                tasks = await GetWorkItemsById(connection, queryResult.WorkItems.Select(x=>x.Id).ToList());
+                tasks = await GetWorkItemsById(connection, queryResult.WorkItems.Select(x => x.Id).ToList());
             }
 
             var result = new ActiveTasksInfo
@@ -30,7 +30,7 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
                 ActiveTaskCount = queryResult.WorkItems.Count(),
                 User = name,
                 TasksInfo = queryResult.WorkItems.Select(i => new TaskInfo
-                    { Id = i.Id, Title = tasks.First(x => x.Id == i.Id).Fields["System.Title"].ToString() }).ToList(),
+                { Id = i.Id, Title = tasks.First(x => x.Id == i.Id).Fields["System.Title"].ToString() }).ToList(),
             };
             log.LogInformation("Query Result: HasActiveTask is '{HasActiveTasks}', ActiveTaskCount is '{ActiveTaskCount}'", result.HasActiveTasks, result.ActiveTaskCount);
 
@@ -38,19 +38,19 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
         }
         catch (Exception ex)
         {
-            log.LogError(ex, "Exception occurred while executing query {Query}", query);
-            throw;
+            log.LogError(ex, "Exception occurred while executing query {Query} for user {User}", query, name);
+            throw new InvalidOperationException($"Error executing query for user {name}", ex);
         }
     }
 
-    public async Task<List<int>> GetWorkItemsForPeriod(VssConnection connection, string userName, DateTime dateTime,
+    public async Task<List<int>> GetWorkItemsForPeriod(VssConnection connection, string username, DateTime dateTime,
         DateTime? dateTo, ILogger log)
     {
-        var query = queryBuilder.GetWorkItemsByDate(userName, dateTime, dateTo);
+        var query = queryBuilder.GetWorkItemsByDate(username, dateTime, dateTo);
 
         var wiql = new Wiql { Query = query };
 
-        var client = connection.GetClient<WorkItemTrackingHttpClient>();
+        var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
         try
         {
             log.LogInformation("Executing query {Query}", query);
@@ -59,8 +59,8 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
         }
         catch (Exception ex)
         {
-            log.LogError(ex, "Exception occurred while executing query {Query}", query);
-            throw;
+            log.LogError(ex, "Exception occurred while executing query {Query} for user {UserName}", query, username);
+            throw new InvalidOperationException($"Error executing query for user {username}", ex);
         }
     }
 
@@ -71,13 +71,13 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
             return Array.Empty<WorkItem>();
         }
 
-        var client = connection.GetClient<WorkItemTrackingHttpClient>();
+        var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
         return await client.GetWorkItemsAsync(workItemsIds, expand: WorkItemExpand.Fields);
     }
 
     public async Task<IList<WorkItemUpdate>> GetWorkItemUpdates(VssConnection connection, int workItemId)
     {
-        var client = connection.GetClient<WorkItemTrackingHttpClient>();
+        var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
         return await client.GetUpdatesAsync(workItemId);
     }
 
@@ -111,6 +111,20 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
         }
 
         return activeTime;
+    }
+    public async Task<WorkItem> GetParentUserStory(VssConnection connection, int workItemId)
+    {
+        var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
+        var workItem = await client.GetWorkItemAsync(workItemId, expand: WorkItemExpand.Relations);
+
+        var parentRelation = workItem.Relations?.FirstOrDefault(r => r.Rel == "System.LinkTypes.Hierarchy-Reverse");
+        if (parentRelation == null)
+        {
+            return null;
+        }
+
+        var parentId = int.Parse(parentRelation.Url.Split('/').Last());
+        return await client.GetWorkItemAsync(parentId);
     }
 
 }
