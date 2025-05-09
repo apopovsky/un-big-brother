@@ -112,10 +112,19 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
 
         return activeTime;
     }
-    public async Task<WorkItem> GetParentUserStory(VssConnection connection, int workItemId)
+        public async Task<WorkItem> GetParentUserStory(VssConnection connection, int workItemId)
     {
         var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
-        var workItem = await client.GetWorkItemAsync(workItemId, expand: WorkItemExpand.Relations);
+        WorkItem workItem;
+        try
+        {
+            workItem = await client.GetWorkItemAsync(workItemId, expand: WorkItemExpand.Relations);
+        }
+        catch
+        {
+            // If the work item does not exist or cannot be retrieved, return null
+            return null;
+        }
 
         var parentRelation = workItem.Relations?.FirstOrDefault(r => r.Rel == "System.LinkTypes.Hierarchy-Reverse");
         if (parentRelation == null)
@@ -123,8 +132,21 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
             return null;
         }
 
-        var parentId = int.Parse(parentRelation.Url.Split('/').Last());
-        return await client.GetWorkItemAsync(parentId);
-    }
+        int parentId;
+        if (!int.TryParse(parentRelation.Url.Split('/').Last(), out parentId))
+        {
+            // If the parentId cannot be parsed, return null
+            return null;
+        }
 
+        try
+        {
+            return await client.GetWorkItemAsync(parentId);
+        }
+        catch
+        {
+            // If the parent work item does not exist or cannot be retrieved, return null
+            return null;
+        }
+    }
 }

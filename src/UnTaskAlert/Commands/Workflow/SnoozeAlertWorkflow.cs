@@ -29,7 +29,7 @@ public class SnoozeAlertWorkflow : CommandWorkflow
         subscriber.SnoozeAlertsUntil = DateTime.UtcNow.AddMinutes(minutes);
         await Notifier.Respond(chatId, minutes == 0
             ? "Alerts are no longer snoozed."
-            : $"You won't receive any alerts for the next {minutes} minutes.");
+: $"You won't receive any alerts until {DateTime.UtcNow.AddMinutes(minutes):dddd dd'th' MMMM yyyy HH:mm}(GMT).");
 
         return WorkflowResult.Finished;
     }

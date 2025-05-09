@@ -28,8 +28,7 @@ public class TelegramNotifier : INotifier
     private readonly ITelegramBotClient _bot;
     private readonly string _devOpsAddress;
 
-    public static readonly string RequestEmailMessage =
-        "I'm here to help you track your time. First, let me know your work email address.";
+    private const string RequestEmailMessage = "I'm here to help you track your time. First, let me know your work email address.";
 
     public TelegramNotifier(IOptions<Config> options, ITelegramBotProvider botProvider, ILogger<TelegramNotifier> logger)
     {
@@ -55,7 +54,7 @@ public class TelegramNotifier : INotifier
                    $"/healthcheck [threshold] - detailed report with a list of tasks where the difference between active and complete is bigger than a given threshold{Environment.NewLine}" +
                    "/help";
 
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.Html);
+        await _bot.SendMessage(subscriber.TelegramId, text, parseMode: ParseMode.Html);
     }
 
     public async Task NoActiveTasksDuringWorkingHours(Subscriber subscriber)
@@ -64,7 +63,7 @@ public class TelegramNotifier : INotifier
                                     "No active tasks during working hours\\.\n" +
                                     "*You are working for free\\!* 😱";
 
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, alertMessage, parseMode: ParseMode.MarkdownV2);
+        await _bot.SendMessage(subscriber.TelegramId, alertMessage, parseMode: ParseMode.MarkdownV2);
     }
 
     public async Task ActiveTaskOutsideOfWorkingHours(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
@@ -80,7 +79,7 @@ public class TelegramNotifier : INotifier
                 $"{current}{GetSingleTaskFormatted(taskInfo)}\n");
 
         // Enviar el mensaje formateado con MarkdownV2
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
+        await _bot.SendMessage(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
     }
 
     public async Task MoreThanSingleTaskIsActive(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
@@ -90,12 +89,12 @@ public class TelegramNotifier : INotifier
         // Agregar las tareas en formato de lista
         message = activeTasksInfo.TasksInfo.Aggregate(message,
             (current, taskInfo) => $"{current}{GetSingleTaskFormatted(taskInfo)}\n");
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, message, parseMode: ParseMode.MarkdownV2);
+        await _bot.SendMessage(subscriber.TelegramId, message, parseMode: ParseMode.MarkdownV2);
     }
 
     public async Task Ping(Subscriber subscriber)
     {
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, "I'm alive");
+        await _bot.SendMessage(subscriber.TelegramId, "I'm alive");
     }
 
     public async Task SendTimeReport(Subscriber subscriber, TimeReport timeReport)
@@ -106,7 +105,7 @@ public class TelegramNotifier : INotifier
         var contentStream = new MemoryStream(byteArray);
         var file = new InputFileStream(contentStream, "report.html");
 
-        await _bot.SendDocumentAsync(subscriber.TelegramId, file, caption: "Your report.");
+        await _bot.SendDocument(subscriber.TelegramId, file, caption: "Your report.");
     
         // Crear el formato de la tabla del reporte
         var reportMessage = new StringBuilder();
@@ -124,7 +123,7 @@ public class TelegramNotifier : INotifier
         reportMessage.AppendLine("```");
 
         // Enviar el mensaje con MarkdownV2
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, reportMessage.ToString(), parseMode: ParseMode.MarkdownV2);
+        await _bot.SendMessage(subscriber.TelegramId, reportMessage.ToString(), parseMode: ParseMode.MarkdownV2);
     }
 
     private static string GetStatsPeriod(TimeReport timeReport)
@@ -194,13 +193,13 @@ public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeR
     // Enviar el mensaje completo
     if (builder.Length > 0)
     {
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
+        await _bot.SendMessage(subscriber.TelegramId, $"{builder}", parseMode: ParseMode.Html);
     }
 
     if (includeSummary)
     {
         // Incluir resumen de datos al final usando HTML
-        await _bot.SendTextMessageAsync(subscriber.TelegramId,
+        await _bot.SendMessage(subscriber.TelegramId,
             $"<b>Estimated Hours:</b> {timeReport.TotalEstimated:0.##}<br>" +
             $"<b>Completed Hours:</b> {timeReport.TotalCompleted:0.##}<br>" +
             $"<b>Active Hours:</b> {timeReport.TotalActive:0.##}<br>" +
@@ -234,7 +233,7 @@ private static string WrapText(string text, int maxLength)
 
     public async Task Progress(Subscriber subscriber)
     {
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, "Processing your request...");
+        await _bot.SendMessage(subscriber.TelegramId, "Processing your request...");
     }
 
     public async Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo)
@@ -248,51 +247,51 @@ private static string WrapText(string text, int maxLength)
         }
 
         _logger.LogInformation(sb.ToString());
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
+        await _bot.SendMessage(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
     }
 
 
 
     public async Task IncorrectEmail(string chatId)
     {
-        await _bot.SendTextMessageAsync(chatId, "Incorrect email address");
+        await _bot.SendMessage(chatId, "Incorrect email address");
     }
 
     public async Task EmailUpdated(Subscriber subscriber)
     {
         var text = $"Email address is set to {subscriber.Email}, but is not yet verified.{Environment.NewLine}" +
                    "Please check you mailbox and send PIN to this chat.";
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, text);
+        await _bot.SendMessage(subscriber.TelegramId, text);
     }
 
     public async Task NoEmail(string chatId)
     {
-        await _bot.SendTextMessageAsync(chatId, "Your email is not set. Use /help command to fix it.");
+        await _bot.SendMessage(chatId, "Your email is not set. Use /help command to fix it.");
     }
 
     public async Task AccountVerified(Subscriber subscriber)
     {
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, "Your account is verified. Now you are able to request reports.");
+        await _bot.SendMessage(subscriber.TelegramId, "Your account is verified. Now you are able to request reports.");
     }
 
     public async Task CouldNotVerifyAccount(Subscriber subscriber)
     {
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, "Your account could not be verified.");
+        await _bot.SendMessage(subscriber.TelegramId, "Your account could not be verified.");
     }
 
     public async Task Typing(string chatId, CancellationToken cancellationToken)
     {
-        await _bot.SendChatActionAsync(chatId, ChatAction.Typing, cancellationToken: cancellationToken);
+        await _bot.SendChatAction(chatId, ChatAction.Typing, cancellationToken: cancellationToken);
     }
 
     public async Task RequestEmail(string chatId)
     {
-        await _bot.SendTextMessageAsync(chatId, RequestEmailMessage);
+        await _bot.SendMessage(chatId, RequestEmailMessage);
     }
 
     public async Task Respond(long chatId, string message)
     {
-        await _bot.SendTextMessageAsync(chatId, message);
+        await _bot.SendMessage(chatId, message);
     }
 
     public async Task AccountInfo(Subscriber subscriber)
@@ -319,10 +318,17 @@ private static string WrapText(string text, int maxLength)
                    $"*Time off:*\n```{timeOffTable}```"; // Usar texto pre-formateado con backticks
 
         // Enviar el mensaje con parse_mode Markdown para mantener el formato
-        await _bot.SendTextMessageAsync(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
+        await _bot.SendMessage(subscriber.TelegramId, text, parseMode: ParseMode.MarkdownV2);
     }
 
-    private string GetSingleTaskFormatted(TaskInfo taskInfo) => $@"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title.EscapeMarkdownV2()} \(Active: {taskInfo.ActiveTime.ToString("0.##").EscapeMarkdownV2()} hs\)";
+    private string GetSingleTaskFormatted(TaskInfo taskInfo)
+    {
+        var singleTaskFormatted = $@"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title.EscapeMarkdownV2()} \(Active: {taskInfo.ActiveTime.ToString("0.##").EscapeMarkdownV2()} hs\)";
+        if(taskInfo.Parent!=null)
+            singleTaskFormatted += "\n"+"Parent: " + GetSingleTaskLink(taskInfo.Parent);
+        
+        return singleTaskFormatted;
+    }
 
     private string GetSingleTaskLink(TaskInfo taskInfo, ParseMode format = ParseMode.Html)
     {

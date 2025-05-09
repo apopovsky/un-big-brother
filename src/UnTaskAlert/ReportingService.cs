@@ -33,8 +33,8 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         foreach (var taskInfo in activeTaskInfo.TasksInfo)
         {
             taskInfo.ActiveTime = (await backlogAccessor.GetWorkItemActiveTime(connection, taskInfo.Id)).TotalHours;
-            var parent = (await backlogAccessor.GetParentUserStory(connection, taskInfo.Id));
-            Console.WriteLine($"Parent: {parent.Fields["System.Title"].ToString()}");
+            var parent = await backlogAccessor.GetParentUserStory(connection, taskInfo.Id);
+            taskInfo.Parent = new TaskInfo(parent);
         }
 
         await _notifier.ActiveTasks(subscriber, activeTaskInfo);

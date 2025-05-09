@@ -79,13 +79,17 @@ public class AddTimeOff : CommandWorkflow
         return WorkflowResult.Finished;
     }
 
-    private static DateTime? ParseDate(string[] inputParts) =>
-        inputParts.Length >= 3
-            ? DateTime.TryParseExact(
-                inputParts[2],
-                validFormats, CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out var date)
-                ? date
-                : null
-            : DateTime.Today;
+    private static DateTime? ParseDate(string[] inputParts)
+    {
+        DateTime? parsedDate = DateTime.TryParseExact(
+                        inputParts[2],
+                        validFormats, CultureInfo.InvariantCulture,
+                        DateTimeStyles.None, out var date)
+                        ? date
+                        : null;
+
+        return inputParts.Length >= 3
+                    ? parsedDate
+                    : DateTime.Today;
+    }
 }

@@ -2,11 +2,12 @@
     "version": "2.0",
   "logging": {
     "logLevel": {
-      "default": "Warning",
-      "Function": "Error",
-      "Host.Aggregator": "Error",
-      "Host.Results": "Information",
-      "UnTaskAlert.Functions": "Warning"
+      "default": "Debug",
+      "Function": "Debug",
+      "Host.Aggregator": "Debug",
+      "Host.Results": "Debug",
+      "UnTaskAlert.Functions": "Debug",
+      "Host": "Debug" 
     },
     "applicationInsights": {
       "samplingSettings": {
