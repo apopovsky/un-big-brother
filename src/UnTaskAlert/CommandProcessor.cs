@@ -96,6 +96,7 @@ public class CommandProcessor(
             new AddTimeOff(),
             new DeleteWorkflow(),
             new AccountWorkflow(),
+            new StoryInfoWorkflow(),
         };
         var commandWorkflow = ProcessInput(input, workflows);
 

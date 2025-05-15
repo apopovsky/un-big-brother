@@ -66,13 +66,18 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
 
     public async Task<IList<WorkItem>> GetWorkItemsById(VssConnection connection, List<int> workItemsIds)
     {
+        return await GetWorkItemsById(connection, workItemsIds, WorkItemExpand.Fields);
+    }
+
+    public async Task<IList<WorkItem>> GetWorkItemsById(VssConnection connection, List<int> workItemsIds, WorkItemExpand expand = WorkItemExpand.Fields)
+    {
         if (!workItemsIds.Any())
         {
             return Array.Empty<WorkItem>();
         }
 
         var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
-        return await client.GetWorkItemsAsync(workItemsIds, expand: WorkItemExpand.Fields);
+        return await client.GetWorkItemsAsync(workItemsIds, expand: expand);
     }
 
     public async Task<IList<WorkItemUpdate>> GetWorkItemUpdates(VssConnection connection, int workItemId)
@@ -112,7 +117,8 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
 
         return activeTime;
     }
-        public async Task<WorkItem> GetParentUserStory(VssConnection connection, int workItemId)
+
+    public async Task<WorkItem> GetParentUserStory(VssConnection connection, int workItemId)
     {
         var client = await connection.GetClientAsync<WorkItemTrackingHttpClient>();
         WorkItem workItem;
@@ -148,5 +154,13 @@ public class BacklogAccessor(IQueryBuilder queryBuilder) : IBacklogAccessor
             // If the parent work item does not exist or cannot be retrieved, return null
             return null;
         }
+    }
+
+    public List<int> GetChildTaskIds(VssConnection connection, WorkItem userStory)
+    {
+        var childLinks = userStory.Relations?.Where(r => r.Rel == "System.LinkTypes.Hierarchy-Forward").ToList();
+        if (childLinks == null || childLinks.Count == 0)
+            return new List<int>();
+        return childLinks.Select(l => int.Parse(l.Url.Split('/').Last())).ToList();
     }
 }

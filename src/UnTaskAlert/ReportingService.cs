@@ -60,6 +60,86 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         await _notifier.SendDetailedTimeReport(subscriber, timeReport, 0, includeSummary: false);
     }
 
+    public async Task StoryInfoReport(Subscriber subscriber, string url, string token, int storyId, ILogger log)
+    {
+        long chatId = 0;
+        long.TryParse(subscriber.TelegramId, out chatId);
+
+        var orgUrl = new Uri(url);
+        var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
+        var story = await _backlogAccessor.GetWorkItemsById(connection, new List<int> { storyId }, Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItemExpand.Relations);
+        if (story == null || story.Count == 0)
+        {
+            await _notifier.Respond(chatId, $"No se encontró la User Story con id {storyId}.");
+            return;
+        }
+        var userStory = story[0];
+        object assignedToObj = null;
+        string assignedToUniqueName = null;
+        string assignedToDisplayName = null;
+        if (userStory.Fields.TryGetValue("System.AssignedTo", out assignedToObj) && assignedToObj != null)
+        {
+            var identity = assignedToObj as Microsoft.VisualStudio.Services.WebApi.IdentityRef;
+            if (identity != null)
+            {
+                assignedToUniqueName = identity.UniqueName;
+                assignedToDisplayName = identity.DisplayName;
+            }
+            else
+            {
+                assignedToUniqueName = assignedToObj.ToString();
+            }
+        }
+        if (string.IsNullOrEmpty(assignedToUniqueName) && string.IsNullOrEmpty(assignedToDisplayName))
+        {
+            await _notifier.Respond(chatId, "La User Story no tiene usuario asignado.");
+            return;
+        }
+        var childIds = _backlogAccessor.GetChildTaskIds(connection, userStory);
+        if (childIds == null || childIds.Count == 0)
+        {
+            await _notifier.Respond(chatId, "La User Story no tiene child tasks.");
+            return;
+        }
+        var childTasks = await _backlogAccessor.GetWorkItemsById(connection, childIds);
+        var assignedTasks = childTasks.Where(t =>
+        {
+            object childAssignedToObj = null;
+            string childUniqueName = null;
+            string childDisplayName = null;
+            if (t.Fields.TryGetValue("System.AssignedTo", out childAssignedToObj) && childAssignedToObj != null)
+            {
+                var identity = childAssignedToObj as Microsoft.VisualStudio.Services.WebApi.IdentityRef;
+                if (identity != null)
+                {
+                    childUniqueName = identity.UniqueName;
+                    childDisplayName = identity.DisplayName;
+                }
+                else
+                {
+                    childUniqueName = childAssignedToObj.ToString();
+                }
+            }
+            return (!string.IsNullOrEmpty(childUniqueName) && childUniqueName == assignedToUniqueName) ||
+                   (!string.IsNullOrEmpty(childDisplayName) && childDisplayName == assignedToDisplayName);
+        }).ToList();
+        if (assignedTasks.Count == 0)
+        {
+            await _notifier.Respond(chatId, "No hay child tasks asignadas al mismo usuario que la User Story.");
+            return;
+        }
+        var results = new List<string>();
+        TimeSpan totalActive = TimeSpan.Zero;
+        foreach (var task in assignedTasks)
+        {
+            var activeTime = await _backlogAccessor.GetWorkItemActiveTime(connection, task.Id.Value);
+            totalActive += activeTime;
+            results.Add($"- {task.Id}: {task.Fields["System.Title"]} | Tiempo activo: {activeTime.TotalHours:F2}h");
+        }
+        var msg = $"User Story {storyId} ({userStory.Fields["System.Title"]})\nUsuario asignado: {(assignedToDisplayName ?? assignedToUniqueName)}\n\nChild tasks asignadas a este usuario:\n" + string.Join("\n", results) + $"\n\nTiempo activo total: {totalActive.TotalHours:F2}h";
+        await _notifier.Respond(chatId, msg);
+    }
+
     private async Task<TimeReport> GetTimeReport(Subscriber subscriber, string url, string token,
         DateTime startDate, ILogger log, DateTime? endDate)
     {
