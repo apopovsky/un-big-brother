@@ -78,7 +78,7 @@ public abstract class CommandWorkflow
         {
             Logger.LogError(e, "Something bad happened to the bot :(");
             await Notifier.Respond(chatId, "Something bad happened to the bot :(");
-            throw;
+            return WorkflowResult.Finished;
         }
     }
 

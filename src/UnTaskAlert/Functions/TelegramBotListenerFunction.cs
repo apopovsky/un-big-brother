@@ -4,7 +4,6 @@ using Microsoft.Extensions.Logging;
 using Telegram.Bot;
 using Telegram.Bot.Types.Enums;
 using UnTaskAlert.Common;
-using UnTaskAlert.MyNamespace;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 
@@ -39,7 +38,7 @@ public class TelegramBotListenerFunction : ITelegramBotListener
                 _logger.LogError(exception, "Error processing the update.");
                 try
                 {
-                    await _botClient.SendTextMessageAsync(update.Message!.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
+                    await _botClient.SendMessage(update.Message!.Chat.Id, "Could not process your request", cancellationToken: cancellationToken);
                 }
                 catch (Exception e)
                 {

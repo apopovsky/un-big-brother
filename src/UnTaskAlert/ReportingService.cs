@@ -11,9 +11,7 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
     public const int HoursPerDay = 8;
 
     private readonly INotifier _notifier = Arg.NotNull(notifier, nameof(notifier));
-    private readonly IBacklogAccessor _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
-
-    public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate,
+    private readonly IBacklogAccessor _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));    public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate,
         ILogger log, DateTime? endDate)
     {
         var report = await GetTimeReport(subscriber, url, token, startDate, log, endDate);
@@ -21,7 +19,27 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         log.LogInformation("Query Result: totalActive:'{TotalActive}', totalEstimated:'{TotalEstimated}', totalCompleted:'{TotalCompleted}', expected: '{Expected}'",
             report.TotalActive, report.TotalEstimated, report.TotalCompleted, report.Expected);
 
-        await SendReport(subscriber, report, log);
+        // Check if this is a single day report
+        bool isSingleDayReport = false;
+        if (endDate.HasValue)
+        {
+            isSingleDayReport = startDate.Date == endDate.Value.Date;
+        }
+        else
+        {
+            isSingleDayReport = startDate.Date == DateTime.Today;
+        }
+
+        if (isSingleDayReport)
+        {
+            // For single day reports, provide a detailed view similar to standup
+            await _notifier.SendDetailedTimeReport(subscriber, report, 0, includeSummary: true);
+        }
+        else
+        {
+            // For multi-day reports, just send the regular summary
+            await SendReport(subscriber, report, log);
+        }
     }
 
     public async Task<ActiveTasksInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)

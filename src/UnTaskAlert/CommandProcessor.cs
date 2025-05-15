@@ -45,7 +45,7 @@ public class CommandProcessor(
 
         var chatId = update.Message.Chat.Id.ToString();
 
-        _logger.LogInformation($"Processing the command: {update.Message.Text}");
+        _logger.LogInformation("Processing the command: {MessageText}", update.Message.Text);
         await _notifier.Typing(update.Message.Chat.Id.ToString(), cancellationToken);
 
         var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), _logger);
@@ -56,16 +56,27 @@ public class CommandProcessor(
         }
         else
         {
-            _logger.LogInformation($"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
-                                   $"VerificationAttempts: {subscriber.VerificationAttempts}{Environment.NewLine}" +
-                                   $"PIN: {subscriber.Pin}{Environment.NewLine}" +
-                                   $"Email: {subscriber.Email}{Environment.NewLine}" +
-                                   $"Working hours (UTC): {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
-                                   $"Is account verified: {subscriber.IsVerified}{Environment.NewLine}" +
-                                   $"Hours per day: {subscriber.HoursPerDay}{Environment.NewLine}" +
-                                   $"LastNoActiveTasksAlert: {subscriber.LastNoActiveTasksAlert}{Environment.NewLine}" +
-                                   $"LastMoreThanSingleTaskIsActiveAlert: {subscriber.LastMoreThanSingleTaskIsActiveAlert}{Environment.NewLine}" +
-                                   $"LastActiveTaskOutsideOfWorkingHoursAlert: {subscriber.LastActiveTaskOutsideOfWorkingHoursAlert}{Environment.NewLine}");
+            _logger.LogInformation("TelegramId: {TelegramId}\n" +
+                                   "VerificationAttempts: {VerificationAttempts}\n" +
+                                   "PIN: {Pin}\n" +
+                                   "Email: {Email}\n" +
+                                   "Working hours (UTC): {StartWorkingHoursUtc}-{EndWorkingHoursUtc}\n" +
+                                   "Is account verified: {IsVerified}\n" +
+                                   "Hours per day: {HoursPerDay}\n" +
+                                   "LastNoActiveTasksAlert: {LastNoActiveTasksAlert}\n" +
+                                   "LastMoreThanSingleTaskIsActiveAlert: {LastMoreThanSingleTaskIsActiveAlert}\n" +
+                                   "LastActiveTaskOutsideOfWorkingHoursAlert: {LastActiveTaskOutsideOfWorkingHoursAlert}",
+                                   subscriber.TelegramId,
+                                   subscriber.VerificationAttempts,
+                                   subscriber.Pin,
+                                   subscriber.Email,
+                                   subscriber.StartWorkingHoursUtc,
+                                   subscriber.EndWorkingHoursUtc,
+                                   subscriber.IsVerified,
+                                   subscriber.HoursPerDay,
+                                   subscriber.LastNoActiveTasksAlert,
+                                   subscriber.LastMoreThanSingleTaskIsActiveAlert,
+                                   subscriber.LastActiveTaskOutsideOfWorkingHoursAlert);
         }
 
         subscriber ??= await NewUserFlow(chatId, cancellationToken);
@@ -111,7 +122,7 @@ public class CommandProcessor(
     private async Task<Subscriber> NewUserFlow(string chatId, CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger<Subscriber>();
-        logger.LogInformation($"NewUserFlow() is executed for chatId '{chatId}'");
+        logger.LogInformation("NewUserFlow() is executed for chatId '{ChatId}'", chatId);
         await Task.Delay(PauseBeforeAnswer, cancellationToken);
         var workflow = new AccountWorkflow();
         workflow.Inject(_scopeFactory, _config, loggerFactory);
@@ -120,12 +131,12 @@ public class CommandProcessor(
         {
             Email = string.Empty,
             TelegramId = chatId,
-            StartWorkingHoursUtc = default,
-            EndWorkingHoursUtc = default,
+            StartWorkingHoursUtc = TimeSpan.Zero,
+            EndWorkingHoursUtc = TimeSpan.Zero,
             HoursPerDay = ReportingService.HoursPerDay,
             IsVerified = false,
             Pin = _pinGenerator.GetRandomPin(),
-            VerificationAttempts = default,
+            VerificationAttempts = 0,
             ActiveWorkflow = workflow,
         };
 

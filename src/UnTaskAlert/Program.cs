@@ -5,9 +5,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Telegram.Bot;
-
-using UnTaskAlert.MyNamespace;
-
 using UnTaskAlert;
 using UnTaskAlert.Functions;
 
@@ -37,7 +34,7 @@ void Configure(HostBuilderContext context, IServiceCollection services)
         });
     services.AddHttpClient();
     services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(provider.GetService<IOptions<Config>>().Value.TelegramBotKey, provider.GetService<HttpClient>()));
-    services.AddSingleton<ITelegramBotListener, TelegramBotListenerFunction>();
+    services.AddScoped<ITelegramBotListener, TelegramBotListenerFunction>();
 
     services.AddSingleton((s) =>
     {

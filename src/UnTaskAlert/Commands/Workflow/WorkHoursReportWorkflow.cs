@@ -103,7 +103,7 @@ public abstract class WorkHoursReportWorkflow : CommandWorkflow
         return new DateTime(year, month, 1);
     }
 
-    private DateTime GetEndOfMonth(int month)
+    private static DateTime GetEndOfMonth(int month)
     {
         var today = DateTime.Today;
         var year = today.Year;

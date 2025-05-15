@@ -106,7 +106,7 @@ public class TelegramNotifier : INotifier
         var file = new InputFileStream(contentStream, "report.html");
 
         await _bot.SendDocument(subscriber.TelegramId, file, caption: "Your report.");
-    
+
         // Crear el formato de la tabla del reporte
         var reportMessage = new StringBuilder();
         reportMessage.AppendLine($"📅 Your stats for period: {GetStatsPeriod(timeReport)}");
@@ -145,13 +145,13 @@ public class TelegramNotifier : INotifier
 public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true)
 {
     const int maxTitleLength = 20; // Ajuste de la longitud máxima del título
-    
+
     var baseUrl = new Url(_devOpsAddress).AppendPathSegment("/_workitems/edit/");
     var builder = new StringBuilder();
     var links = new HashSet<string>(); // Usar HashSet para almacenar enlaces únicos
 
     // Agregar encabezado de la tabla utilizando <pre> para el texto con formato fijo
-    builder.AppendLine($"<b>Standup tasks {timeReport.StartDate.Date:dd/MM/yyyy}</b>{Environment.NewLine}");
+    builder.AppendLine($"<b>Tasks for period {GetStatsPeriod(timeReport)}</b>{Environment.NewLine}");
     builder.AppendLine("<pre>");
     builder.AppendLine("Date  | ID     | Title                | C       ");
     builder.AppendLine("------|--------|----------------------|---------");
@@ -200,9 +200,9 @@ public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeR
     {
         // Incluir resumen de datos al final usando HTML
         await _bot.SendMessage(subscriber.TelegramId,
-            $"<b>Estimated Hours:</b> {timeReport.TotalEstimated:0.##}<br>" +
-            $"<b>Completed Hours:</b> {timeReport.TotalCompleted:0.##}<br>" +
-            $"<b>Active Hours:</b> {timeReport.TotalActive:0.##}<br>" +
+            $"<b>Estimated Hours:</b> {timeReport.TotalEstimated:0.##}\n" +
+            $"<b>Completed Hours:</b> {timeReport.TotalCompleted:0.##}\n" +
+            $"<b>Active Hours:</b> {timeReport.TotalActive:0.##}\n" +
             $"<b>Expected Hours:</b> {timeReport.Expected:0.##}",
             parseMode: ParseMode.Html);
     }
@@ -323,10 +323,15 @@ private static string WrapText(string text, int maxLength)
 
     private string GetSingleTaskFormatted(TaskInfo taskInfo)
     {
-        var singleTaskFormatted = $@"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskInfo.Title.EscapeMarkdownV2()} \(Active: {taskInfo.ActiveTime.ToString("0.##").EscapeMarkdownV2()} hs\)";
-        if(taskInfo.Parent!=null)
-            singleTaskFormatted += "\n"+"Parent: " + GetSingleTaskLink(taskInfo.Parent);
-        
+        var taskTitle = taskInfo.Title.EscapeMarkdownV2();
+        var activeTime = taskInfo.ActiveTime.ToString("0.##").EscapeMarkdownV2();
+        var singleTaskFormatted = $@"• {GetSingleTaskLink(taskInfo, ParseMode.MarkdownV2)}: {taskTitle} \(Active: {activeTime} hs\)";
+
+        if(taskInfo.Parent != null)
+        {
+            singleTaskFormatted += $"\nParent: {GetSingleTaskLink(taskInfo.Parent, ParseMode.MarkdownV2)}";
+        }
+
         return singleTaskFormatted;
     }
 

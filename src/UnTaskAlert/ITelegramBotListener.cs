@@ -1,4 +1,4 @@
-﻿namespace UnTaskAlert.MyNamespace;
+﻿namespace UnTaskAlert;
 
 public interface ITelegramBotListener
 {
