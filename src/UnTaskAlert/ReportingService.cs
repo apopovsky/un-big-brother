@@ -20,26 +20,14 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
             report.TotalActive, report.TotalEstimated, report.TotalCompleted, report.Expected);
 
         // Check if this is a single day report
-        bool isSingleDayReport = false;
-        if (endDate.HasValue)
-        {
-            isSingleDayReport = startDate.Date == endDate.Value.Date;
-        }
-        else
-        {
-            isSingleDayReport = startDate.Date == DateTime.Today;
-        }
+        var isSingleDayReport = endDate.HasValue ? startDate.Date == endDate.Value.Date : startDate.Date == DateTime.Today;
 
         if (isSingleDayReport)
         {
             // For single day reports, provide a detailed view similar to standup
             await _notifier.SendDetailedTimeReport(subscriber, report, 0, includeSummary: true);
         }
-        else
-        {
-            // For multi-day reports, just send the regular summary
-            await SendReport(subscriber, report, log);
-        }
+        await SendReport(subscriber, report, log);
     }
 
     public async Task<ActiveTasksInfo> ActiveTasksReport(Subscriber subscriber, string url, string token, DateTime startDate, ILogger log)
@@ -80,25 +68,22 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
 
     public async Task StoryInfoReport(Subscriber subscriber, string url, string token, int storyId, ILogger log)
     {
-        long chatId = 0;
-        long.TryParse(subscriber.TelegramId, out chatId);
+        long.TryParse(subscriber.TelegramId, out var chatId);
 
         var orgUrl = new Uri(url);
         var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
-        var story = await _backlogAccessor.GetWorkItemsById(connection, new List<int> { storyId }, Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItemExpand.Relations);
+        var story = await _backlogAccessor.GetWorkItemsById(connection, [storyId], Microsoft.TeamFoundation.WorkItemTracking.WebApi.Models.WorkItemExpand.Relations);
         if (story == null || story.Count == 0)
         {
             await _notifier.Respond(chatId, $"No se encontró la User Story con id {storyId}.");
             return;
         }
         var userStory = story[0];
-        object assignedToObj = null;
         string assignedToUniqueName = null;
         string assignedToDisplayName = null;
-        if (userStory.Fields.TryGetValue("System.AssignedTo", out assignedToObj) && assignedToObj != null)
+        if (userStory.Fields.TryGetValue("System.AssignedTo", out var assignedToObj) && assignedToObj != null)
         {
-            var identity = assignedToObj as Microsoft.VisualStudio.Services.WebApi.IdentityRef;
-            if (identity != null)
+            if (assignedToObj is IdentityRef identity)
             {
                 assignedToUniqueName = identity.UniqueName;
                 assignedToDisplayName = identity.DisplayName;
@@ -122,13 +107,11 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         var childTasks = await _backlogAccessor.GetWorkItemsById(connection, childIds);
         var assignedTasks = childTasks.Where(t =>
         {
-            object childAssignedToObj = null;
             string childUniqueName = null;
             string childDisplayName = null;
-            if (t.Fields.TryGetValue("System.AssignedTo", out childAssignedToObj) && childAssignedToObj != null)
+            if (t.Fields.TryGetValue("System.AssignedTo", out var childAssignedToObj) && childAssignedToObj != null)
             {
-                var identity = childAssignedToObj as Microsoft.VisualStudio.Services.WebApi.IdentityRef;
-                if (identity != null)
+                if (childAssignedToObj is IdentityRef identity)
                 {
                     childUniqueName = identity.UniqueName;
                     childDisplayName = identity.DisplayName;
@@ -183,8 +166,7 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
                 completed = 0;
             }
 
-            var workItemDate = workItem.Fields.Keys.Contains("Microsoft.VSTS.Common.ClosedDate")
-                ? (DateTime)workItem.Fields["Microsoft.VSTS.Common.ClosedDate"]
+            var workItemDate = workItem.Fields.TryGetValue("Microsoft.VSTS.Common.ClosedDate", out var field) ? (DateTime)field
                 : (DateTime)workItem.Fields["System.ChangedDate"];
 
 
@@ -234,14 +216,10 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         {
             date = date.AddDays(-1);
         }
-        while (IsWeekend(date));
+        while (date.IsWeekend());
 
         return date;
     }
-
-    private static bool IsWeekend(DateTime date) =>
-        date.DayOfWeek == DayOfWeek.Saturday ||
-        date.DayOfWeek == DayOfWeek.Sunday;
 
     private static double GetBusinessDays(DateTime startDate, DateTime endDate)
     {

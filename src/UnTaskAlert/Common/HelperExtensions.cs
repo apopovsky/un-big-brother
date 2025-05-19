@@ -22,4 +22,10 @@ public static class HelperExtensions
             .Replace("}", "\\}")
             .Replace(".", "\\.")
             .Replace("!", "\\!");
+
+    public static bool IsWeekend(this DateTime date) =>
+        date.DayOfWeek == DayOfWeek.Saturday ||
+        date.DayOfWeek == DayOfWeek.Sunday;
+
+    public static bool IsWeekDay(this DateTime dateTime) => dateTime.DayOfWeek != DayOfWeek.Saturday && dateTime.DayOfWeek != DayOfWeek.Sunday;
 }

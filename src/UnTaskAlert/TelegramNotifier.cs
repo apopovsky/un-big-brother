@@ -153,8 +153,8 @@ public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeR
     // Agregar encabezado de la tabla utilizando <pre> para el texto con formato fijo
     builder.AppendLine($"<b>Tasks for period {GetStatsPeriod(timeReport)}</b>{Environment.NewLine}");
     builder.AppendLine("<pre>");
-    builder.AppendLine("Date  | ID     | Title                | C       ");
-    builder.AppendLine("------|--------|----------------------|---------");
+    builder.AppendLine("Date  | ID     | Title                | A    | C    ");
+    builder.AppendLine("------|--------|----------------------|------|------");
 
     foreach (var item in timeReport.WorkItemTimes.OrderBy(x => x.Date))
     {
@@ -169,16 +169,17 @@ public async Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeR
         var titleLines = wrappedTitle.Split([Environment.NewLine], StringSplitOptions.None);
 
         // Formatear la primera fila de la tabla con todas las columnas
-        var message = $"{item.Date:dd/MM} | {item.Id,-6} | {titleLines[0],-maxTitleLength} | {item.Completed,7:F2}";
+        var message = $"{item.Date:dd/MM} | {item.Id,-6} | {titleLines[0],-maxTitleLength} | {item.Active,4:F2} | {item.Completed,4:F2}";
         builder.AppendLine(message);
 
         // Agregar líneas adicionales para el título, si las hay
         for (int i = 1; i < titleLines.Length; i++)
         {
-            builder.AppendLine($"      |        | {titleLines[i].PadRight(maxTitleLength)} |         ");
+            builder.AppendLine($"      |        | {titleLines[i].PadRight(maxTitleLength)} |      |      ");
         }
     }
-    builder.AppendLine("------|--------|----------------------|---------");
+    builder.AppendLine("------|--------|----------------------|------|-----");
+    builder.AppendLine($"      |        |{"", -22}| {timeReport.TotalActive,4:F2} | {timeReport.TotalCompleted,4:F2} ");
 
     // Cerrar la etiqueta <pre>
     builder.AppendLine("</pre>");
@@ -215,11 +216,11 @@ private static string WrapText(string text, int maxLength)
     while (text.Length > maxLength)
     {
         // Cortar hasta el máximo de caracteres permitido
-        var line = text.Substring(0, maxLength);
+        var line = text[..maxLength];
         lines.Add(line);
 
         // Remover la parte cortada y continuar
-        text = text.Substring(maxLength);
+        text = text[maxLength..];
     }
 
     // Agregar cualquier texto restante

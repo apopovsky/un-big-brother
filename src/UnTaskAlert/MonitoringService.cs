@@ -12,13 +12,13 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
     private readonly INotifier _notifier = Arg.NotNull(notifier, nameof(notifier));
     private readonly IBacklogAccessor _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
     private readonly IDbAccessor _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
-    private static readonly TimeSpan PauseBetweenAlerts = TimeSpan.FromMinutes(30);
+    private static readonly TimeSpan pauseBetweenAlerts = TimeSpan.FromMinutes(30);
 
     public async Task PerformMonitoring(Subscriber subscriber, string url, string token, ILogger log, CancellationToken cancellationToken)
     {
         var orgUrl = new Uri(url);
 
-        if (subscriber.StartWorkingHoursUtc == default || subscriber.EndWorkingHoursUtc == default)
+        if (subscriber.StartWorkingHoursUtc == TimeSpan.Zero || subscriber.EndWorkingHoursUtc == TimeSpan.Zero)
         {
             log.LogInformation("{Email} has no working hours set. Active task monitoring is disabled.", subscriber.Email);
             return;
@@ -43,13 +43,13 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
         }
 
         var now = DateTime.UtcNow.TimeOfDay;
-        if (now > subscriber.StartWorkingHoursUtc && now < subscriber.EndWorkingHoursUtc && IsWeekDay())
+        if (now > subscriber.StartWorkingHoursUtc && now < subscriber.EndWorkingHoursUtc && DateTime.UtcNow.IsWeekDay())
         {
             log.LogInformation("It's working hours for {Email}", subscriber.Email);
             if (!activeTasksInfo.HasActiveTasks)
             {
                 log.LogInformation("No active tasks during working hours.");
-                if (DateTime.UtcNow - subscriber.LastNoActiveTasksAlert >= PauseBetweenAlerts)
+                if (DateTime.UtcNow - subscriber.LastNoActiveTasksAlert >= pauseBetweenAlerts)
                 {
                     subscriber.LastNoActiveTasksAlert = DateTime.UtcNow;
                     await _notifier.NoActiveTasksDuringWorkingHours(subscriber);
@@ -59,7 +59,7 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
         else
         {
             log.LogInformation("It's not working hours for {Email}", subscriber.Email);
-            if (activeTasksInfo.HasActiveTasks && DateTime.UtcNow - subscriber.LastActiveTaskOutsideOfWorkingHoursAlert >= PauseBetweenAlerts)
+            if (activeTasksInfo.HasActiveTasks && DateTime.UtcNow - subscriber.LastActiveTaskOutsideOfWorkingHoursAlert >= pauseBetweenAlerts)
             {
                 log.LogWarning("There is an active task outside of working hours.");
                 subscriber.LastActiveTaskOutsideOfWorkingHoursAlert = DateTime.UtcNow;
@@ -67,7 +67,7 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
             }
         }
 
-        if (activeTasksInfo.ActiveTaskCount > 1 && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert >= PauseBetweenAlerts)
+        if (activeTasksInfo.ActiveTaskCount > 1 && DateTime.UtcNow - subscriber.LastMoreThanSingleTaskIsActiveAlert >= pauseBetweenAlerts)
         {
             log.LogInformation("{ActiveTaskCount} active tasks at the same time.", activeTasksInfo.ActiveTaskCount);
             subscriber.LastMoreThanSingleTaskIsActiveAlert = DateTime.UtcNow;
@@ -77,6 +77,4 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
 
         await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
     }
-
-    private bool IsWeekDay() => DateTime.UtcNow.DayOfWeek != DayOfWeek.Saturday && DateTime.UtcNow.DayOfWeek != DayOfWeek.Sunday;
 }
