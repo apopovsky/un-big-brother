@@ -43,16 +43,18 @@ public class CommandProcessor(
             return;
         }
 
-        var chatId = update.Message.Chat.Id.ToString();
+        var chatId = update.Message.Chat.Id;
 
         _logger.LogInformation("Processing the command: {MessageText}", update.Message.Text);
-        await _notifier.Typing(update.Message.Chat.Id.ToString(), cancellationToken);
+        await _notifier.Typing(chatId, cancellationToken);
 
         var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), _logger);
 
         if (subscriber == null)
         {
             _logger.LogInformation("Process: Subscriber is 'null'");
+            await _notifier.Respond(update.Message.Chat.Id, "Nothing to see here!");
+            return;
         }
         else
         {
@@ -119,7 +121,7 @@ public class CommandProcessor(
         await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
     }
 
-    private async Task<Subscriber> NewUserFlow(string chatId, CancellationToken cancellationToken)
+    private async Task<Subscriber> NewUserFlow(long chatId, CancellationToken cancellationToken)
     {
         var logger = loggerFactory.CreateLogger<Subscriber>();
         logger.LogInformation("NewUserFlow() is executed for chatId '{ChatId}'", chatId);
@@ -130,7 +132,7 @@ public class CommandProcessor(
         var subscriber = new Subscriber
         {
             Email = string.Empty,
-            TelegramId = chatId,
+            TelegramId = chatId.ToString(),
             StartWorkingHoursUtc = TimeSpan.Zero,
             EndWorkingHoursUtc = TimeSpan.Zero,
             HoursPerDay = ReportingService.HoursPerDay,

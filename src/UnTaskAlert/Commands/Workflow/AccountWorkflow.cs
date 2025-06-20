@@ -32,7 +32,7 @@ public class AccountWorkflow : CommandWorkflow
     {
         if (CurrentStep == (int) Steps.Start)
         {
-            await Notifier.RequestEmail(chatId.ToString());
+            await Notifier.RequestEmail(chatId);
 
             CurrentStep = (int) Steps.EnterEmail;
             return WorkflowResult.Continue;
@@ -42,7 +42,7 @@ public class AccountWorkflow : CommandWorkflow
         {
             if (!IsEmail(input) || !input.EndsWith(Config.EmailDomain))
             {
-                await Notifier.IncorrectEmail(subscriber.TelegramId);
+                await Notifier.IncorrectEmail(Convert.ToInt64(subscriber.TelegramId));
                 CurrentStep = (int)Steps.EnterEmail;
 
                 return WorkflowResult.Continue;

@@ -71,7 +71,7 @@ public abstract class CommandWorkflow
 
         try
         {
-            await Notifier.Typing(chatId.ToString(), cancellationToken);
+            await Notifier.Typing(chatId, cancellationToken);
             return await PerformStep(input, subscriber, chatId);
         }
         catch (Exception e)

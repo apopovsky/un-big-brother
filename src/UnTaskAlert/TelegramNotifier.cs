@@ -253,7 +253,7 @@ private static string WrapText(string text, int maxLength)
 
 
 
-    public async Task IncorrectEmail(string chatId)
+    public async Task IncorrectEmail(long chatId)
     {
         await _bot.SendMessage(chatId, "Incorrect email address");
     }
@@ -265,7 +265,7 @@ private static string WrapText(string text, int maxLength)
         await _bot.SendMessage(subscriber.TelegramId, text);
     }
 
-    public async Task NoEmail(string chatId)
+    public async Task NoEmail(long chatId)
     {
         await _bot.SendMessage(chatId, "Your email is not set. Use /help command to fix it.");
     }
@@ -280,12 +280,12 @@ private static string WrapText(string text, int maxLength)
         await _bot.SendMessage(subscriber.TelegramId, "Your account could not be verified.");
     }
 
-    public async Task Typing(string chatId, CancellationToken cancellationToken)
+    public async Task Typing(long chatId, CancellationToken cancellationToken)
     {
         await _bot.SendChatAction(chatId, ChatAction.Typing, cancellationToken: cancellationToken);
     }
 
-    public async Task RequestEmail(string chatId)
+    public async Task RequestEmail(long chatId)
     {
         await _bot.SendMessage(chatId, RequestEmailMessage);
     }

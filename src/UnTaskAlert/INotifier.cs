@@ -13,13 +13,13 @@ public interface INotifier
     Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true);
     Task Progress(Subscriber subscriber);
     Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
-    Task IncorrectEmail(string chatId);
+    Task IncorrectEmail(long chatId);
     Task EmailUpdated(Subscriber subscriber);
-    Task NoEmail(string chatId);
+    Task NoEmail(long chatId);
     Task AccountVerified(Subscriber subscriber);
     Task CouldNotVerifyAccount(Subscriber subscriber);
-    Task Typing(string chatId, CancellationToken cancellationToken);
-    Task RequestEmail(string chatId);
+    Task Typing(long chatId, CancellationToken cancellationToken);
+    Task RequestEmail(long chatId);
     Task Respond(long chatId, string message);
     Task AccountInfo(Subscriber subscriber);
 }
