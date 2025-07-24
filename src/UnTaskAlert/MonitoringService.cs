@@ -28,7 +28,7 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
         var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
         foreach (var taskInfo in activeTaskInfo.TasksInfo)
         {
-            taskInfo.ActiveTime = (await backlogAccessor.GetWorkItemActiveTime(connection, taskInfo.Id)).TotalHours;
+            taskInfo.ActiveTime = (await _backlogAccessor.GetWorkItemActiveTime(connection, taskInfo.Id)).TotalHours;
         }
 
         await CreateAlertIfNeeded(subscriber, activeTaskInfo, log, cancellationToken);
