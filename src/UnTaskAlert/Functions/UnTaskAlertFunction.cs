@@ -14,7 +14,7 @@ public class UnTaskAlertFunction(IMonitoringService service, IOptions<Config> op
 
     [Function(nameof(UnTaskAlertFunction))]
     // ReSharper disable once UnusedParameter.Global
-    public async Task Run([TimerTrigger("0 */10 * * * *", RunOnStartup = true)] TimerInfo timerInfo, FunctionContext context)
+    public async Task Run([TimerTrigger("0 */10 * * * *", RunOnStartup = false)] TimerInfo timerInfo, FunctionContext context)
     {
         var logger = context.GetLogger(nameof(UnTaskAlertFunction));
         logger.LogInformation("Executing monitoring task");

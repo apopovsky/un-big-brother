@@ -13,9 +13,9 @@ var host = new HostBuilder()
     .ConfigureServices(Configure)
     .Build();
 
-host.Run();
+await host.RunAsync();
 
-void Configure(HostBuilderContext context, IServiceCollection services)
+static void Configure(HostBuilderContext context, IServiceCollection services)
 {
     services.AddLogging(builder => builder.AddDebug().AddConsole());
     services.AddTransient<IMonitoringService, MonitoringService>();
@@ -34,7 +34,7 @@ void Configure(HostBuilderContext context, IServiceCollection services)
         });
     services.AddHttpClient();
     services.AddSingleton<ITelegramBotClient>(provider => new TelegramBotClient(provider.GetService<IOptions<Config>>().Value.TelegramBotKey, provider.GetService<HttpClient>()));
-    services.AddScoped<ITelegramBotListener, TelegramBotListenerFunction>();
+    services.AddHostedService<TelegramBotBackgroundService>();
 
     services.AddSingleton((s) =>
     {
