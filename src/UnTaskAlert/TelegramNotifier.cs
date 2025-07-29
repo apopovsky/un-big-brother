@@ -99,7 +99,6 @@ public class TelegramNotifier : INotifier
 
     public async Task SendTimeReport(Subscriber subscriber, TimeReport timeReport)
     {
-        // Generar el contenido del reporte y enviarlo como archivo adjunto
         var content = new StpdReportGenerator(_devOpsAddress).GenerateReport(timeReport);
         var byteArray = Encoding.UTF8.GetBytes(content);
         var contentStream = new MemoryStream(byteArray);
@@ -107,7 +106,6 @@ public class TelegramNotifier : INotifier
 
         await _bot.SendDocument(subscriber.TelegramId, file, caption: "Your report.");
 
-        // Crear el formato de la tabla del reporte
         var reportMessage = new StringBuilder();
         reportMessage.AppendLine($"📅 Your stats for period: {GetStatsPeriod(timeReport)}");
         reportMessage.AppendLine("```");
@@ -122,8 +120,38 @@ public class TelegramNotifier : INotifier
         reportMessage.AppendLine("----------------------------");
         reportMessage.AppendLine("```");
 
-        // Enviar el mensaje con MarkdownV2
         await _bot.SendMessage(subscriber.TelegramId, reportMessage.ToString(), parseMode: ParseMode.MarkdownV2);
+
+        // Add anomalous days section if report spans multiple days
+        if (timeReport.StartDate.Date != timeReport.EndDate.Date)
+        {
+            var anomalousDays = GetAnomalousDays(timeReport, subscriber.HoursPerDay == 0 ? 8 : subscriber.HoursPerDay);
+            if (anomalousDays.Any())
+            {
+                var anomalousMessage = new StringBuilder();
+                anomalousMessage.AppendLine("```");
+                anomalousMessage.AppendLine("⚠️ Anomalous Days (≠8h):");
+                anomalousMessage.AppendLine("----------------------------");
+                foreach (var day in anomalousDays)
+                {
+                    anomalousMessage.AppendLine($"\\- {day.Date:ddd dd/MM}: {day.Hours:0.##}h");
+                }
+                anomalousMessage.AppendLine("```");
+                
+                await _bot.SendMessage(subscriber.TelegramId, anomalousMessage.ToString(), parseMode: ParseMode.MarkdownV2);
+            }
+        }
+    }
+
+    private static List<(DateTime Date, double Hours)> GetAnomalousDays(TimeReport timeReport, int expectedHoursPerDay)
+    {
+        return timeReport.WorkItemTimes
+            .GroupBy(w => w.Date.Date)
+            .Select(g => new { Date = g.Key, Hours = g.Sum(w => w.Completed) })
+            .Where(d => Math.Abs(d.Hours - expectedHoursPerDay) > 0.01)
+            .OrderBy(d => d.Date)
+            .Select(d => (d.Date, d.Hours))
+            .ToList();
     }
 
     private static string GetStatsPeriod(TimeReport timeReport)
