@@ -38,8 +38,8 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         var activeTaskInfo = await _backlogAccessor.GetActiveWorkItems(connection, subscriber.Email, log);
         foreach (var taskInfo in activeTaskInfo.TasksInfo)
         {
-            taskInfo.ActiveTime = (await backlogAccessor.GetWorkItemActiveTime(connection, taskInfo.Id)).TotalHours;
-            var parent = await backlogAccessor.GetParentUserStory(connection, taskInfo.Id);
+            taskInfo.ActiveTime = (await _backlogAccessor.GetWorkItemActiveTime(connection, taskInfo.Id)).TotalHours;
+            var parent = await _backlogAccessor.GetParentUserStory(connection, taskInfo.Id);
             taskInfo.Parent = new TaskInfo(parent);
         }
 
@@ -154,7 +154,7 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         {
             if (workItem.Id == null) continue;
             var workItemId = workItem.Id.Value;
-            var activeTime = await backlogAccessor.GetWorkItemActiveTime(connection, workItemId);
+            var activeTime = await _backlogAccessor.GetWorkItemActiveTime(connection, workItemId);
 
             if (!workItem.Fields.TryGetValue<double>("Microsoft.VSTS.Scheduling.OriginalEstimate", out var estimated))
             {
