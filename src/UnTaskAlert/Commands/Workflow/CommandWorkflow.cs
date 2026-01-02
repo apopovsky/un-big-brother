@@ -13,7 +13,7 @@ public abstract class CommandWorkflow
 
     private const int PauseBeforeAnswer = 2000;
 
-    protected ILogger<CommandWorkflow> Logger { get; set; }
+    protected ILogger Logger { get; set; }
     protected INotifier Notifier { get; set; }
     protected IReportingService ReportingService { get; set; }
     protected Config Config { get; set; }
@@ -25,9 +25,9 @@ public abstract class CommandWorkflow
     public DateTime Expiration { get; set; } = DateTime.UtcNow.AddMinutes(5);
     public int CurrentStep { get; set; }
 
-    public void Inject(IServiceScopeFactory serviceScopeFactory, Config config, ILoggerFactory loggerFactory)
+    public void Inject(IServiceScopeFactory serviceScopeFactory, Config config, ILogger log)
     {
-        Logger = loggerFactory.CreateLogger<CommandWorkflow>();
+        Logger = log;
         Config = Arg.NotNull(config, nameof(config));
         var serviceScope = serviceScopeFactory.CreateScope();
         Notifier = Arg.NotNull(serviceScope.ServiceProvider.GetService<INotifier>(), $"Could not resolve '{nameof(INotifier)}'");

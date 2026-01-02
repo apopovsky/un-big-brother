@@ -23,7 +23,7 @@ public class PrAccessor(IQueryBuilder queryBuilder) : IPrAccessor
 
             var gitClient = await connection.GetClientAsync<GitHttpClient>();
 
-            var projects = (projectNames ?? Array.Empty<string>())
+            var projects = (projectNames ?? [])
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .Select(p => p.Trim())
                 .ToList();

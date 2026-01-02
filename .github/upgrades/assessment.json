@@ -1,0 +1,829 @@
+{
+  "settings": {
+    "components": {
+      "code": false,
+      "binaries": false
+    },
+    "targetId": "net10.0",
+    "targetDisplayName": ".NETCoreApp,Version=v10.0"
+  },
+  "analysisStartTime": "2026-01-02T15:45:39.8958874Z",
+  "analysisEndTime": "2026-01-02T15:45:49.1502114Z",
+  "privacyModeHelpUrl": "https://go.microsoft.com/fwlink/?linkid=2270980",
+  "stats": {
+    "summary": {
+      "projects": 1,
+      "issues": 5,
+      "incidents": 27,
+      "effort": 29
+    },
+    "charts": {
+      "severity": {
+        "Mandatory": 2,
+        "Optional": 0,
+        "Potential": 25,
+        "Information": 0
+      },
+      "category": {
+        "AzureFunctionsUpgrade": 1,
+        "NuGet": 5,
+        "Project": 1,
+        "Api": 20
+      }
+    }
+  },
+  "projects": [
+    {
+      "path": "UnTaskAlert.csproj",
+      "startingProject": true,
+      "issues": 5,
+      "storyPoints": 29,
+      "properties": {
+        "appName": "UnTaskAlert",
+        "projectKind": "AzureFunctions",
+        "frameworks": [
+          "net9.0"
+        ],
+        "languages": [
+          "C#"
+        ],
+        "tools": [
+          "MSBuild"
+        ],
+        "isSdkStyle": true,
+        "numberOfFiles": 49,
+        "numberOfCodeFiles": 48,
+        "linesTotal": 3289,
+        "linesOfCode": 3192,
+        "totalApiScanned": 4597,
+        "minLinesOfCodeToChange": 20,
+        "maxLinesOfCodeToChange": 20
+      },
+      "ruleInstances": [
+        {
+          "incidentId": "4b847ef6-063d-4faf-b212-d3343f30e037",
+          "ruleId": "AzureFunctionsUpgrade.0002",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "kind": "File",
+            "path": "UnTaskAlert.csproj"
+          }
+        },
+        {
+          "incidentId": "b21f688d-5385-4e96-83ed-18acbe2d2097",
+          "ruleId": "NuGet.0002",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "System.Formats.Asn1, 9.0.7\n\nRecommendation:\n\nRemove System.Formats.Asn1, and replace with new package System.Formats.Asn1 10.0.1",
+              "protected": "System.Formats.Asn1, 9.0.7\n\nRecommendation:\n\nRemove System.Formats.Asn1, and replace with new package System.Formats.Asn1 10.0.1"
+            },
+            "kind": "File",
+            "path": "UnTaskAlert.csproj",
+            "snippet": "System.Formats.Asn1, 9.0.7\n\nRecommendation:\n\nRemove System.Formats.Asn1, and replace with new package System.Formats.Asn1 10.0.1",
+            "protectedSnippet": "System.Formats.Asn1, 9.0.7\n\nRecommendation:\n\nRemove System.Formats.Asn1, and replace with new package System.Formats.Asn1 10.0.1",
+            "label": "System.Formats.Asn1 9.0.7",
+            "properties": {
+              "PackageId": "System.Formats.Asn1",
+              "PackageVersion": "9.0.7",
+              "PackageNewVersion": "10.0.1",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "9b4d0e81-f3b8-430b-b1f4-c6e9efee9f37",
+          "ruleId": "NuGet.0002",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.Azure.Functions.Worker, 2.0.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker, and replace with new package Microsoft.Azure.Functions.Worker 2.51.0",
+              "protected": "Microsoft.Azure.Functions.Worker, 2.0.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker, and replace with new package Microsoft.Azure.Functions.Worker 2.51.0"
+            },
+            "kind": "File",
+            "path": "UnTaskAlert.csproj",
+            "snippet": "Microsoft.Azure.Functions.Worker, 2.0.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker, and replace with new package Microsoft.Azure.Functions.Worker 2.51.0",
+            "protectedSnippet": "Microsoft.Azure.Functions.Worker, 2.0.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker, and replace with new package Microsoft.Azure.Functions.Worker 2.51.0",
+            "label": "Microsoft.Azure.Functions.Worker 2.0.0",
+            "properties": {
+              "PackageId": "Microsoft.Azure.Functions.Worker",
+              "PackageVersion": "2.0.0",
+              "PackageNewVersion": "2.51.0",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "88641a03-ad17-4cd0-be81-32956a41420e",
+          "ruleId": "NuGet.0002",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, 4.12.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB 4.14.0",
+              "protected": "Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, 4.12.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB 4.14.0"
+            },
+            "kind": "File",
+            "path": "UnTaskAlert.csproj",
+            "snippet": "Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, 4.12.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB 4.14.0",
+            "protectedSnippet": "Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, 4.12.0\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.CosmosDB, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.CosmosDB 4.14.0",
+            "label": "Microsoft.Azure.Functions.Worker.Extensions.CosmosDB 4.12.0",
+            "properties": {
+              "PackageId": "Microsoft.Azure.Functions.Worker.Extensions.CosmosDB",
+              "PackageVersion": "4.12.0",
+              "PackageNewVersion": "4.14.0",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "7aa65331-5217-48bc-8f20-5a9ff2b6e4a4",
+          "ruleId": "NuGet.0002",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, 2.0.2\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore 2.1.0",
+              "protected": "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, 2.0.2\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore 2.1.0"
+            },
+            "kind": "File",
+            "path": "UnTaskAlert.csproj",
+            "snippet": "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, 2.0.2\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore 2.1.0",
+            "protectedSnippet": "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, 2.0.2\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore, and replace with new package Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore 2.1.0",
+            "label": "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore 2.0.2",
+            "properties": {
+              "PackageId": "Microsoft.Azure.Functions.Worker.Extensions.Http.AspNetCore",
+              "PackageVersion": "2.0.2",
+              "PackageNewVersion": "2.1.0",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "103944cd-7167-4f8e-b721-1017f44bd83c",
+          "ruleId": "NuGet.0002",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Microsoft.Azure.Functions.Worker.Sdk, 2.0.5\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Sdk, and replace with new package Microsoft.Azure.Functions.Worker.Sdk 2.0.7",
+              "protected": "Microsoft.Azure.Functions.Worker.Sdk, 2.0.5\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Sdk, and replace with new package Microsoft.Azure.Functions.Worker.Sdk 2.0.7"
+            },
+            "kind": "File",
+            "path": "UnTaskAlert.csproj",
+            "snippet": "Microsoft.Azure.Functions.Worker.Sdk, 2.0.5\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Sdk, and replace with new package Microsoft.Azure.Functions.Worker.Sdk 2.0.7",
+            "protectedSnippet": "Microsoft.Azure.Functions.Worker.Sdk, 2.0.5\n\nRecommendation:\n\nRemove Microsoft.Azure.Functions.Worker.Sdk, and replace with new package Microsoft.Azure.Functions.Worker.Sdk 2.0.7",
+            "label": "Microsoft.Azure.Functions.Worker.Sdk 2.0.5",
+            "properties": {
+              "PackageId": "Microsoft.Azure.Functions.Worker.Sdk",
+              "PackageVersion": "2.0.5",
+              "PackageNewVersion": "2.0.7",
+              "PackageReplacements": null
+            }
+          }
+        },
+        {
+          "incidentId": "21769d91-ceae-405a-aa79-e46eb731a9cb",
+          "ruleId": "Project.0002",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "Current target framework: net9.0\nRecommended target framework: net10.0",
+              "protected": "Current target framework: net9.0\nRecommended target framework: net10.0"
+            },
+            "kind": "File",
+            "path": "UnTaskAlert.csproj",
+            "snippet": "Current target framework: net9.0\nRecommended target framework: net10.0",
+            "protectedSnippet": "Current target framework: net9.0\nRecommended target framework: net10.0",
+            "properties": {
+              "CurrentTargetFramework": "net9.0",
+              "RecommendedTargetFramework": "net10.0"
+            }
+          }
+        },
+        {
+          "incidentId": "fabdc418-c1e2-4a62-9a30-937f5e18e715",
+          "ruleId": "Api.0002",
+          "description": "Breaking change: New TimeSpan.From*() overloads that take integers ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);",
+              "protected": "M:System.TimeSpan.FromSeconds(System.Int64)"
+            },
+            "kind": "File",
+            "path": "Functions\\TelegramBotBackgroundService.cs",
+            "snippet": "await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);",
+            "protectedSnippet": "M:System.TimeSpan.FromSeconds(System.Int64)",
+            "label": "M:System.TimeSpan.FromSeconds(System.Int64)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/core-libraries/9.0/timespan-from-overloads.md",
+                "isCustom": false
+              }
+            ],
+            "line": 40,
+            "column": 16
+          }
+        },
+        {
+          "incidentId": "ad4640c9-e96e-4c09-960e-7828d8d16ebe",
+          "ruleId": "Api.0002",
+          "description": "Breaking change: New TimeSpan.From*() overloads that take integers ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var slot2End = slot2Start.Add(TimeSpan.FromHours(1));",
+              "protected": "M:System.TimeSpan.FromHours(System.Int32)"
+            },
+            "kind": "File",
+            "path": "MonitoringService.cs",
+            "snippet": "var slot2End = slot2Start.Add(TimeSpan.FromHours(1));",
+            "protectedSnippet": "M:System.TimeSpan.FromHours(System.Int32)",
+            "label": "M:System.TimeSpan.FromHours(System.Int32)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/core-libraries/9.0/timespan-from-overloads.md",
+                "isCustom": false
+              }
+            ],
+            "line": 104,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "6baa01af-dec9-4f17-8cfd-81818ac512ed",
+          "ruleId": "Api.0002",
+          "description": "Breaking change: New TimeSpan.From*() overloads that take integers ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var slot2Start = subscriber.StartWorkingHoursUtc.Add(TimeSpan.FromHours(4));",
+              "protected": "M:System.TimeSpan.FromHours(System.Int32)"
+            },
+            "kind": "File",
+            "path": "MonitoringService.cs",
+            "snippet": "var slot2Start = subscriber.StartWorkingHoursUtc.Add(TimeSpan.FromHours(4));",
+            "protectedSnippet": "M:System.TimeSpan.FromHours(System.Int32)",
+            "label": "M:System.TimeSpan.FromHours(System.Int32)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/core-libraries/9.0/timespan-from-overloads.md",
+                "isCustom": false
+              }
+            ],
+            "line": 103,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "99832731-0b30-48d6-b963-653c9e57b478",
+          "ruleId": "Api.0002",
+          "description": "Breaking change: New TimeSpan.From*() overloads that take integers ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var slot1End = slot1Start.Add(TimeSpan.FromHours(1));",
+              "protected": "M:System.TimeSpan.FromHours(System.Int32)"
+            },
+            "kind": "File",
+            "path": "MonitoringService.cs",
+            "snippet": "var slot1End = slot1Start.Add(TimeSpan.FromHours(1));",
+            "protectedSnippet": "M:System.TimeSpan.FromHours(System.Int32)",
+            "label": "M:System.TimeSpan.FromHours(System.Int32)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/core-libraries/9.0/timespan-from-overloads.md",
+                "isCustom": false
+              }
+            ],
+            "line": 101,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "2b68ed03-1561-4bc2-bc91-82deb84079a5",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "T:System.Uri"
+            },
+            "kind": "File",
+            "path": "MonitoringService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "T:System.Uri",
+            "label": "T:System.Uri",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 19,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "7a5d06f1-66c8-4038-b33a-1cfe9cf53ef9",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "M:System.Uri.#ctor(System.String)"
+            },
+            "kind": "File",
+            "path": "MonitoringService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "M:System.Uri.#ctor(System.String)",
+            "label": "M:System.Uri.#ctor(System.String)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 19,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "68f88f69-ae38-4d41-b6c8-5d043d30e9c5",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "T:System.Uri"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "T:System.Uri",
+            "label": "T:System.Uri",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 160,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "15f09c0b-6183-49d2-b385-affcaf67438f",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "M:System.Uri.#ctor(System.String)"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "M:System.Uri.#ctor(System.String)",
+            "label": "M:System.Uri.#ctor(System.String)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 160,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "7025e661-2ea7-4d90-b721-b41a52d6fdc1",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "T:System.Uri"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "T:System.Uri",
+            "label": "T:System.Uri",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 86,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "baa53c2e-0201-4894-9455-015097b7f856",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "M:System.Uri.#ctor(System.String)"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "M:System.Uri.#ctor(System.String)",
+            "label": "M:System.Uri.#ctor(System.String)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 86,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "16f2fb77-0c70-41a9-8e5a-c41a3ec044ae",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "T:System.Uri"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "T:System.Uri",
+            "label": "T:System.Uri",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 55,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "ef9ad233-d3ee-4824-a866-f2dfd6fbe801",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "M:System.Uri.#ctor(System.String)"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "M:System.Uri.#ctor(System.String)",
+            "label": "M:System.Uri.#ctor(System.String)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 55,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "2666b161-d2fa-48e7-8937-7af3da7bf6d9",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "T:System.Uri"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "T:System.Uri",
+            "label": "T:System.Uri",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 37,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "40e396a8-b4dc-4c76-9bbc-ffad0c4061ea",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var orgUrl = new Uri(url);",
+              "protected": "M:System.Uri.#ctor(System.String)"
+            },
+            "kind": "File",
+            "path": "ReportingService.cs",
+            "snippet": "var orgUrl = new Uri(url);",
+            "protectedSnippet": "M:System.Uri.#ctor(System.String)",
+            "label": "M:System.Uri.#ctor(System.String)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 37,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "c486cafa-84e8-4ee8-ad68-e2208967c12e",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var segments = uri.AbsolutePath.Split(\u0027/\u0027, StringSplitOptions.RemoveEmptyEntries);",
+              "protected": "P:System.Uri.AbsolutePath"
+            },
+            "kind": "File",
+            "path": "PrAccessor.cs",
+            "snippet": "var segments = uri.AbsolutePath.Split(\u0027/\u0027, StringSplitOptions.RemoveEmptyEntries);",
+            "protectedSnippet": "P:System.Uri.AbsolutePath",
+            "label": "P:System.Uri.AbsolutePath",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 132,
+            "column": 12
+          }
+        },
+        {
+          "incidentId": "3fd6662a-5d16-40c4-96e7-ea1202072e05",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var uri = new Uri(azureDevOpsAddress);",
+              "protected": "T:System.Uri"
+            },
+            "kind": "File",
+            "path": "PrAccessor.cs",
+            "snippet": "var uri = new Uri(azureDevOpsAddress);",
+            "protectedSnippet": "T:System.Uri",
+            "label": "T:System.Uri",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 127,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "eb0b6a42-9bad-4878-afe7-e1eb24760184",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: URI length limits removed ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var uri = new Uri(azureDevOpsAddress);",
+              "protected": "M:System.Uri.#ctor(System.String)"
+            },
+            "kind": "File",
+            "path": "PrAccessor.cs",
+            "snippet": "var uri = new Uri(azureDevOpsAddress);",
+            "protectedSnippet": "M:System.Uri.#ctor(System.String)",
+            "label": "M:System.Uri.#ctor(System.String)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/10.0/uri-length-limits-removed.md",
+                "isCustom": false
+              }
+            ],
+            "line": 127,
+            "column": 8
+          }
+        },
+        {
+          "incidentId": "e3a04b43-e24a-4ac2-bfaf-d0474a9c357b",
+          "ruleId": "Api.0003",
+          "description": "URI query redaction in IHttpClientFactory logs ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddHttpClient();",
+              "protected": "M:Microsoft.Extensions.DependencyInjection.HttpClientFactoryServiceCollectionExtensions.AddHttpClient(Microsoft.Extensions.DependencyInjection.IServiceCollection)"
+            },
+            "kind": "File",
+            "path": "Program.cs",
+            "snippet": "services.AddHttpClient();",
+            "protectedSnippet": "M:Microsoft.Extensions.DependencyInjection.HttpClientFactoryServiceCollectionExtensions.AddHttpClient(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+            "label": "M:Microsoft.Extensions.DependencyInjection.HttpClientFactoryServiceCollectionExtensions.AddHttpClient(Microsoft.Extensions.DependencyInjection.IServiceCollection)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/networking/9.0/query-redaction-logs.md",
+                "isCustom": false
+              }
+            ],
+            "line": 35,
+            "column": 4
+          }
+        },
+        {
+          "incidentId": "976514d6-ed78-4355-8ce8-2b85ee24e91f",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: Message no longer duplicated in Console log output ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "services.AddLogging(builder =\u003E builder.AddDebug().AddConsole());",
+              "protected": "M:Microsoft.Extensions.Logging.ConsoleLoggerExtensions.AddConsole(Microsoft.Extensions.Logging.ILoggingBuilder)"
+            },
+            "kind": "File",
+            "path": "Program.cs",
+            "snippet": "services.AddLogging(builder =\u003E builder.AddDebug().AddConsole());",
+            "protectedSnippet": "M:Microsoft.Extensions.Logging.ConsoleLoggerExtensions.AddConsole(Microsoft.Extensions.Logging.ILoggingBuilder)",
+            "label": "M:Microsoft.Extensions.Logging.ConsoleLoggerExtensions.AddConsole(Microsoft.Extensions.Logging.ILoggingBuilder)",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/extensions/10.0/console-json-logging-duplicate-messages.md",
+                "isCustom": false
+              }
+            ],
+            "line": 19,
+            "column": 4
+          }
+        },
+        {
+          "incidentId": "3b2c0db0-5ecf-4b0c-afa1-4b56af818e99",
+          "ruleId": "Api.0003",
+          "description": "Breaking change: HostBuilder enables ValidateOnBuild/ValidateScopes in development environment ",
+          "projectPath": "UnTaskAlert.csproj",
+          "state": "Active",
+          "location": {
+            "snippetModel": {
+              "unrestricted": "var host = new HostBuilder()\r\n    .ConfigureFunctionsWebApplication()\r\n    .ConfigureServices(Configure)\r\n    .Build();",
+              "protected": "T:Microsoft.Extensions.Hosting.HostBuilder"
+            },
+            "kind": "File",
+            "path": "Program.cs",
+            "snippet": "var host = new HostBuilder()\r\n    .ConfigureFunctionsWebApplication()\r\n    .ConfigureServices(Configure)\r\n    .Build();",
+            "protectedSnippet": "T:Microsoft.Extensions.Hosting.HostBuilder",
+            "label": "T:Microsoft.Extensions.Hosting.HostBuilder",
+            "links": [
+              {
+                "title": "API documentation",
+                "url": "https://github.com/dotnet/docs/blob/main/docs/core/compatibility/aspnet-core/9.0/hostbuilder-validation.md",
+                "isCustom": false
+              }
+            ],
+            "line": 10,
+            "column": 0
+          }
+        }
+      ],
+      "features": []
+    }
+  ],
+  "rules": {
+    "AzureFunctionsUpgrade.0002": {
+      "id": "AzureFunctionsUpgrade.0002",
+      "isFeature": true,
+      "description": "When migrating from in-proc to isolated, enable the use of the V2 model for Azure Functions projects and enable Application Insights.",
+      "label": "Enable the use of the V2 model for Azure Functions projects and enable Application Insights.",
+      "severity": "Mandatory",
+      "effort": 3,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2342114",
+          "isCustom": false
+        },
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2341915",
+          "isCustom": false
+        }
+      ]
+    },
+    "NuGet.0002": {
+      "id": "NuGet.0002",
+      "isFeature": false,
+      "description": "NuGet package upgrade is recommended for selected target framework.\n\nStandard .NET packages are recommended to have versions matching version of .NET that project targets.\n\nSome other packages also are known to work better for selected target frameworks.",
+      "label": "NuGet package upgrade is recommended",
+      "severity": "Potential",
+      "effort": 1,
+      "links": [
+        {
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262530",
+          "isCustom": false
+        }
+      ]
+    },
+    "Project.0002": {
+      "id": "Project.0002",
+      "isFeature": false,
+      "description": "Project\u0027s target framework(s) needs to be changed to the new target framework that you selected for this upgrade.\n\nDuring upgrade target framework will be adjusted to corresponding platform when applicable. In some cases project would result in multiple target frameworks after the upgrade if it was using features that now have their own platforms in modern .NET frameworks (windows, iOS, Android etc).",
+      "label": "Project\u0027s target framework(s) needs to be changed",
+      "severity": "Mandatory",
+      "effort": 1,
+      "links": [
+        {
+          "title": "Overview of porting from .NET Framework to .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265227",
+          "isCustom": false
+        },
+        {
+          "title": ".NET project SDKs",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2265226",
+          "isCustom": false
+        }
+      ]
+    },
+    "Api.0002": {
+      "id": "Api.0002",
+      "isFeature": false,
+      "description": "API is source incompatible for selected .NET version: requires code changes to compile successfully when targeting a new version, such as removing obsolete APIs or changing method signatures.",
+      "label": "Source incompatible for selected .NET version",
+      "severity": "Potential",
+      "effort": 1,
+      "links": [
+        {
+          "title": "Breaking changes in .NET",
+          "url": "https://go.microsoft.com/fwlink/?linkid=2262679",
+          "isCustom": false
+        }
+      ]
+    },
+    "Api.0003": {
+      "id": "Api.0003",
+      "isFeature": false,
+      "description": "API has a behavioral change in selected .NET version: code and binaries may behave differently at runtime without needing recompilation, but the new behavior might be undesirable and require updates.",
+      "label": "Behavioral change in selected .NET version",
+      "severity": "Potential",
+      "effort": 1
+    }
+  }
+}

@@ -14,8 +14,7 @@ public class CommandProcessor(
     IDbAccessor dbAccessor,
     IPinGenerator pinGenerator,
     IOptions<Config> options,
-    IServiceScopeFactory scopeFactory,
-    ILoggerFactory loggerFactory)
+    IServiceScopeFactory scopeFactory)
     : ICommandProcessor
 {
     private readonly INotifier _notifier = Arg.NotNull(notifier, nameof(notifier));
@@ -23,7 +22,6 @@ public class CommandProcessor(
     private readonly IDbAccessor _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
     private readonly IPinGenerator _pinGenerator = Arg.NotNull(pinGenerator, nameof(pinGenerator));
     private readonly IServiceScopeFactory _scopeFactory = Arg.NotNull(scopeFactory, nameof(scopeFactory));
-    private readonly ILogger<CommandProcessor> _logger = loggerFactory.CreateLogger<CommandProcessor>();
 
     private const int PauseBeforeAnswer = 1000;
 
@@ -45,20 +43,20 @@ public class CommandProcessor(
 
         var chatId = update.Message.Chat.Id;
 
-        _logger.LogInformation("Processing the command: {MessageText}", update.Message.Text);
+        log.LogInformation("Processing the command: {MessageText}", update.Message.Text);
         await _notifier.Typing(chatId, cancellationToken);
 
-        var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), _logger);
+        var subscriber = await _dbAccessor.GetSubscriberById(update.Message.Chat.Id.ToString(), log);
 
         if (subscriber == null)
         {
-            _logger.LogInformation("Process: Subscriber is 'null'");
+            log.LogInformation("Process: Subscriber is 'null'");
             await _notifier.Respond(update.Message.Chat.Id, "Nothing to see here!");
             return;
         }
         else
         {
-            _logger.LogInformation("TelegramId: {TelegramId}\n" +
+            log.LogInformation("TelegramId: {TelegramId}\n" +
                                    "VerificationAttempts: {VerificationAttempts}\n" +
                                    "PIN: {Pin}\n" +
                                    "Email: {Email}\n" +
@@ -80,8 +78,6 @@ public class CommandProcessor(
                                    subscriber.LastMoreThanSingleTaskIsActiveAlert,
                                    subscriber.LastActiveTaskOutsideOfWorkingHoursAlert);
         }
-
-        subscriber ??= await NewUserFlow(chatId, cancellationToken);
 
         if (subscriber.ActiveWorkflow is { IsExpired: false } || input.StartsWith("/abort"))
         {
@@ -112,23 +108,21 @@ public class CommandProcessor(
             new AccountWorkflow(),
             new StoryInfoWorkflow(),
         };
-        var commandWorkflow = ProcessInput(input, workflows);
-
-        if (commandWorkflow == null)
-            throw new InvalidOperationException($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}'.");
+        
+        var commandWorkflow = ProcessInput(input, log, workflows) ?? throw new InvalidOperationException($"The bot is lost and doesn't know what to do. chatId '{subscriber.TelegramId}'.");
 
         var workflowResult = await commandWorkflow.Step(input, subscriber, update.Message.Chat.Id, cancellationToken);
+        
         subscriber.ActiveWorkflow = workflowResult == WorkflowResult.Finished ? null : commandWorkflow;
         await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
     }
 
-    private async Task<Subscriber> NewUserFlow(long chatId, CancellationToken cancellationToken)
+    private async Task<Subscriber> NewUserFlow(long chatId, ILogger log, CancellationToken cancellationToken)
     {
-        var logger = loggerFactory.CreateLogger<Subscriber>();
-        logger.LogInformation("NewUserFlow() is executed for chatId '{ChatId}'", chatId);
+        log.LogInformation("NewUserFlow() is executed for chatId '{ChatId}'", chatId);
         await Task.Delay(PauseBeforeAnswer, cancellationToken);
         var workflow = new AccountWorkflow();
-        workflow.Inject(_scopeFactory, _config, loggerFactory);
+        workflow.Inject(_scopeFactory, _config, log);
 
         var subscriber = new Subscriber
         {
@@ -148,13 +142,13 @@ public class CommandProcessor(
         return subscriber;
     }
 
-    private CommandWorkflow ProcessInput(string input, params CommandWorkflow[] workflows)
+    private CommandWorkflow ProcessInput(string input, ILogger log, params CommandWorkflow[] workflows)
     {
         foreach (var commandWorkflow in workflows)
         {
             if (!commandWorkflow.Accepts(input)) continue;
 
-            commandWorkflow.Inject(_scopeFactory, _config, loggerFactory);
+            commandWorkflow.Inject(_scopeFactory, _config, log);
             return commandWorkflow;
         }
 

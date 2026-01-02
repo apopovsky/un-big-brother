@@ -47,7 +47,7 @@ public class SetSettingsWorkflow : CommandWorkflow
                         if (success)
                         {
                             await Notifier.Respond(chatId, $"From now on {settingName}={settingValue}");
-                            Logger.LogInformation($"Changing setting {settingName}. New value: {settingValue}");
+                            Logger.LogInformation("Changing setting {SettingName}. New value: {SettingValue}", settingName, settingValue);
                             return WorkflowResult.Finished;
                         }
 
@@ -100,7 +100,7 @@ public class SetSettingsWorkflow : CommandWorkflow
         if (success2)
         {
             await Notifier.Respond(chatId, $"From now on {settingName}={settingValue}");
-            Logger.LogInformation($"Changing setting {settingName}. New value: {settingValue}");
+            Logger.LogInformation("Changing setting {SettingName}. New value: {SettingValue}", settingName, settingValue);
 
             return WorkflowResult.Finished;
         }

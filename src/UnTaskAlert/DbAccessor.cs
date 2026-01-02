@@ -47,7 +47,7 @@ namespace UnTaskAlert
                 .ToList();
 
             var subscriber = result.SingleOrDefault();
-            subscriber?.ActiveWorkflow?.Inject(_serviceScopeFactory, _config, _loggerFactory);
+            subscriber?.ActiveWorkflow?.Inject(_serviceScopeFactory, _config, logger);
 
             return Task.FromResult(subscriber);
         }

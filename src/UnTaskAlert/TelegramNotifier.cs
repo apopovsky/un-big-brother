@@ -127,15 +127,15 @@ public class TelegramNotifier : INotifier
         if (timeReport.StartDate.Date != timeReport.EndDate.Date)
         {
             var anomalousDays = GetAnomalousDays(timeReport, subscriber.HoursPerDay == 0 ? 8 : subscriber.HoursPerDay);
-            if (anomalousDays.Any())
+            if (anomalousDays.Count != 0)
             {
                 var anomalousMessage = new StringBuilder();
                 anomalousMessage.AppendLine("```");
                 anomalousMessage.AppendLine("⚠️ Anomalous Days (≠8h):");
                 anomalousMessage.AppendLine("----------------------------");
-                foreach (var day in anomalousDays)
+                foreach (var (date, hours) in anomalousDays)
                 {
-                    anomalousMessage.AppendLine($"\\- {day.Date:ddd dd/MM}: {day.Hours:0.##}h");
+                    anomalousMessage.AppendLine($"\\- {date:ddd dd/MM}: {hours:0.##}h");
                 }
                 anomalousMessage.AppendLine("```");
 
@@ -146,13 +146,12 @@ public class TelegramNotifier : INotifier
 
     private static List<(DateTime Date, double Hours)> GetAnomalousDays(TimeReport timeReport, int expectedHoursPerDay)
     {
-        return timeReport.WorkItemTimes
+        return [.. timeReport.WorkItemTimes
             .GroupBy(w => w.Date.Date)
             .Select(g => new { Date = g.Key, Hours = g.Sum(w => w.Completed) })
             .Where(d => Math.Abs(d.Hours - expectedHoursPerDay) > 0.01)
             .OrderBy(d => d.Date)
-            .Select(d => (d.Date, d.Hours))
-            .ToList();
+            .Select(d => (d.Date, d.Hours))];
     }
 
     private static string GetStatsPeriod(TimeReport timeReport)
