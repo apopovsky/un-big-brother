@@ -45,6 +45,7 @@ public class TelegramNotifier : INotifier
                    $"The following commands are available:{Environment.NewLine}" +
                    $"/standup - tasks of the previous work day{Environment.NewLine}" +
                    $"/active - show active tasks{Environment.NewLine}" +
+                   $"/pr - show active pull requests{Environment.NewLine}" +
                    $"/day - stats for today{Environment.NewLine}" +
                    $"/week - stats for the week{Environment.NewLine}" +
                    $"/month - stats for the month{Environment.NewLine}" +
@@ -137,7 +138,7 @@ public class TelegramNotifier : INotifier
                     anomalousMessage.AppendLine($"\\- {day.Date:ddd dd/MM}: {day.Hours:0.##}h");
                 }
                 anomalousMessage.AppendLine("```");
-                
+
                 await _bot.SendMessage(subscriber.TelegramId, anomalousMessage.ToString(), parseMode: ParseMode.MarkdownV2);
             }
         }
@@ -279,6 +280,40 @@ private static string WrapText(string text, int maxLength)
         await _bot.SendMessage(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
     }
 
+    public async Task ActivePullRequests(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo)
+    {
+        var sb = new StringBuilder();
+        sb.Append($"ℹ You have **{activePullRequestsInfo.ActivePullRequestCount}** active pull request{(activePullRequestsInfo.ActivePullRequestCount is > 1 or 0 ? "s" : string.Empty)}\\.{Environment.NewLine}");
+
+        foreach (var pr in activePullRequestsInfo.PullRequests)
+        {
+            sb.AppendLine(GetSinglePullRequestFormatted(pr));
+        }
+
+        _logger.LogInformation(sb.ToString());
+        await _bot.SendMessage(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
+    }
+
+    public async Task ActivePullRequestsReminder(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo)
+    {
+        if (!activePullRequestsInfo.HasActivePullRequests)
+        {
+            return;
+        }
+
+        var sb = new StringBuilder();
+        sb.Append("🔔 *PR reminder\\!* 🔔\n");
+        sb.Append($"You have **{activePullRequestsInfo.ActivePullRequestCount}** open pull request{(activePullRequestsInfo.ActivePullRequestCount is > 1 ? "s" : string.Empty)}\\.\n\n");
+
+        foreach (var pr in activePullRequestsInfo.PullRequests)
+        {
+            sb.AppendLine(GetSinglePullRequestFormatted(pr));
+        }
+
+        _logger.LogInformation(sb.ToString());
+        await _bot.SendMessage(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
+    }
+
 
 
     public async Task IncorrectEmail(long chatId)
@@ -338,6 +373,7 @@ private static string WrapText(string text, int maxLength)
         // Utilizar texto pre-formateado para enviar la tabla con un formato más legible
         var text = $"TelegramId: {subscriber.TelegramId}{Environment.NewLine}" +
                    $"Email: {subscriber.Email}{Environment.NewLine}" +
+                   $"Projects: {(subscriber.AzureDevOpsProjects == null || subscriber.AzureDevOpsProjects.Count == 0 ? "(all)" : string.Join(",", subscriber.AzureDevOpsProjects))}{Environment.NewLine}" +
                    $"Working hours (UTC): {subscriber.StartWorkingHoursUtc}-{subscriber.EndWorkingHoursUtc}{Environment.NewLine}" +
                    $"Is account verified: {subscriber.IsVerified}{Environment.NewLine}" +
                    $"Hours per day: {subscriber.HoursPerDay}{Environment.NewLine}" +
@@ -362,6 +398,23 @@ private static string WrapText(string text, int maxLength)
         }
 
         return singleTaskFormatted;
+    }
+
+    private static string GetSinglePullRequestFormatted(PullRequestInfo pr)
+    {
+        var title = (pr.Title ?? string.Empty).EscapeMarkdownV2();
+        var repo = (pr.Repository ?? string.Empty).EscapeMarkdownV2();
+        var project = (pr.Project ?? string.Empty).EscapeMarkdownV2();
+        var url = pr.WebUrl;
+
+        var linkText = $"PR {pr.Id}".EscapeMarkdownV2();
+        var link = string.IsNullOrWhiteSpace(url) ? linkText : $"[{linkText}]({url})";
+
+        var where = string.IsNullOrWhiteSpace(project) && string.IsNullOrWhiteSpace(repo)
+            ? string.Empty
+            : $" \\({project}/{repo}\\)";
+
+        return $"• {link}: {title}{where}";
     }
 
     private string GetSingleTaskLink(TaskInfo taskInfo, ParseMode format = ParseMode.Html)

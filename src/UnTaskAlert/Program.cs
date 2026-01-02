@@ -23,6 +23,7 @@ static void Configure(HostBuilderContext context, IServiceCollection services)
     services.AddTransient<INotifier, TelegramNotifier>();
     services.AddTransient<IMailSender, MailSender>();
     services.AddTransient<IBacklogAccessor, BacklogAccessor>();
+    services.AddTransient<IPrAccessor, PrAccessor>();
     services.AddTransient<IQueryBuilder, QueryBuilder>();
     services.AddTransient<ICommandProcessor, CommandProcessor>();
     services.AddTransient<ITelegramBotProvider, TelegramBotProvider>();

@@ -3,7 +3,8 @@ day - stats for today
 week - stats for the week
 month - stats for the month
 active - show active tasks
-info - show account settings 
+pr - show active pull requests
+info - show account settings
 snooze - snooze any alerts for 30 minutes
 delete - delete account
 healthcheck - [threshold] detailed report with a list of tasks where the difference between active and complete is bigger than a given threshold

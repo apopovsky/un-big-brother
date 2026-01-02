@@ -6,11 +6,12 @@ using UnTaskAlert.Models;
 
 namespace UnTaskAlert;
 
-public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAccessor, IDbAccessor dbAccessor)
+public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAccessor, IPrAccessor prAccessor, IDbAccessor dbAccessor)
     : IMonitoringService
 {
     private readonly INotifier _notifier = Arg.NotNull(notifier, nameof(notifier));
     private readonly IBacklogAccessor _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
+    private readonly IPrAccessor _prAccessor = Arg.NotNull(prAccessor, nameof(prAccessor));
     private readonly IDbAccessor _dbAccessor = Arg.NotNull(dbAccessor, nameof(dbAccessor));
     private static readonly TimeSpan pauseBetweenAlerts = TimeSpan.FromMinutes(30);
 
@@ -32,6 +33,90 @@ public class MonitoringService(INotifier notifier, IBacklogAccessor backlogAcces
         }
 
         await CreateAlertIfNeeded(subscriber, activeTaskInfo, log, cancellationToken);
+
+        await CreatePullRequestAlertIfNeeded(subscriber, connection, url, log, cancellationToken);
+    }
+
+    private async Task CreatePullRequestAlertIfNeeded(Subscriber subscriber, VssConnection connection, string azureDevOpsAddress, ILogger log, CancellationToken cancellationToken)
+    {
+        if (subscriber.SnoozeAlertsUntil.GetValueOrDefault(DateTime.MinValue) > DateTime.UtcNow)
+        {
+            return;
+        }
+
+        if (subscriber.AzureDevOpsProjects == null || subscriber.AzureDevOpsProjects.Count == 0)
+        {
+            return;
+        }
+
+        if (!TryGetPrAlertSlot(subscriber, DateTime.UtcNow, out var slot))
+        {
+            return;
+        }
+
+        var slotHourUtc = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, DateTime.UtcNow.Day, DateTime.UtcNow.Hour, 0, 0, DateTimeKind.Utc);
+        if (slot == 1 && subscriber.LastActivePullRequestsStartSlotAlertUtc == slotHourUtc)
+        {
+            return;
+        }
+        if (slot == 2 && subscriber.LastActivePullRequestsMidSlotAlertUtc == slotHourUtc)
+        {
+            return;
+        }
+
+        var prs = await _prAccessor.GetActivePullRequests(connection, azureDevOpsAddress, subscriber.Email, subscriber.AzureDevOpsProjects, log);
+        if (!prs.HasActivePullRequests)
+        {
+            log.LogInformation("No active pull requests for {Email} in PR alert slot {Slot}.", subscriber.Email, slot);
+            return;
+        }
+
+        if (slot == 1)
+        {
+            subscriber.LastActivePullRequestsStartSlotAlertUtc = slotHourUtc;
+        }
+        else
+        {
+            subscriber.LastActivePullRequestsMidSlotAlertUtc = slotHourUtc;
+        }
+
+        await _notifier.ActivePullRequestsReminder(subscriber, prs);
+        await _dbAccessor.AddOrUpdateSubscriber(subscriber, cancellationToken);
+    }
+
+    private static bool TryGetPrAlertSlot(Subscriber subscriber, DateTime utcNow, out int slot)
+    {
+        slot = 0;
+        if (!utcNow.IsWeekDay())
+        {
+            return false;
+        }
+
+        var now = utcNow.TimeOfDay;
+        if (now <= subscriber.StartWorkingHoursUtc || now >= subscriber.EndWorkingHoursUtc)
+        {
+            return false;
+        }
+
+        var slot1Start = subscriber.StartWorkingHoursUtc;
+        var slot1End = slot1Start.Add(TimeSpan.FromHours(1));
+
+        var slot2Start = subscriber.StartWorkingHoursUtc.Add(TimeSpan.FromHours(4));
+        var slot2End = slot2Start.Add(TimeSpan.FromHours(1));
+
+        if (now >= slot1Start && now < slot1End)
+        {
+            slot = 1;
+            return true;
+        }
+
+        if (now >= slot2Start && now < slot2End)
+        {
+            slot = 2;
+            return true;
+        }
+
+        return false;
     }
 
     private async Task CreateAlertIfNeeded(Subscriber subscriber, ActiveTasksInfo activeTasksInfo, ILogger log, CancellationToken cancellationToken)

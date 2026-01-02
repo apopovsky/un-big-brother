@@ -13,6 +13,13 @@ public class QueryBuilder : IQueryBuilder
 		return query;
 	}
 
+	public string GetActivePullRequestsQuery(string userEmail)
+	{
+		// Azure DevOps PR queries are executed via GitHttpClient with search criteria.
+		// We still keep a human-readable query string for consistent logging.
+		return $"PullRequests: status=Active, createdBy='{userEmail}', scope=all-projects";
+	}
+
 	public string GetWorkItemsByDate(string userName, DateTime @from, DateTime? to)
 	{
 		var dateTo = (to ?? DateTime.UtcNow).Date.AddDays(1);

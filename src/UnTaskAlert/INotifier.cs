@@ -13,6 +13,8 @@ public interface INotifier
     Task SendDetailedTimeReport(Subscriber subscriber, TimeReport timeReport, double offsetThreshold, bool includeSummary = true);
     Task Progress(Subscriber subscriber);
     Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
+    Task ActivePullRequests(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo);
+    Task ActivePullRequestsReminder(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo);
     Task IncorrectEmail(long chatId);
     Task EmailUpdated(Subscriber subscriber);
     Task NoEmail(long chatId);

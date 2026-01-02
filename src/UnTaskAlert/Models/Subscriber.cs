@@ -1,4 +1,5 @@
-﻿using UnTaskAlert.Commands.Workflow;
+﻿using Newtonsoft.Json;
+using UnTaskAlert.Commands.Workflow;
 
 namespace UnTaskAlert.Models;
 
@@ -16,7 +17,14 @@ public class Subscriber
     public DateTime LastNoActiveTasksAlert { get; set; }
     public DateTime LastActiveTaskOutsideOfWorkingHoursAlert { get; set; }
     public DateTime LastMoreThanSingleTaskIsActiveAlert { get; set; }
+    public DateTime LastActivePullRequestsStartSlotAlertUtc { get; set; }
+    public DateTime LastActivePullRequestsMidSlotAlertUtc { get; set; }
+    [Newtonsoft.Json.JsonProperty(PropertyName = "projects")]
+    public IList<string> AzureDevOpsProjects { get; set; }
+
+    [JsonIgnore]
     public CommandWorkflow ActiveWorkflow { get; set; }
+
     public DateTime? SnoozeAlertsUntil { get; set; }
     public IList<TimeOff> TimeOff { get; set; }
     public bool IsAdmin { get; set; }

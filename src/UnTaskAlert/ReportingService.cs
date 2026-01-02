@@ -6,12 +6,15 @@ using UnTaskAlert.Models;
 
 namespace UnTaskAlert;
 
-public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccessor) : IReportingService
+public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccessor, IPrAccessor prAccessor) : IReportingService
 {
     public const int HoursPerDay = 8;
 
     private readonly INotifier _notifier = Arg.NotNull(notifier, nameof(notifier));
-    private readonly IBacklogAccessor _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));    public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate,
+    private readonly IBacklogAccessor _backlogAccessor = Arg.NotNull(backlogAccessor, nameof(backlogAccessor));
+    private readonly IPrAccessor _prAccessor = Arg.NotNull(prAccessor, nameof(prAccessor));
+
+    public async Task CreateWorkHoursReport(Subscriber subscriber, string url, string token, DateTime startDate,
         ILogger log, DateTime? endDate)
     {
         var report = await GetTimeReport(subscriber, url, token, startDate, log, endDate);
@@ -46,6 +49,17 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         await _notifier.ActiveTasks(subscriber, activeTaskInfo);
 
         return activeTaskInfo;
+    }
+
+    public async Task<ActivePullRequestsInfo> ActivePullRequestsReport(Subscriber subscriber, string url, string token, ILogger log)
+    {
+        var orgUrl = new Uri(url);
+        var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
+        var activePrInfo = await _prAccessor.GetActivePullRequests(connection, url, subscriber.Email, subscriber.AzureDevOpsProjects, log);
+
+        await _notifier.ActivePullRequests(subscriber, activePrInfo);
+
+        return activePrInfo;
     }
 
     public async Task CreateHealthCheckReport(Subscriber subscriber, string url, string token, DateTime startDate,

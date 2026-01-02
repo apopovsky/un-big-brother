@@ -99,6 +99,7 @@ public class CommandProcessor(
             new SnoozeAlertWorkflow(),
             new SetSettingsWorkflow(),
             new ActiveWorkflow(),
+            new PullRequestsWorkflow(),
             new StandupWorkflow(),
             new DayWorkflow(),
             new WeekWorkflow(),
