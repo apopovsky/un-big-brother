@@ -15,6 +15,7 @@ public interface INotifier
     Task ActiveTasks(Subscriber subscriber, ActiveTasksInfo activeTasksInfo);
     Task ActivePullRequests(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo);
     Task ActivePullRequestsReminder(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo);
+    Task ActivePullRequestsApprovalRequest(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo);
     Task IncorrectEmail(long chatId);
     Task EmailUpdated(Subscriber subscriber);
     Task NoEmail(long chatId);

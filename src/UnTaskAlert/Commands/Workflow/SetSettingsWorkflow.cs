@@ -19,7 +19,7 @@ public class SetSettingsWorkflow : CommandWorkflow
     }
 
     private static readonly string[] SettingNames = [WorkingHoursSetting, HoursPerDaySetting, ProjectsSetting];
-        
+
     protected override async Task<WorkflowResult> PerformStep(string input, Subscriber subscriber, long chatId)
     {
         string settingName = null, settingValue = null;
@@ -47,7 +47,7 @@ public class SetSettingsWorkflow : CommandWorkflow
                         if (success)
                         {
                             await Notifier.Respond(chatId, $"From now on {settingName}={settingValue}");
-                            Logger.LogInformation("Changing setting {SettingName}. New value: {SettingValue}", settingName, settingValue);
+                            Logger.LogInformation($"Changing setting {settingName}. New value: {settingValue}");
                             return WorkflowResult.Finished;
                         }
 
@@ -100,7 +100,7 @@ public class SetSettingsWorkflow : CommandWorkflow
         if (success2)
         {
             await Notifier.Respond(chatId, $"From now on {settingName}={settingValue}");
-            Logger.LogInformation("Changing setting {SettingName}. New value: {SettingValue}", settingName, settingValue);
+            Logger.LogInformation($"Changing setting {settingName}. New value: {settingValue}");
 
             return WorkflowResult.Finished;
         }

@@ -19,7 +19,7 @@ public abstract class WorkHoursReportWorkflow : CommandWorkflow
     {
         var strings = input.Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         if (strings.Length > 1 && DateTime.TryParseExact(strings[1],
-                ["yyyy.MM.dd", "yyyyMMdd", "dd.MM.yyyy", "dd/MM/yyyy"],
+            DateUtils.AcceptedDateInputFormats,
                 CultureInfo.CurrentCulture,
                 DateTimeStyles.None, out var startDate))
         {
@@ -32,7 +32,7 @@ public abstract class WorkHoursReportWorkflow : CommandWorkflow
         }
 
         if (strings.Length > 2 && DateTime.TryParseExact(strings[2],
-                ["yyyy.MM.dd", "yyyyMMdd", "dd.MM.yyyy", "dd/MM/yyyy"],
+        DateUtils.AcceptedDateInputFormats,
                 CultureInfo.CurrentCulture,
                 DateTimeStyles.None, out var endDate))
         {
@@ -132,7 +132,7 @@ public class MonthWorkflow : WorkHoursReportWorkflow
 {
     protected override string Command { get; set; } = "/month";
     protected override DateTime StartDate { get; set; } = DateUtils.StartOfMonth();
-        
+
 }
 
 public class YearWorkflow : WorkHoursReportWorkflow

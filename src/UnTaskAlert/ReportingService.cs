@@ -62,6 +62,17 @@ public class ReportingService(INotifier notifier, IBacklogAccessor backlogAccess
         return activePrInfo;
     }
 
+    public async Task<ActivePullRequestsInfo> ActivePullRequestsApprovalRequestReport(Subscriber subscriber, string url, string token, ILogger log)
+    {
+        var orgUrl = new Uri(url);
+        var connection = new VssConnection(orgUrl, new VssBasicCredential(string.Empty, token));
+        var activePrInfo = await _prAccessor.GetActivePullRequests(connection, url, subscriber.Email, subscriber.AzureDevOpsProjects, log);
+
+        await _notifier.ActivePullRequestsApprovalRequest(subscriber, activePrInfo);
+
+        return activePrInfo;
+    }
+
     public async Task CreateHealthCheckReport(Subscriber subscriber, string url, string token, DateTime startDate,
         double threshold, ILogger log)
     {

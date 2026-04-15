@@ -38,5 +38,18 @@ public class PullRequestsWorkflow : CommandWorkflow
         // no-op
     }
 
-    protected override bool DoesAccept(string input) => input.StartsWith("/pr", StringComparison.OrdinalIgnoreCase);
+    protected override bool DoesAccept(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return false;
+        }
+
+        if (!input.StartsWith("/pr", StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return input.Length == 3 || char.IsWhiteSpace(input[3]);
+    }
 }

@@ -1,7 +1,17 @@
 ﻿namespace UnTaskAlert;
 
-public class DateUtils
+public static class DateUtils
 {
+    public static readonly string[] AcceptedDateInputFormats =
+    [
+        "yyyy.MM.dd",
+        "yyyyMMdd",
+        "dd.MM.yyyy",
+        "dd/MM/yyyy",
+        "dd-MM-yyyy",
+        "yyyy-MM-dd",
+    ];
+
     public static DateTime StartOfWeek()
     {
         var dt = DateTime.Today;

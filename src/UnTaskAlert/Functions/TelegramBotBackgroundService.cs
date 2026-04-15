@@ -31,6 +31,18 @@ public class TelegramBotBackgroundService : BackgroundService
         {
             try
             {
+                var webhookInfo = await _botClient.GetWebhookInfo(cancellationToken: stoppingToken);
+                if (!string.IsNullOrWhiteSpace(webhookInfo.Url))
+                {
+                    var webhookHost = Uri.TryCreate(webhookInfo.Url, UriKind.Absolute, out var webhookUri)
+                        ? webhookUri.Host
+                        : "invalid-url";
+
+                    _logger.LogWarning("Telegram webhook is active on host {WebhookHost}. Deleting webhook and switching to polling.", webhookHost);
+                    await _botClient.DeleteWebhook(dropPendingUpdates: false, cancellationToken: stoppingToken);
+                    await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
+                }
+
                 _logger.LogInformation("Starting Telegram bot receiving loop.");
                 _botClient.StartReceiving(_handler, cancellationToken: stoppingToken);
                 await Task.Delay(Timeout.Infinite, stoppingToken);
@@ -45,16 +57,17 @@ public class TelegramBotBackgroundService : BackgroundService
 
     private async Task HandleUpdateAsync(ITelegramBotClient botClient, Update update, CancellationToken cancellationToken)
     {
+        _logger.LogTrace("Handling update: {Update}", update);
         if (update.Type == UpdateType.Message)
         {
             try
             {
                 _logger.LogInformation("Message received from: {From}. Message: {Text}", update.Message?.From, update.Message?.Text);
-                
+
                 // Crear un scope para resolver dependencias scoped
                 using var scope = _serviceScopeFactory.CreateScope();
                 var commandProcessor = scope.ServiceProvider.GetRequiredService<ICommandProcessor>();
-                
+
                 await commandProcessor.Process(update, _logger, cancellationToken);
             }
             catch (Exception exception)

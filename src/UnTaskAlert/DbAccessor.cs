@@ -24,14 +24,14 @@ namespace UnTaskAlert
         public DbAccessor(CosmosClient cosmosClient, IServiceScopeFactory scopeFactory, IOptions<Config> options, ILoggerFactory loggerFactory)
         {
             _cosmosClient = cosmosClient;
-            _config = Arg.NotNull(options.Value, nameof(options));
+            _config = Arg.NotNull(options.Value, nameof(options.Value));
             _serviceScopeFactory = scopeFactory;
             _loggerFactory = loggerFactory;
+            _logger = _loggerFactory.CreateLogger<DbAccessor>();
 
             // Initialize the database and container
             var database = InitializeDatabaseAsync().GetAwaiter().GetResult();
             _container = InitializeContainerAsync(database).GetAwaiter().GetResult();
-            _logger = _loggerFactory.CreateLogger<DbAccessor>();
         }
 
         public async Task AddOrUpdateSubscriber(Subscriber subscriber, CancellationToken cancellationToken)
@@ -47,8 +47,6 @@ namespace UnTaskAlert
                 .ToList();
 
             var subscriber = result.SingleOrDefault();
-            subscriber?.ActiveWorkflow?.Inject(_serviceScopeFactory, _config, logger);
-
             return Task.FromResult(subscriber);
         }
 

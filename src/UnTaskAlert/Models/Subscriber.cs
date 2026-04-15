@@ -25,6 +25,11 @@ public class Subscriber
     [JsonIgnore]
     public CommandWorkflow ActiveWorkflow { get; set; }
 
+    public string ActiveWorkflowName { get; set; }
+    public int? ActiveWorkflowStep { get; set; }
+    public DateTime? ActiveWorkflowExpirationUtc { get; set; }
+    public string ActiveWorkflowData { get; set; }
+
     public DateTime? SnoozeAlertsUntil { get; set; }
     public IList<TimeOff> TimeOff { get; set; }
     public bool IsAdmin { get; set; }

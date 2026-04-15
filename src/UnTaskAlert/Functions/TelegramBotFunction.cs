@@ -20,7 +20,7 @@ public class TelegramBotFunction(ICommandProcessor commandProcessor)
     {
         var requestBody = await new StreamReader(req.Body).ReadToEndAsync(context.CancellationToken);
         var log = context.GetLogger(nameof(TelegramBotFunction));
-        log.LogInformation("Incoming request:{NewLine}{RequestBody}", Environment.NewLine, requestBody);
+        log.LogInformation("Incoming Telegram update. BodyLength={BodyLength}", requestBody?.Length ?? 0);
 
         try
         {

@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Net;
 using Flurl;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -127,15 +128,15 @@ public class TelegramNotifier : INotifier
         if (timeReport.StartDate.Date != timeReport.EndDate.Date)
         {
             var anomalousDays = GetAnomalousDays(timeReport, subscriber.HoursPerDay == 0 ? 8 : subscriber.HoursPerDay);
-            if (anomalousDays.Count != 0)
+            if (anomalousDays.Any())
             {
                 var anomalousMessage = new StringBuilder();
                 anomalousMessage.AppendLine("```");
                 anomalousMessage.AppendLine("⚠️ Anomalous Days (≠8h):");
                 anomalousMessage.AppendLine("----------------------------");
-                foreach (var (date, hours) in anomalousDays)
+                foreach (var day in anomalousDays)
                 {
-                    anomalousMessage.AppendLine($"\\- {date:ddd dd/MM}: {hours:0.##}h");
+                    anomalousMessage.AppendLine($"\\- {day.Date:ddd dd/MM}: {day.Hours:0.##}h");
                 }
                 anomalousMessage.AppendLine("```");
 
@@ -146,12 +147,13 @@ public class TelegramNotifier : INotifier
 
     private static List<(DateTime Date, double Hours)> GetAnomalousDays(TimeReport timeReport, int expectedHoursPerDay)
     {
-        return [.. timeReport.WorkItemTimes
+        return timeReport.WorkItemTimes
             .GroupBy(w => w.Date.Date)
             .Select(g => new { Date = g.Key, Hours = g.Sum(w => w.Completed) })
             .Where(d => Math.Abs(d.Hours - expectedHoursPerDay) > 0.01)
             .OrderBy(d => d.Date)
-            .Select(d => (d.Date, d.Hours))];
+            .Select(d => (d.Date, d.Hours))
+            .ToList();
     }
 
     private static string GetStatsPeriod(TimeReport timeReport)
@@ -311,6 +313,43 @@ private static string WrapText(string text, int maxLength)
 
         _logger.LogInformation(sb.ToString());
         await _bot.SendMessage(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.MarkdownV2);
+    }
+
+    public async Task ActivePullRequestsApprovalRequest(Subscriber subscriber, ActivePullRequestsInfo activePullRequestsInfo)
+    {
+        if (activePullRequestsInfo.PullRequests == null || activePullRequestsInfo.PullRequests.Count == 0)
+        {
+            await _bot.SendMessage(subscriber.TelegramId, "No active pull requests found.");
+            return;
+        }
+
+        const int maxItems = 20;
+        var prs = activePullRequestsInfo.PullRequests.Take(maxItems).ToList();
+        var remaining = activePullRequestsInfo.PullRequests.Count - prs.Count;
+
+        var sb = new StringBuilder();
+        foreach (var pr in prs)
+        {
+            var text = $"Pull request {pr.Id}: {pr.Title ?? string.Empty}";
+            var encodedText = WebUtility.HtmlEncode(text);
+
+            if (!string.IsNullOrWhiteSpace(pr.WebUrl))
+            {
+                sb.AppendLine($"for approval, please: <a href=\"{pr.WebUrl}\">{encodedText}</a>");
+            }
+            else
+            {
+                sb.AppendLine($"for approval, please: {encodedText}");
+            }
+        }
+
+        if (remaining > 0)
+        {
+            sb.AppendLine($"...and {remaining} more");
+        }
+
+        _logger.LogInformation(sb.ToString());
+        await _bot.SendMessage(subscriber.TelegramId, sb.ToString(), parseMode: ParseMode.Html);
     }
 
 

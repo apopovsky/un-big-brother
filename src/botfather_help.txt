@@ -4,6 +4,7 @@ week - stats for the week
 month - stats for the month
 active - show active tasks
 pr - show active pull requests
+prapproval - generate approval request lines for active pull requests
 info - show account settings
 snooze - snooze any alerts for 30 minutes
 delete - delete account
